@@ -162,6 +162,116 @@ CARDS = [
                  "Драка/раунд → combat (B4); Выносливость/уставший → endurance_hope.vynoslivost (B2.1); "
                  "Проступок (стр.138) → shadow.istochniki_teni (B6).",
     },
+    {
+        "id": AD + "volki", "title": "Волки Диких земель",
+        "subsystem": "adversaries", "section": "Противники → ВОЛКИ ДИКИХ ЗЕМЕЛЬ", "pages": [146, 147],
+        "quotes": [("волки диких земель Во времена приключений Бильбо",
+                    "все герои в поле зрения пса получают 2 балла Тени (Страх). Те, за кого проверка "
+                    "Тени провалена, запуганы и не могут тратить баллы Надежды до конца боя.")],
+        "summary": "Владелец статблоков волков Диких земель. У всех волков Диких земель есть способность "
+                   "Гигантский прыжок (за 1 балл Ненависти атакуют героя на любой позиции, даже "
+                   "стрелковой). Варги — особо жестокая порода серых волков; на них ездят орки. "
+                   "Статблоки: Дикий волк (Ур.3, Выносл 12, Мощь 1, Ненависть 3, Парир —, Броня 1; Клыки "
+                   "3 (3/14, Укол); Боязнь огня, Змеиная быстрота); Волчий вожак (Ур.4, Выносл 16, Мощь "
+                   "1, Ненависть 4, Парир —, Броня 1; Клыки 3 (4/14, Укол), Когти 2 (4/14, Захват); "
+                   "Боязнь огня, Змеиная быстрота, Победный вой); Пёс Саурона — слуга Тёмного Повелителя "
+                   "в облике варга (Ур.5, Выносл 20, Мощь 2, Ненависть 5, Парир +1, Броня 2; Клыки 3 "
+                   "(5/14, Укол), Когти 3 (5/14, Захват); Невероятная стойкость, Смертельная рана, Удар "
+                   "страха).",
+        "parameters": {
+            "general_abilities": ["Гигантский прыжок"],
+            "abilities_glossary": {
+                "Гигантский прыжок": "for 1 Hatred, may attack a hero in any combat position, even ranged",
+                "Боязнь огня": "loses 1 Hatred at the start of each round it is in melee with a foe holding a torch or burning item",
+                "Змеиная быстрота": "if targeted by an attack, may spend 1 Hatred to make that attack check ill-fated",
+                "Победный вой": "for 1 Hatred, restores 1 Hatred to every other warg in the fight",
+                "Невероятная стойкость": "immune to unarmed attacks; damage that would drop its Endurance to 0 instead Pierces; if it survives, it restores half its maximum Endurance",
+                "Смертельная рана": "a target it wounds rolls an ill-fated Feat die to determine wound severity",
+                "Удар страха": "for 1 Hatred, all heroes in sight gain 2 Shadow (Fear); those who fail the Shadow check are frightened and cannot spend Hope until the fight ends",
+            },
+            "enemies": {
+                "dikiy_volk": {"name_ru": "Дикий волк", "distinctive": ["Мрачность", "Остроглазость"],
+                    "level": 3, "endurance": 12, "might": 1, "hatred": 3, "parry": None, "armour": 1,
+                    "weapons": [{"name": "Клыки", "rating": 3, "damage": 3, "wound": 14, "special": ["Укол"]}],
+                    "abilities": ["Боязнь огня", "Змеиная быстрота"]},
+                "volchiy_vozhak": {"name_ru": "Волчий вожак", "distinctive": ["Быстрота", "Злобность"],
+                    "level": 4, "endurance": 16, "might": 1, "hatred": 4, "parry": None, "armour": 1,
+                    "weapons": [{"name": "Клыки", "rating": 3, "damage": 4, "wound": 14, "special": ["Укол"]},
+                                {"name": "Когти", "rating": 2, "damage": 4, "wound": 14, "special": ["Захват"]}],
+                    "abilities": ["Боязнь огня", "Змеиная быстрота", "Победный вой"]},
+                "pyos_saurona": {"name_ru": "Пёс Саурона", "distinctive": ["Смелость", "Свирепость"],
+                    "level": 5, "endurance": 20, "might": 2, "hatred": 5, "parry": 1, "armour": 2,
+                    "weapons": [{"name": "Клыки", "rating": 3, "damage": 5, "wound": 14, "special": ["Укол"]},
+                                {"name": "Когти", "rating": 3, "damage": 5, "wound": 14, "special": ["Захват"]}],
+                    "abilities": ["Невероятная стойкость", "Смертельная рана", "Удар страха"]},
+            },
+        },
+        "related": [AD + "format_opisaniya", SHADOW_SRC, FEAT],
+        "notes": "Владелец статблоков волков Диких земель (ф.146-147). Vision-assisted: статблоки "
+                 "(уровень/выносл/мощь/ненависть/парир/броня/оружие) и способности сверены по скану; "
+                 "числа есть в текст-слое и трассируются. Способности — в abilities_glossary "
+                 "(описания прозой). Страх → shadow.istochniki_teni (B6); Пронзающий/раунд/позиция/Драка "
+                 "→ combat (B4); общая механика врага → adversaries.format_opisaniya.",
+    },
+    {
+        "id": AD + "nedobrye_lyudi", "title": "Недобрые люди",
+        "subsystem": "adversaries", "section": "Противники → НЕДОБРЫЕ ЛЮДИ", "pages": [148, 149],
+        "quotes": [("недобрые люди Это жестокие личности",
+                    "Если является целью атаки, за 1 балл Решимости может сделать бросок при проверке "
+                    "этой атаки злополучным.")],
+        "summary": "Владелец статблоков недобрых людей — бандитов, мародёров и работорговцев Одиноких "
+                   "земель; они не служат Саурону и противостоят героям по обстоятельствам (у них "
+                   "Решимость, а не Ненависть). Враждебные южане: Южанин-налётчик (Ур.4, Выносл 16, Мощь "
+                   "1, Решим 4, Парир +1, Броня 2; Топор 3 (5/18), Короткое копьё 2 (3/14, Укол); "
+                   "Свирепость); Предводитель южан (Ур.5, Выносл 20, Мощь 1, Решим 5, Парир +2, Броня 3; "
+                   "Копьё 3 (4/14, Укол), Секира 3 (6/18, Сокрушение щита); Свирепость). Бандиты: "
+                   "Разбойник (Ур.2, Выносл 8, Мощь 1, Решим 2, Парир —, Броня 1; Жезл 2 (3/12), Лук 2 "
+                   "(3/14, Укол); Трус); Главарь бандитов (Ур.3, Выносл 12, Мощь 1, Решим 3, Парир +1, "
+                   "Броня 2; Короткий меч 3 (3/16), Лук 2 (3/14, Укол); Победный клич); Дорожный "
+                   "грабитель (Ур.4, Выносл 16, Мощь 1, Решим 4, Парир —, Броня 2; Копьё 3 (4/14, Укол), "
+                   "Лук 2 (3/14, Укол); Змеиная быстрота).",
+        "parameters": {
+            "intro": "bandits, marauders and slavers of the Lone-lands; not Sauron's servants; oppose by circumstance (Resolve, not Hatred)",
+            "abilities_glossary": {
+                "Свирепость": "for 1 Resolve, gains one die and makes the attack check favoured",
+                "Трус": "if «Запугать врага» is successfully used on it, it loses 1 more Resolve",
+                "Победный клич": "for 1 Resolve, restores 1 Resolve to every other bandit in the fight",
+                "Змеиная быстрота": "if targeted by an attack, may spend 1 Resolve to make that attack check ill-fated",
+            },
+            "enemies": {
+                "yuzhanin_naletchik": {"name_ru": "Южанин-налётчик", "distinctive": ["Практичность", "Чёрствость"],
+                    "level": 4, "endurance": 16, "might": 1, "resolve": 4, "parry": 1, "armour": 2,
+                    "weapons": [{"name": "Топор", "rating": 3, "damage": 5, "wound": 18, "special": []},
+                                {"name": "Короткое копьё", "rating": 2, "damage": 3, "wound": 14, "special": ["Укол"]}],
+                    "abilities": ["Свирепость"]},
+                "predvoditel_yuzhan": {"name_ru": "Предводитель южан", "distinctive": ["Жестокость", "Стойкость"],
+                    "level": 5, "endurance": 20, "might": 1, "resolve": 5, "parry": 2, "armour": 3,
+                    "weapons": [{"name": "Копьё", "rating": 3, "damage": 4, "wound": 14, "special": ["Укол"]},
+                                {"name": "Секира", "rating": 3, "damage": 6, "wound": 18, "special": ["Сокрушение щита"]}],
+                    "abilities": ["Свирепость"]},
+                "razboynik": {"name_ru": "Разбойник", "distinctive": ["Подозрительность", "Прыткость"],
+                    "level": 2, "endurance": 8, "might": 1, "resolve": 2, "parry": None, "armour": 1,
+                    "weapons": [{"name": "Жезл", "rating": 2, "damage": 3, "wound": 12, "special": []},
+                                {"name": "Лук", "rating": 2, "damage": 3, "wound": 14, "special": ["Укол"]}],
+                    "abilities": ["Трус"]},
+                "glavar_banditov": {"name_ru": "Главарь бандитов", "distinctive": ["Безжалостность", "Замкнутость"],
+                    "level": 3, "endurance": 12, "might": 1, "resolve": 3, "parry": 1, "armour": 2,
+                    "weapons": [{"name": "Короткий меч", "rating": 3, "damage": 3, "wound": 16, "special": []},
+                                {"name": "Лук", "rating": 2, "damage": 3, "wound": 14, "special": ["Укол"]}],
+                    "abilities": ["Победный клич"]},
+                "dorozhnyy_grabitel": {"name_ru": "Дорожный грабитель", "distinctive": ["Быстрота", "Мстительность"],
+                    "level": 4, "endurance": 16, "might": 1, "resolve": 4, "parry": None, "armour": 2,
+                    "weapons": [{"name": "Копьё", "rating": 3, "damage": 4, "wound": 14, "special": ["Укол"]},
+                                {"name": "Лук", "rating": 2, "damage": 3, "wound": 14, "special": ["Укол"]}],
+                    "abilities": ["Змеиная быстрота"]},
+            },
+        },
+        "related": [AD + "format_opisaniya", FEAT],
+        "notes": "Владелец статблоков недобрых людей (ф.148-149). Vision-assisted: статблоки и "
+                 "способности сверены по скану; числа в текст-слое трассируются. У всех — Решимость "
+                 "(не Ненависть): убийство — возможный Проступок (см. format_opisaniya). «Запугать "
+                 "врага»/Пронзающий → combat (B4); механика врага → adversaries.format_opisaniya.",
+    },
 ]
 
 
