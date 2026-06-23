@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.lifepaths.cultures",
+  "type": "lifepath_cultures",
+  "title": "Таблица культур героев",
+  "source": {
+    "book": "zhizn_puti_geroev",
+    "edition": "на_рассылку_03_04_2026",
+    "pages": [
+      3
+    ]
+  },
+  "verified": true,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "Порядок 1–6 как в книге; culture_id — стабильные слаги движка.",
+  "payload": {
+    "die": "success",
+    "rows": [
+      {
+        "face": 1,
+        "culture_id": "bardings",
+        "name": "Бардинги"
+      },
+      {
+        "face": 2,
+        "culture_id": "dwarves_of_durins_folk",
+        "name": "Гномы народа Дурина"
+      },
+      {
+        "face": 3,
+        "culture_id": "elves_of_lindon",
+        "name": "Эльфы Линдона"
+      },
+      {
+        "face": 4,
+        "culture_id": "hobbits_of_the_shire",
+        "name": "Хоббиты Шира"
+      },
+      {
+        "face": 5,
+        "culture_id": "men_of_bree",
+        "name": "Люди Бри"
+      },
+      {
+        "face": 6,
+        "culture_id": "rangers_of_the_north",
+        "name": "Следопыты Севера"
+      }
+    ]
+  },
+  "verification": {
+    "method": "auto-v1",
+    "adr": "ADR-001",
+    "date": "2026-06-11",
+    "gates": {
+      "text_fidelity": "independent_check.py: зелёный на момент простановки (см. лог)",
+      "vision_sweep": "vision_sweep_report_lifepaths.json 11.06.2026: GREEN, 8/8 файлов, 391 ячейка, 0 MISMATCH, 0 UNREADABLE, слой не открывался",
+      "lynn_review": "lynn-review PASS 11.06.2026 (свежая сессия; KI-D..KI-J разобраны после вердикта)"
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/lifepath_backgrounds.schema.json",
+  "allOf": [
+    {
+      "$ref": "common.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "lifepath_backgrounds"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "die",
+        "culture",
+        "rows"
+      ],
+      "properties": {
+        "die": {
+          "const": "success"
+        },
+        "culture": {
+          "type": "object",
+          "required": [
+            "id",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "required": [
+              "face",
+              "title",
+              "story",
+              "attributes",
+              "favoured_skill",
+              "distinctive_features"
+            ],
+            "properties": {
+              "face": {
+                "$ref": "common.schema.json#/$defs/successDieFace"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "story": {
+                "type": "string",
+                "minLength": 40
+              },
+              "attributes": {
+                "type": "object",
+                "required": [
+                  "strength",
+                  "heart",
+                  "wits"
+                ],
+                "properties": {
+                  "strength": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 8
+                  },
+                  "heart": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 8
+                  },
+                  "wits": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 8
+                  }
+                },
+                "additionalProperties": false
+              },
+              "favoured_skill": {
+                "type": "string",
+                "minLength": 2
+              },
+              "distinctive_features": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "string",
+                  "minLength": 2
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

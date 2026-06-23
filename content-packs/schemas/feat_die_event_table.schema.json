@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/feat_die_event_table.schema.json",
+  "allOf": [
+    {
+      "$ref": "common.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "feat_die_event_table"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "die",
+        "rows"
+      ],
+      "properties": {
+        "die": {
+          "const": "feat"
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "required": [
+              "face",
+              "text"
+            ],
+            "properties": {
+              "face": {
+                "$ref": "common.schema.json#/$defs/featDieFace"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "effects": {
+                "type": "array",
+                "items": {
+                  "$ref": "common.schema.json#/$defs/effect"
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

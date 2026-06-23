@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/rule_parameters.schema.json",
+  "allOf": [
+    {
+      "$ref": "common.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "rule_parameters"
+    },
+    "payload": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "Free-form numeric/structured parameters; every leaf must be traceable to a book statement (source.pages)."
+    }
+  }
+}

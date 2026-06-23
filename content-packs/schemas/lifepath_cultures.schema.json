@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/lifepath_cultures.schema.json",
+  "allOf": [
+    {
+      "$ref": "common.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "lifepath_cultures"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "die",
+        "rows"
+      ],
+      "properties": {
+        "die": {
+          "const": "success"
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "required": [
+              "face",
+              "culture_id",
+              "name"
+            ],
+            "properties": {
+              "face": {
+                "$ref": "common.schema.json#/$defs/successDieFace"
+              },
+              "culture_id": {
+                "type": "string",
+                "pattern": "^[a-z_]+$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

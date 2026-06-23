@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/journey_scenes_table.schema.json",
+  "allOf": [
+    {
+      "$ref": "common.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "journey_scenes_table"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "die",
+        "regional_roll_bias",
+        "rows"
+      ],
+      "properties": {
+        "die": {
+          "const": "feat"
+        },
+        "regional_roll_bias": {
+          "type": "object",
+          "required": [
+            "border_lands",
+            "wild_lands",
+            "dark_lands"
+          ],
+          "properties": {
+            "border_lands": {
+              "enum": [
+                "favoured",
+                "plain",
+                "ill_favoured"
+              ]
+            },
+            "wild_lands": {
+              "enum": [
+                "favoured",
+                "plain",
+                "ill_favoured"
+              ]
+            },
+            "dark_lands": {
+              "enum": [
+                "favoured",
+                "plain",
+                "ill_favoured"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "skills_pool": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/skill"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "required": [
+              "scene_type",
+              "scene",
+              "consequence_text",
+              "consequence",
+              "detail_table"
+            ],
+            "properties": {
+              "face": {
+                "$ref": "common.schema.json#/$defs/featDieFace"
+              },
+              "range": {
+                "$ref": "common.schema.json#/$defs/featDieRange"
+              },
+              "scene_type": {
+                "type": "string"
+              },
+              "scene": {
+                "type": "string"
+              },
+              "consequence_text": {
+                "type": "string"
+              },
+              "consequence": {
+                "$ref": "common.schema.json#/$defs/consequence"
+              },
+              "fatigue_gain": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "detail_table": {
+                "type": "string",
+                "pattern": "^kv\\.solo\\.scene_details\\.[a-z_]+$"
+              }
+            },
+            "oneOf": [
+              {
+                "required": [
+                  "face"
+                ]
+              },
+              {
+                "required": [
+                  "range"
+                ]
+              }
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.solo.scene_details.chance_meeting",
+  "type": "scene_detail_table",
+  "title": "Детали сцены: Случайная встреча",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "pages": [
+      21,
+      27
+    ]
+  },
+  "verified": true,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "Приложение идентично телу книги.",
+  "payload": {
+    "die": "success",
+    "scene_type": "chance_meeting",
+    "rows": [
+      {
+        "face": 1,
+        "scene": "Одинокий охотник",
+        "prompt": "ОХОТА, чтобы обменяться историями",
+        "skill": "hunting"
+      },
+      {
+        "face": 2,
+        "scene": "Попутчик",
+        "prompt": "ИССЛЕДОВАНИЕ, чтобы узнать о дороге впереди",
+        "skill": "exploration"
+      },
+      {
+        "face": 3,
+        "scene": "Тайный наблюдатель",
+        "prompt": "БДИТЕЛЬНОСТЬ, чтобы заметить его",
+        "skill": "awareness"
+      },
+      {
+        "face": 4,
+        "scene": "Благородный зверь",
+        "prompt": "ОХОТА, чтобы общаться",
+        "skill": "hunting"
+      },
+      {
+        "face": 5,
+        "scene": "Уединённый лагерь",
+        "prompt": "ИССЛЕДОВАНИЕ, чтобы пройти глухими тропами",
+        "skill": "exploration"
+      },
+      {
+        "face": 6,
+        "scene": "Благоприятное собрание",
+        "prompt": "Значимая встреча",
+        "skill": null,
+        "significant_encounter": true
+      }
+    ],
+    "check_consequence_text": "При успехе проверки баллы Изнурения не начисляются, а игрок придумывает встречу, благоприятную для героя.",
+    "check_consequence": {
+      "trigger": "on_success",
+      "effects": [
+        {
+          "op": "fatigue_waived"
+        }
+      ]
+    },
+    "fatigue_gain": 1
+  },
+  "verification": {
+    "method": "auto-v1",
+    "adr": "ADR-001",
+    "date": "2026-06-11",
+    "gates": {
+      "text_fidelity": "independent_check.py: 215/215 на момент простановки",
+      "vision_sweep": "vision_sweep_report.json (прогон 11.06.2026, КРАСНЫЙ: 9 находок; все разрешены, разрешение подтверждено гейтом 3 по сканам)",
+      "lynn_review": "lynn-review PASS 11.06.2026 (свежая сессия, финальное состояние v4+KI-фиксы; KI-A/B/C разобраны)"
+    }
+  }
+}

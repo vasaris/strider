@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/patron_tasks_table.schema.json",
+  "allOf": [
+    {
+      "$ref": "common.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "patron_tasks_table"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "die",
+        "patron",
+        "rows"
+      ],
+      "properties": {
+        "die": {
+          "const": "success"
+        },
+        "patron": {
+          "type": "object",
+          "required": [
+            "id",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z_]+$"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "required": [
+              "face",
+              "text"
+            ],
+            "properties": {
+              "face": {
+                "$ref": "common.schema.json#/$defs/successDieFace"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

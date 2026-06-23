@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.mechanics.hero_creation.cultures",
+  "type": "rule_card",
+  "title": "Культуры героев",
+  "source": {
+    "book": "kv_core",
+    "edition": "02_03_2026_с_рубрикатором",
+    "section": "искатели приключений → КУЛЬТУРЫ ГЕРОЕВ",
+    "pages": [
+      29
+    ]
+  },
+  "verified": false,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "",
+  "payload": {
+    "subsystem": "hero_creation",
+    "title": "Культуры героев",
+    "source_text": [
+      "В мире Средиземья культура, к которой принадлежит герой, — это не просто обычаи и традиции, а нечто, оказывающее на героя гораздо более глубокое влияние. Вот почему ключевым выбором при создании персонажа становится его культура происхождения. Описания всех доступных героям культур построены по единому образцу и приводятся далее."
+    ],
+    "summary": "Культура происхождения — ключевой выбор при создании героя: она влияет на героя глубже обычаев и традиций. Описания всех доступных культур построены по единому образцу.",
+    "parameters": {
+      "count": 6,
+      "culture_ids": [
+        "bardings",
+        "dwarves_of_durins_folk",
+        "men_of_bree",
+        "rangers_of_the_north",
+        "hobbits_of_the_shire",
+        "elves_of_lindon"
+      ]
+    },
+    "related": [
+      "kv.mechanics.hero_creation.characteristics",
+      "kv.mechanics.hero_creation.distinctions",
+      "kv.mechanics.hero_creation.derived_characteristics",
+      "kv.mechanics.hero_creation.skills_and_weapon_skills",
+      "kv.mechanics.hero_creation.distinctive_features_intro",
+      "kv.mechanics.hero_creation.languages_and_names",
+      "kv.mechanics.hero_creation.bardings",
+      "kv.mechanics.hero_creation.dwarves_of_durins_folk",
+      "kv.mechanics.hero_creation.men_of_bree",
+      "kv.mechanics.hero_creation.rangers_of_the_north",
+      "kv.mechanics.hero_creation.hobbits_of_the_shire",
+      "kv.mechanics.hero_creation.elves_of_lindon"
+    ]
+  }
+}

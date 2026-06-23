@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/adversary.schema.json",
+  "allOf": [
+    {
+      "$ref": "common.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "adversary"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "name",
+        "category",
+        "description",
+        "distinctive_features",
+        "attribute_level",
+        "endurance",
+        "might",
+        "parry",
+        "armour",
+        "combat_proficiencies",
+        "fell_abilities"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 40
+        },
+        "distinctive_features": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "attribute_level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "endurance": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "might": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "hate": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "resolve": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parry": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "armour": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "combat_proficiencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "rating",
+              "damage",
+              "injury"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "rating": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 6
+              },
+              "damage": {
+                "type": "integer"
+              },
+              "injury": {
+                "type": "integer"
+              },
+              "notes": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "fell_abilities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "text"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 20
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "hate"
+          ]
+        },
+        {
+          "required": [
+            "resolve"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

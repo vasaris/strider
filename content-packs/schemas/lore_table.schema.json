@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/lore_table.schema.json",
+  "allOf": [
+    {
+      "$ref": "common.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "lore_table"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "section_die",
+        "row_die",
+        "columns",
+        "sections"
+      ],
+      "properties": {
+        "section_die": {
+          "const": "feat"
+        },
+        "row_die": {
+          "const": "success"
+        },
+        "columns": {
+          "const": [
+            "action",
+            "aspect",
+            "focus"
+          ]
+        },
+        "sections": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "required": [
+              "face",
+              "rows"
+            ],
+            "properties": {
+              "face": {
+                "$ref": "common.schema.json#/$defs/featDieFace"
+              },
+              "rows": {
+                "type": "array",
+                "minItems": 6,
+                "maxItems": 6,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "action",
+                    "aspect",
+                    "focus"
+                  ],
+                  "properties": {
+                    "action": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "aspect": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "focus": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

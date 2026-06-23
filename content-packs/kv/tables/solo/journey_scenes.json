@@ -1,0 +1,175 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.solo.journey_scenes",
+  "type": "journey_scenes_table",
+  "title": "Таблица сцен путешествий в одиночку",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "pages": [
+      19,
+      26
+    ]
+  },
+  "verified": true,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "Транскрибировано со скана стр. 19 (приложение стр. 26 идентично, сверено визуально). Благополучный/злополучный бросок по местности — стр. 19. Изнурение «—» у руны закодировано как null.",
+  "payload": {
+    "die": "feat",
+    "regional_roll_bias": {
+      "border_lands": "favoured",
+      "wild_lands": "plain",
+      "dark_lands": "ill_favoured"
+    },
+    "skills_pool": [
+      "exploration",
+      "awareness",
+      "hunting"
+    ],
+    "rows": [
+      {
+        "face": "eye",
+        "scene_type": "terrible_misfortune",
+        "scene": "Ужасная неудача",
+        "consequence_text": "При провале проверки герой ранен.",
+        "consequence": {
+          "trigger": "on_failure",
+          "effects": [
+            {
+              "op": "wound"
+            }
+          ]
+        },
+        "fatigue_gain": 3,
+        "detail_table": "kv.solo.scene_details.terrible_misfortune"
+      },
+      {
+        "face": 1,
+        "scene_type": "despair",
+        "scene": "Отчаяние",
+        "consequence_text": "При провале проверки герой получает 2 балла Тени (Страх).",
+        "consequence": {
+          "trigger": "on_failure",
+          "effects": [
+            {
+              "op": "shadow_points",
+              "value": 2,
+              "kind": "fear"
+            }
+          ]
+        },
+        "fatigue_gain": 2,
+        "detail_table": "kv.solo.scene_details.despair"
+      },
+      {
+        "range": {
+          "min": 2,
+          "max": 3
+        },
+        "scene_type": "bad_choice",
+        "scene": "Плохой выбор",
+        "consequence_text": "При провале проверки герой получает 1 балл Тени (Страх).",
+        "consequence": {
+          "trigger": "on_failure",
+          "effects": [
+            {
+              "op": "shadow_points",
+              "value": 1,
+              "kind": "fear"
+            }
+          ]
+        },
+        "fatigue_gain": 2,
+        "detail_table": "kv.solo.scene_details.bad_choice"
+      },
+      {
+        "range": {
+          "min": 4,
+          "max": 7
+        },
+        "scene_type": "mishap",
+        "scene": "Неприятность",
+        "consequence_text": "При провале проверки добавьте 1 день к длительности путешествия. Герой получает 1 дополнительный балл Изнурения.",
+        "consequence": {
+          "trigger": "on_failure",
+          "effects": [
+            {
+              "op": "journey_days_delta",
+              "value": 1
+            },
+            {
+              "op": "fatigue_points",
+              "value": 1
+            }
+          ]
+        },
+        "fatigue_gain": 2,
+        "detail_table": "kv.solo.scene_details.mishap"
+      },
+      {
+        "range": {
+          "min": 8,
+          "max": 9
+        },
+        "scene_type": "short_cut",
+        "scene": "Короткий путь",
+        "consequence_text": "При успехе проверки длительность путешествия уменьшается на день.",
+        "consequence": {
+          "trigger": "on_success",
+          "effects": [
+            {
+              "op": "journey_days_delta",
+              "value": -1
+            }
+          ]
+        },
+        "fatigue_gain": 1,
+        "detail_table": "kv.solo.scene_details.short_cut"
+      },
+      {
+        "face": 10,
+        "scene_type": "chance_meeting",
+        "scene": "Случайная встреча",
+        "consequence_text": "При успехе проверки баллы Изнурения не начисляются, а игрок придумывает встречу, благоприятную для героя.",
+        "consequence": {
+          "trigger": "on_success",
+          "effects": [
+            {
+              "op": "fatigue_waived"
+            }
+          ]
+        },
+        "fatigue_gain": 1,
+        "detail_table": "kv.solo.scene_details.chance_meeting"
+      },
+      {
+        "face": "gandalf_rune",
+        "scene_type": "inspiring_sight",
+        "scene": "Вдохновляющий вид",
+        "consequence_text": "При успехе проверки герой получает 1 балл Надежды.",
+        "consequence": {
+          "trigger": "on_success",
+          "effects": [
+            {
+              "op": "hope_points",
+              "value": 1
+            }
+          ]
+        },
+        "fatigue_gain": null,
+        "detail_table": "kv.solo.scene_details.inspiring_sight"
+      }
+    ]
+  },
+  "verification": {
+    "method": "auto-v1",
+    "adr": "ADR-001",
+    "date": "2026-06-11",
+    "gates": {
+      "text_fidelity": "independent_check.py: 215/215 на момент простановки",
+      "vision_sweep": "vision_sweep_report.json (прогон 11.06.2026, КРАСНЫЙ: 9 находок; все разрешены, разрешение подтверждено гейтом 3 по сканам)",
+      "lynn_review": "lynn-review PASS 11.06.2026 (свежая сессия, финальное состояние v4+KI-фиксы; KI-A/B/C разобраны)"
+    }
+  }
+}

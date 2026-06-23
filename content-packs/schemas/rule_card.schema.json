@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/rule_card.schema.json",
+  "allOf": [
+    {
+      "$ref": "common.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "rule_card"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "subsystem",
+        "title",
+        "source_text",
+        "summary",
+        "parameters",
+        "related"
+      ],
+      "properties": {
+        "subsystem": {
+          "enum": [
+            "checks",
+            "conditions",
+            "hero_creation",
+            "traits",
+            "endurance_hope",
+            "standard_of_living",
+            "equipment",
+            "valour_wisdom",
+            "rewards_virtues",
+            "combat",
+            "council",
+            "journey",
+            "fellowship_phase",
+            "keeper_tools",
+            "shadow",
+            "eye",
+            "treasure",
+            "reference"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_text": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 40
+          }
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 20
+        },
+        "parameters": {
+          "type": "object"
+        },
+        "related": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^kv\\."
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

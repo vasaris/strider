@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.solo.scene_details.inspiring_sight",
+  "type": "scene_detail_table",
+  "title": "Детали сцены: Вдохновляющий вид",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "pages": [
+      21,
+      28
+    ]
+  },
+  "verified": true,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "Приложение идентично телу книги.",
+  "payload": {
+    "die": "success",
+    "scene_type": "inspiring_sight",
+    "rows": [
+      {
+        "face": 1,
+        "scene": "Величественные создания",
+        "prompt": "ОХОТА, чтобы наблюдать, не спугнув их",
+        "skill": "hunting"
+      },
+      {
+        "face": 2,
+        "scene": "Воодушевляющие красоты",
+        "prompt": "ИССЛЕДОВАНИЕ, чтобы достичь обзорной точки",
+        "skill": "exploration"
+      },
+      {
+        "face": 3,
+        "scene": "Доброжелательное существо",
+        "prompt": "БДИТЕЛЬНОСТЬ, чтобы узнать о его присутствии",
+        "skill": "awareness"
+      },
+      {
+        "face": 4,
+        "scene": "Изобильная добыча",
+        "prompt": "ОХОТА, чтобы пополнить припасы",
+        "skill": "hunting"
+      },
+      {
+        "face": 5,
+        "scene": "Древнее сооружение",
+        "prompt": "БДИТЕЛЬНОСТЬ, чтобы понять его значение",
+        "skill": "awareness"
+      },
+      {
+        "face": 6,
+        "scene": "Тихое убежище",
+        "prompt": "Значимая встреча",
+        "skill": null,
+        "significant_encounter": true
+      }
+    ],
+    "check_consequence_text": "При успехе проверки герой получает 1 балл Надежды.",
+    "check_consequence": {
+      "trigger": "on_success",
+      "effects": [
+        {
+          "op": "hope_points",
+          "value": 1
+        }
+      ]
+    },
+    "fatigue_gain": null
+  },
+  "verification": {
+    "method": "auto-v1",
+    "adr": "ADR-001",
+    "date": "2026-06-11",
+    "gates": {
+      "text_fidelity": "independent_check.py: 215/215 на момент простановки",
+      "vision_sweep": "vision_sweep_report.json (прогон 11.06.2026, КРАСНЫЙ: 9 находок; все разрешены, разрешение подтверждено гейтом 3 по сканам)",
+      "lynn_review": "lynn-review PASS 11.06.2026 (свежая сессия, финальное состояние v4+KI-фиксы; KI-A/B/C разобраны)"
+    }
+  }
+}

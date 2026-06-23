@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.solo.hero_adjustments",
+  "type": "rule_parameters",
+  "title": "Соло-правки создания героя и проверок",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "pages": [
+      6,
+      7,
+      10
+    ]
+  },
+  "verified": true,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "Стр. 6 (15 баллов опыта, братство 3, безопасное место), стр. 7 (без Важного товарища, Странник), стр. 10 (ЦЧ = 18 − рейтинг).",
+  "payload": {
+    "previous_experience_points": 15,
+    "fellowship_rating_base": 3,
+    "target_number_base": 18,
+    "target_number_formula": "18 − рейтинг характеристики (альтернативный метод КВ, стр. 18)",
+    "important_companion": false,
+    "extra_distinctive_quality": {
+      "id": "wanderer",
+      "name": "Странник",
+      "text": "При проверках навыков в путешествии герой считается вдохновлённым."
+    },
+    "recommended_callings": [
+      "вестник",
+      "искатель сокровищ",
+      "страж"
+    ]
+  },
+  "verification": {
+    "method": "auto-v1",
+    "adr": "ADR-001",
+    "date": "2026-06-11",
+    "gates": {
+      "text_fidelity": "independent_check.py: 215/215 на момент простановки",
+      "vision_sweep": "vision_sweep_report.json (прогон 11.06.2026, КРАСНЫЙ: 9 находок; все разрешены, разрешение подтверждено гейтом 3 по сканам)",
+      "lynn_review": "lynn-review PASS 11.06.2026 (свежая сессия, финальное состояние v4+KI-фиксы; KI-A/B/C разобраны)"
+    }
+  }
+}

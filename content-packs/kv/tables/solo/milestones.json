@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.solo.milestones",
+  "type": "lookup_table",
+  "title": "Вехи и опыт",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "pages": [
+      9,
+      23
+    ]
+  },
+  "verified": true,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "Заголовок колонки: в теле книги «НАГРАДА» (стр. 9), в приложении «ОПЫТ» (стр. 23); содержимое строк идентично.",
+  "payload": {
+    "kind": "milestones",
+    "rows": [
+      {
+        "milestone": "Принять задание покровителя",
+        "adventure_points": 1,
+        "skill_points": 0,
+        "reward_text": "1 балл приключений"
+      },
+      {
+        "milestone": "Добиться важной личной цели",
+        "adventure_points": 1,
+        "skill_points": 1,
+        "reward_text": "1 балл приключений и 1 балл навыков"
+      },
+      {
+        "milestone": "Завершить задание покровителя",
+        "adventure_points": 1,
+        "skill_points": 1,
+        "reward_text": "1 балл приключений и 1 балл навыков"
+      },
+      {
+        "milestone": "Завершить важное путешествие",
+        "adventure_points": 0,
+        "skill_points": 2,
+        "reward_text": "2 балла навыков"
+      },
+      {
+        "milestone": "Значимая встреча в путешествии",
+        "adventure_points": 0,
+        "skill_points": 1,
+        "reward_text": "1 балл навыков"
+      },
+      {
+        "milestone": "Обнаружить важное место или находку",
+        "adventure_points": 1,
+        "skill_points": 0,
+        "reward_text": "1 балл приключений"
+      },
+      {
+        "milestone": "Преодолеть хитрое препятствие",
+        "adventure_points": 0,
+        "skill_points": 1,
+        "reward_text": "1 балл навыков"
+      },
+      {
+        "milestone": "Участвовать в Совете",
+        "adventure_points": 0,
+        "skill_points": 1,
+        "reward_text": "1 балл навыков"
+      },
+      {
+        "milestone": "Пережить опасное сражение",
+        "adventure_points": 1,
+        "skill_points": 0,
+        "reward_text": "1 балл приключений"
+      },
+      {
+        "milestone": "Пережить сцену обнаружения",
+        "adventure_points": 1,
+        "skill_points": 0,
+        "reward_text": "1 балл приключений"
+      }
+    ],
+    "constraint": "Если в сцене или испытании достигнуто более одной вехи, выбирается только одна."
+  },
+  "verification": {
+    "method": "auto-v1",
+    "adr": "ADR-001",
+    "date": "2026-06-11",
+    "gates": {
+      "text_fidelity": "independent_check.py: 215/215 на момент простановки",
+      "vision_sweep": "vision_sweep_report.json (прогон 11.06.2026, КРАСНЫЙ: 9 находок; все разрешены, разрешение подтверждено гейтом 3 по сканам)",
+      "lynn_review": "lynn-review PASS 11.06.2026 (свежая сессия, финальное состояние v4+KI-фиксы; KI-A/B/C разобраны)"
+    }
+  }
+}

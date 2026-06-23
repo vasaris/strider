@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/oracle_yes_no.schema.json",
+  "allOf": [
+    {
+      "$ref": "common.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "oracle_yes_no"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "die",
+        "likelihoods",
+        "special_faces"
+      ],
+      "properties": {
+        "die": {
+          "const": "feat"
+        },
+        "likelihoods": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "required": [
+              "key",
+              "label",
+              "yes_if_at_least"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "yes_if_at_least": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10
+              },
+              "default": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "special_faces": {
+          "type": "object",
+          "required": [
+            "gandalf_rune",
+            "eye"
+          ],
+          "properties": {
+            "gandalf_rune": {
+              "$ref": "#/$defs/special"
+            },
+            "eye": {
+              "$ref": "#/$defs/special"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "special": {
+      "type": "object",
+      "required": [
+        "answer",
+        "extreme",
+        "text"
+      ],
+      "properties": {
+        "answer": {
+          "enum": [
+            "yes",
+            "no"
+          ]
+        },
+        "extreme": {
+          "type": "boolean"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

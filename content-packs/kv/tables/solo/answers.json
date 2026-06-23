@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.solo.answers",
+  "type": "oracle_yes_no",
+  "title": "Таблица ответов",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "pages": [
+      12,
+      23
+    ]
+  },
+  "verified": true,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "Пороги и строки рун сверены со сканами стр. 12 и 23; расхождений между телом и приложением нет.",
+  "payload": {
+    "die": "feat",
+    "likelihoods": [
+      {
+        "key": "certain",
+        "label": "Определённо",
+        "yes_if_at_least": 1
+      },
+      {
+        "key": "likely",
+        "label": "Возможно",
+        "yes_if_at_least": 4
+      },
+      {
+        "key": "even",
+        "label": "Пополам",
+        "yes_if_at_least": 6,
+        "default": true
+      },
+      {
+        "key": "doubtful",
+        "label": "Сомнительно",
+        "yes_if_at_least": 8
+      },
+      {
+        "key": "unthinkable",
+        "label": "Немыслимо",
+        "yes_if_at_least": 10
+      }
+    ],
+    "special_faces": {
+      "gandalf_rune": {
+        "answer": "yes",
+        "extreme": true,
+        "text": "Всегда «да» с экстремальным итогом или поворотом."
+      },
+      "eye": {
+        "answer": "no",
+        "extreme": true,
+        "text": "Всегда «нет» с экстремальным итогом или поворотом."
+      }
+    }
+  },
+  "verification": {
+    "method": "auto-v1",
+    "adr": "ADR-001",
+    "date": "2026-06-11",
+    "gates": {
+      "text_fidelity": "independent_check.py: 215/215 на момент простановки",
+      "vision_sweep": "vision_sweep_report.json (прогон 11.06.2026, КРАСНЫЙ: 9 находок; все разрешены, разрешение подтверждено гейтом 3 по сканам)",
+      "lynn_review": "lynn-review PASS 11.06.2026 (свежая сессия, финальное состояние v4+KI-фиксы; KI-A/B/C разобраны)"
+    }
+  }
+}

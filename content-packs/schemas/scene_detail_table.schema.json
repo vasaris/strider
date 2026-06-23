@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/scene_detail_table.schema.json",
+  "allOf": [
+    {
+      "$ref": "common.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "scene_detail_table"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "die",
+        "scene_type",
+        "rows",
+        "check_consequence_text",
+        "check_consequence",
+        "fatigue_gain"
+      ],
+      "properties": {
+        "die": {
+          "const": "success"
+        },
+        "scene_type": {
+          "enum": [
+            "terrible_misfortune",
+            "despair",
+            "bad_choice",
+            "mishap",
+            "short_cut",
+            "chance_meeting",
+            "inspiring_sight"
+          ]
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "required": [
+              "face",
+              "scene",
+              "prompt"
+            ],
+            "properties": {
+              "face": {
+                "$ref": "common.schema.json#/$defs/successDieFace"
+              },
+              "scene": {
+                "type": "string",
+                "minLength": 1
+              },
+              "prompt": {
+                "type": "string",
+                "minLength": 1
+              },
+              "skill": {
+                "oneOf": [
+                  {
+                    "$ref": "common.schema.json#/$defs/skill"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "significant_encounter": {
+                "const": true
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "check_consequence_text": {
+          "type": "string"
+        },
+        "check_consequence": {
+          "$ref": "common.schema.json#/$defs/consequence"
+        },
+        "fatigue_gain": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

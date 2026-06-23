@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.solo.scene_details.bad_choice",
+  "type": "scene_detail_table",
+  "title": "Детали сцены: Плохой выбор",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "pages": [
+      20,
+      27
+    ]
+  },
+  "verified": true,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "Приложение идентично телу книги.",
+  "payload": {
+    "die": "success",
+    "scene_type": "bad_choice",
+    "rows": [
+      {
+        "face": 1,
+        "scene": "Беда с припасами",
+        "prompt": "ОХОТА, чтобы пополнить припасы",
+        "skill": "hunting"
+      },
+      {
+        "face": 2,
+        "scene": "Потерянный путь",
+        "prompt": "ИССЛЕДОВАНИЕ, чтобы вернуться по следам",
+        "skill": "exploration"
+      },
+      {
+        "face": 3,
+        "scene": "Пропущенная угроза",
+        "prompt": "БДИТЕЛЬНОСТЬ, чтобы безопасно сбежать",
+        "skill": "awareness"
+      },
+      {
+        "face": 4,
+        "scene": "Упущенная добыча",
+        "prompt": "ОХОТА, чтобы пойти по следам",
+        "skill": "hunting"
+      },
+      {
+        "face": 5,
+        "scene": "Дезориентирующее окружение",
+        "prompt": "ИССЛЕДОВАНИЕ, чтобы найти путь",
+        "skill": "exploration"
+      },
+      {
+        "face": 6,
+        "scene": "Навязчивые видения",
+        "prompt": "БДИТЕЛЬНОСТЬ, чтобы преодолеть тьму",
+        "skill": "awareness"
+      }
+    ],
+    "check_consequence_text": "При провале проверки герой получает 1 балл Тени (Страх).",
+    "check_consequence": {
+      "trigger": "on_failure",
+      "effects": [
+        {
+          "op": "shadow_points",
+          "value": 1,
+          "kind": "fear"
+        }
+      ]
+    },
+    "fatigue_gain": 2
+  },
+  "verification": {
+    "method": "auto-v1",
+    "adr": "ADR-001",
+    "date": "2026-06-11",
+    "gates": {
+      "text_fidelity": "independent_check.py: 215/215 на момент простановки",
+      "vision_sweep": "vision_sweep_report.json (прогон 11.06.2026, КРАСНЫЙ: 9 находок; все разрешены, разрешение подтверждено гейтом 3 по сканам)",
+      "lynn_review": "lynn-review PASS 11.06.2026 (свежая сессия, финальное состояние v4+KI-фиксы; KI-A/B/C разобраны)"
+    }
+  }
+}

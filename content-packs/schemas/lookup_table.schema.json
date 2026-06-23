@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/lookup_table.schema.json",
+  "allOf": [
+    {
+      "$ref": "common.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "lookup_table"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "kind",
+        "rows"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "milestones",
+            "risk_degrees",
+            "special_successes",
+            "shadow_recovery"
+          ]
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1
+        },
+        "constraint": {
+          "type": "string"
+        },
+        "default": {
+          "type": "string"
+        },
+        "oracle_rule": {
+          "type": "string"
+        },
+        "precedence": {
+          "type": "string"
+        },
+        "phase": {
+          "type": "string"
+        },
+        "spend_rule_text": {
+          "type": "string"
+        },
+        "engine_note": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

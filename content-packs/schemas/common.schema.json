@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/common.schema.json",
+  "title": "Common envelope and shared definitions for content-pack tables",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "type",
+    "title",
+    "source",
+    "verified",
+    "locale",
+    "terminology",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^kv\\.(solo|lifepaths|mechanics|adversaries)\\.[a-z0-9_.]+$"
+    },
+    "type": {
+      "enum": [
+        "oracle_yes_no",
+        "lore_table",
+        "feat_die_event_table",
+        "journey_scenes_table",
+        "scene_detail_table",
+        "patron_tasks_table",
+        "lookup_table",
+        "rule_parameters",
+        "lifepath_cultures",
+        "lifepath_backgrounds",
+        "lifepath_events",
+        "rule_card",
+        "adversary"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "book",
+        "edition",
+        "pages"
+      ],
+      "properties": {
+        "book": {
+          "enum": [
+            "igra_dlya_odnogo",
+            "zhizn_puti_geroev",
+            "kv_core"
+          ]
+        },
+        "edition": {
+          "type": "string"
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 242
+          },
+          "minItems": 1
+        },
+        "section": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "verified": {
+      "type": "boolean"
+    },
+    "locale": {
+      "const": "ru"
+    },
+    "terminology": {
+      "const": "pandora_box"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "featDieFace": {
+      "description": "Face of the Feat die. Numeric mapping per core rulebook («выполнение проверок»): eye = 11, gandalf_rune = 12 on a plain d12. Content files use literals only.",
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        {
+          "enum": [
+            "eye",
+            "gandalf_rune"
+          ]
+        }
+      ]
+    },
+    "featDieRange": {
+      "type": "object",
+      "required": [
+        "min",
+        "max"
+      ],
+      "properties": {
+        "min": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      },
+      "additionalProperties": false
+    },
+    "successDieFace": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 6
+    },
+    "skill": {
+      "description": "Skills referenced by solo journey tables",
+      "enum": [
+        "hunting",
+        "exploration",
+        "awareness"
+      ]
+    },
+    "effect": {
+      "type": "object",
+      "required": [
+        "op"
+      ],
+      "properties": {
+        "op": {
+          "enum": [
+            "eye_awareness_delta",
+            "shadow_points",
+            "fatigue_points",
+            "hope_points",
+            "wound",
+            "journey_days_delta",
+            "fatigue_waived",
+            "shadow_scar",
+            "previous_experience_delta",
+            "standard_of_living_delta",
+            "endurance_delta",
+            "parry_delta",
+            "hope_delta",
+            "fellowship_rating_delta",
+            "tn_delta",
+            "favoured_skill_add",
+            "favoured_skill_remove",
+            "treat_feat_roll"
+          ]
+        },
+        "value": {
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "fear",
+            "sorrow",
+            "dread"
+          ]
+        },
+        "attribute": {
+          "enum": [
+            "strength",
+            "heart",
+            "wits",
+            "choice"
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "choice": {
+          "const": true
+        },
+        "from": {
+          "type": "integer"
+        },
+        "as": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "consequence": {
+      "type": "object",
+      "required": [
+        "trigger",
+        "effects"
+      ],
+      "properties": {
+        "trigger": {
+          "enum": [
+            "on_failure",
+            "on_success",
+            "always"
+          ]
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/effect"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

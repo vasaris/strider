@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.solo.scene_details.mishap",
+  "type": "scene_detail_table",
+  "title": "Детали сцены: Неприятность",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "pages": [
+      20,
+      27
+    ]
+  },
+  "verified": true,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "Диффы с приложением: face 4 (prompt): тело «ОХОТА, чтобы выследить добычу» / приложение «ОХОТА, чтобы выследить»",
+  "payload": {
+    "die": "success",
+    "scene_type": "mishap",
+    "rows": [
+      {
+        "face": 1,
+        "scene": "Скудная дичь",
+        "prompt": "ОХОТА, чтобы добыть что получится",
+        "skill": "hunting"
+      },
+      {
+        "face": 2,
+        "scene": "Сбившийся с дороги",
+        "prompt": "ИССЛЕДОВАНИЕ, чтобы сориентироваться",
+        "skill": "exploration"
+      },
+      {
+        "face": 3,
+        "scene": "Препятствие на пути",
+        "prompt": "БДИТЕЛЬНОСТЬ, чтобы найти обход",
+        "skill": "awareness"
+      },
+      {
+        "face": 4,
+        "scene": "Неуловимая добыча",
+        "prompt": "ОХОТА, чтобы выследить добычу",
+        "skill": "hunting"
+      },
+      {
+        "face": 5,
+        "scene": "Сложный рельеф",
+        "prompt": "ИССЛЕДОВАНИЕ, чтобы преодолеть безопасно",
+        "skill": "exploration"
+      },
+      {
+        "face": 6,
+        "scene": "Блуждающие враги",
+        "prompt": "БДИТЕЛЬНОСТЬ, чтобы узнать об их приближении",
+        "skill": "awareness"
+      }
+    ],
+    "check_consequence_text": "При провале проверки длительность путешествия увеличивается на 1 день. Герой получает 1 дополнительный балл Изнурения.",
+    "check_consequence": {
+      "trigger": "on_failure",
+      "effects": [
+        {
+          "op": "journey_days_delta",
+          "value": 1
+        },
+        {
+          "op": "fatigue_points",
+          "value": 1
+        }
+      ]
+    },
+    "fatigue_gain": 2
+  },
+  "verification": {
+    "method": "auto-v1",
+    "adr": "ADR-001",
+    "date": "2026-06-11",
+    "gates": {
+      "text_fidelity": "independent_check.py: 215/215 на момент простановки",
+      "vision_sweep": "vision_sweep_report.json (прогон 11.06.2026, КРАСНЫЙ: 9 находок; все разрешены, разрешение подтверждено гейтом 3 по сканам)",
+      "lynn_review": "lynn-review PASS 11.06.2026 (свежая сессия, финальное состояние v4+KI-фиксы; KI-A/B/C разобраны)"
+    }
+  }
+}

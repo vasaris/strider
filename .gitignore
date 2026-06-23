@@ -1,0 +1,17 @@
+# ============================================================
+#  Бродяжник — PRIVATE repository ONLY (copyrighted ВК text inside)
+# ============================================================
+# Raw source books: large binaries, keep LOCAL.
+*.pdf
+
+# Rendered book pages (gate-2b evidence) — re-render from local PDF via MANIFEST.md
+content-packs/kv/gate2b_evidence/*.jpg
+
+# NOTE: source_kv/kv_core.txt and content-packs/**/*.json carry verbatim ВК
+# excerpts but are needed for reproducible builds, so they ARE committed.
+# ==> repo MUST stay private and never be shared.
+
+__pycache__/
+*.pyc
+.venv/
+brodyazhnik-*.zip

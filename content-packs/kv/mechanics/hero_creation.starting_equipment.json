@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.mechanics.hero_creation.starting_equipment",
+  "type": "rule_card",
+  "title": "Стартовое снаряжение",
+  "source": {
+    "book": "kv_core",
+    "edition": "02_03_2026_с_рубрикатором",
+    "section": "искатели приключений → СТАРТОВОЕ СНАРЯЖЕНИЕ",
+    "pages": [
+      47
+    ]
+  },
+  "verified": false,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "",
+  "payload": {
+    "subsystem": "hero_creation",
+    "title": "Стартовое снаряжение",
+    "source_text": [
+      "Каждый герой вступает на путь искателя приключений полностью экипированным нужными личными вещами и снаряжением, которые он считает подходящими для его путешествий. В игре такие вещи — это боевое снаряжение, походное снаряжение и полезные предметы."
+    ],
+    "summary": "Каждый герой начинает путь полностью экипированным. Стартовое снаряжение делится на три вида: боевое снаряжение, походное снаряжение и полезные предметы.",
+    "parameters": {
+      "categories": [
+        "combat_gear",
+        "travelling_gear",
+        "useful_items"
+      ]
+    },
+    "related": [
+      "kv.mechanics.hero_creation.combat_gear",
+      "kv.mechanics.hero_creation.travelling_gear",
+      "kv.mechanics.hero_creation.useful_items",
+      "kv.mechanics.hero_creation.ponies_and_horses"
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.mechanics.conditions.overview",
+  "type": "rule_card",
+  "title": "Состояния",
+  "source": {
+    "book": "kv_core",
+    "edition": "02_03_2026_с_рубрикатором",
+    "section": "Выполнение действий → Состояния",
+    "pages": [
+      22
+    ]
+  },
+  "verified": false,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "",
+  "payload": {
+    "subsystem": "conditions",
+    "title": "Состояния",
+    "source_text": [
+      "На проверки влияют три особых состояния, в которых могут быть герои игроков. Состояния отмечаются галочкой в соответствующем поле на бланке героя."
+    ],
+    "summary": "Три особых состояния влияют на проверки: усталость, ранение и несчастье; каждое отмечается галочкой в соответствующем поле бланка героя.",
+    "parameters": {
+      "states": [
+        "weary",
+        "wounded",
+        "miserable"
+      ]
+    },
+    "related": [
+      "kv.mechanics.conditions.weariness",
+      "kv.mechanics.conditions.wounded",
+      "kv.mechanics.conditions.miserable"
+    ]
+  }
+}
