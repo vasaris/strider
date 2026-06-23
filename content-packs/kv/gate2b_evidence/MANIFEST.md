@@ -21,7 +21,7 @@
 | spisok_nagrad (rewards) | 79–80 | все 6 эффектов (текст: 9, +2, −2, +1...) |
 | cultural stat blocks ×6 | 32–43 | characteristic_sets/derived/skills/weapon_skills — 246 чисел, 0 расхождений (reproducible: `tools/extraction/verify_gate2b_cultures.py`) |
 | cultural features ×6 (36 virtues) | 81–90 | имена+count 36 особенностей и 14 числовых магнитуд (endurance/hope max, parry +2, тяга 4, Травма 12…) + семантика построчно — 0 расхождений (reproducible: `tools/extraction/verify_gate2b_cultural_features.py`) |
+| starting gear ×3 | 49–51 | useful_items (кол-во по достатку 0/1/2/3/4/4, max 1), ponies_and_horses (тяга 0/0/1/2/3/3, кладь 10), starting_rewards_and_virtues (Доблесть/Мудрость старт 1, 6 наград + 6 особенностей) — 22 числа, 0 расхождений (reproducible: `tools/extraction/verify_gate2b_starting_gear.py`) |
 
 ## Осталось для 2b (фреш-сеанс, батчем)
-- ponies_and_horses (50–51), useful_items (49–50), starting_rewards_and_virtues (51)
 - скаляры: valour_wisdom (78), endurance_hope recovery (69–72), derived/fellowship/companion
