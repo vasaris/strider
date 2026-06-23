@@ -41,6 +41,7 @@ LAYERS = [
     ("build_mechanics_b7",    "mechanics"),
     ("build_mechanics_b8",    "mechanics"),
     ("build_mechanics_b9",    "mechanics"),
+    ("build_solo_overlay",    "mechanics"),
     ("build_solo_tables",     "tables/solo"),
     ("build_lifepath_tables", "lifepaths"),
 ]

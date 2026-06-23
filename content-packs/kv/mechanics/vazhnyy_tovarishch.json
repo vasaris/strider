@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.mechanics.solo.vazhnyy_tovarishch",
+  "type": "rule_card",
+  "title": "Важный товарищ",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "section": "ваш искатель приключений",
+    "pages": [
+      7
+    ]
+  },
+  "verified": false,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "",
+  "payload": {
+    "subsystem": "solo",
+    "title": "Важный товарищ",
+    "source_text": [
+      "При игре в одиночку ваш герой не состоит в отряде, поэтому у него нет Важного товарища, оттого эта часть создания героя пропускается."
+    ],
+    "summary": "Соло-правка: герой не состоит в отряде, Важного товарища нет, и этот шаг создания пропускается. Флаг important_companion=false — в kv.solo.hero_adjustments.",
+    "parameters": {
+      "params_ref": "kv.solo.hero_adjustments"
+    },
+    "related": []
+  }
+}

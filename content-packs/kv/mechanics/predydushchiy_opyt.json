@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.mechanics.solo.predydushchiy_opyt",
+  "type": "rule_card",
+  "title": "Предыдущий опыт",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "section": "ваш искатель приключений",
+    "pages": [
+      6
+    ]
+  },
+  "verified": false,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "",
+  "payload": {
+    "subsystem": "solo",
+    "title": "Предыдущий опыт",
+    "source_text": [
+      "При распределении баллов предыдущего опыта (книга основных правил, стр. 46) у вас будет 15 баллов вместо 10. Это отражает дополнительные особенности и опыт, приобретённые вашим героем во время его странствий по Средиземью в одиночку."
+    ],
+    "summary": "Соло-правка распределения предыдущего опыта (КВ стр. 46): 15 баллов вместо 10, отражая особенности и опыт одиночных странствий. Число канонизировано в kv.solo.hero_adjustments (previous_experience_points).",
+    "parameters": {
+      "params_ref": "kv.solo.hero_adjustments"
+    },
+    "related": []
+  }
+}

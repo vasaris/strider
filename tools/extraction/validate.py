@@ -154,7 +154,7 @@ def main() -> int:
         check(listed == havefile,
               f"culture cross-ref mismatch: listed {sorted(listed)} vs files {sorted(havefile)}")
 
-    expected_count = 173  # +3: B9 nezhit + orki + trolli (150-157)
+    expected_count = 190  # +17: B-ИдО.1 solo overlay (Игра для одного, folios 4-7, subsystem solo)
     check(len(docs) == expected_count, f"file count {len(docs)} != {expected_count}")
 
     if errors:
