@@ -272,6 +272,201 @@ CARDS = [
                  "(не Ненависть): убийство — возможный Проступок (см. format_opisaniya). «Запугать "
                  "врага»/Пронзающий → combat (B4); механика врага → adversaries.format_opisaniya.",
     },
+    {
+        "id": AD + "nezhit", "title": "Нежить",
+        "subsystem": "adversaries", "section": "Противники → НЕЖИТЬ", "pages": [150, 151],
+        "quotes": [("нежить Множество ужасов обитает",
+                    "Укус 3 (3/14, Укол), Когти 2 (3/14, Захват) СПОСОБНОСТИ ВРАГА: Боязнь огня. В начале "
+                    "каждого раунда, когда находится в ближнем бою с врагом, держащим факел или иной "
+                    "горящий предмет, теряет 1 балл Ненависти. Ненависть к солнечному свету. Теряет 1 "
+                    "балл Ненависти в начале каждого раунда, в котором находится под прямыми солнечными "
+                    "лучами.")],
+        "summary": "Владелец статблоков нежити. Вся нежить обладает общими способностями: Бездушие "
+                   "(«Запугать врага» не действует без волшебного успеха), Бессмертность (за 1 балл "
+                   "Ненависти отменяет ранение или полностью восстанавливает Выносливость при уроне до "
+                   "0; не действует против волшебного оружия, гибельного для нежити), Ужасное создание (в "
+                   "начале первого раунда герои в поле зрения получают 3 балла Тени (Страх)). Статблоки: "
+                   "Могильное умертвие (Ур.6, Выносл 24, Мощь 1, Ненависть 6, Парир —, Броня 3; Древний "
+                   "меч 3 (5/16, Укол), Ледяное касание 2 (6/12, Захват); Ненависть к солнечному свету, "
+                   "Обитатель тьмы, Ужасные заклинания); Свирепый призрак (Ур.4, Выносл 16, Мощь 1, "
+                   "Ненависть 4, Парир +1, Броня 2; Выщербленный клинок 3 (4/16), Безжалостное копьё 2 "
+                   "(4/14, Укол); Боязнь огня, Обитатель тьмы); Болотная тварь (Ур.3, Выносл 12, Мощь 1, "
+                   "Ненависть 3, Парир —, Броня 1; Укус 3 (3/14, Укол), Когти 2 (3/14, Захват); Боязнь "
+                   "огня, Ненависть к солнечному свету).",
+        "parameters": {
+            "general_abilities": ["Бездушие", "Бессмертность", "Ужасное создание"],
+            "abilities_glossary": {
+                "Бездушие": "«Запугать врага» does not affect it unless the performer gets a magic success",
+                "Бессмертность": "for 1 Hatred may cancel a wound; if damage would drop its Endurance to 0, for 1 Hatred it may fully restore its Endurance; does not work against magic weapons deadly to undead",
+                "Ужасное создание": "at the start of the first round, heroes in sight gain 3 Shadow (Fear); those who fail the Shadow check cannot spend Hope until the fight ends",
+                "Ненависть к солнечному свету": "loses 1 Hatred at the start of each round it is in direct sunlight",
+                "Обитатель тьмы": "while it is in darkness, all its attack checks are favoured",
+                "Ужасные заклинания": "for 1 Hatred, one hero gains 3 Shadow (Sorcery); if the target is ill-fated or fails the Shadow check, it falls unconscious (revived by a successful ВЫСТУПЛЕНИЕ check, else after 1 hour)",
+                "Боязнь огня": "loses 1 Hatred at the start of each round it is in melee with a foe holding a torch or burning item",
+            },
+            "enemies": {
+                "mogilnoe_umertvie": {"name_ru": "Могильное умертвие", "distinctive": ["Остроумие", "Мстительность"],
+                    "level": 6, "endurance": 24, "might": 1, "hatred": 6, "parry": None, "armour": 3,
+                    "weapons": [{"name": "Древний меч", "rating": 3, "damage": 5, "wound": 16, "special": ["Укол"]},
+                                {"name": "Ледяное касание", "rating": 2, "damage": 6, "wound": 12, "special": ["Захват"]}],
+                    "abilities": ["Ненависть к солнечному свету", "Обитатель тьмы", "Ужасные заклинания"]},
+                "svirepyy_prizrak": {"name_ru": "Свирепый призрак", "distinctive": ["Быстрота", "Подозрительность"],
+                    "level": 4, "endurance": 16, "might": 1, "hatred": 4, "parry": 1, "armour": 2,
+                    "weapons": [{"name": "Выщербленный клинок", "rating": 3, "damage": 4, "wound": 16, "special": []},
+                                {"name": "Безжалостное копьё", "rating": 2, "damage": 4, "wound": 14, "special": ["Укол"]}],
+                    "abilities": ["Боязнь огня", "Обитатель тьмы"]},
+                "bolotnaya_tvar": {"name_ru": "Болотная тварь", "distinctive": ["Свирепость", "Незаметность"],
+                    "level": 3, "endurance": 12, "might": 1, "hatred": 3, "parry": None, "armour": 1,
+                    "weapons": [{"name": "Укус", "rating": 3, "damage": 3, "wound": 14, "special": ["Укол"]},
+                                {"name": "Когти", "rating": 2, "damage": 3, "wound": 14, "special": ["Захват"]}],
+                    "abilities": ["Боязнь огня", "Ненависть к солнечному свету"]},
+            },
+        },
+        "related": [AD + "format_opisaniya", SHADOW_SRC, FEAT],
+        "notes": "Владелец статблоков нежити (ф.150-151). Vision-assisted: статблоки и способности "
+                 "сверены по скану; числа в текст-слое трассируются. Общие способности (Бездушие/"
+                 "Бессмертность/Ужасное создание) и пер-враг — в abilities_glossary. Страх/Колдовство → "
+                 "shadow.istochniki_teni (B6); «Запугать врага»/Пронзающий/гибельное оружие → combat (B4) "
+                 "и treasure.volshebnye_nagrady; яд (стр.134) → combat; механика врага → "
+                 "adversaries.format_opisaniya.",
+    },
+    {
+        "id": AD + "orki", "title": "Орки",
+        "subsystem": "adversaries", "section": "Противники → ОРКИ", "pages": [152, 154],
+        "quotes": [("орки Орки — злобная разумная раса",
+                    "Если кто-то успешно применил к орку-солдату боевую задачу «Запугать врага», "
+                    "орк-солдат теряет ещё и 1 балл Ненависти.")],
+        "summary": "Владелец статблоков орков. Некоторым оркам хранитель может добавить общую способность "
+                   "Вражда (с кем-то) (все броски атак против объекта вражды благополучные), и у всех "
+                   "орков есть Ненависть к солнечному свету (теряет 1 балл Ненависти в начале раунда под "
+                   "прямыми лучами). Великие орки: Великий орк-главарь (Ур.7, Выносл 48, Мощь 2, "
+                   "Ненависть 7, Парир +3, Броня 4; Тяжёлый ятаган 3 (5/18, Сокрушение щита), Копьё с "
+                   "широким наконечником 3 (5/16, Укол); Змеиная быстрота, Победный клич, Ужасающая сила); "
+                   "Великий орк-телохранитель (Ур.6, Выносл 24, Мощь 2, Ненависть 6, Парир +2, Броня 3; "
+                   "Орочий топор 3 (5/18, Сокрушение щита), Копьё с широким наконечником 3 (5/16, Укол); "
+                   "Невероятная стойкость). Орки Севера: Гоблин-лучник (Ур.2, Выносл 8, Мощь 1, Ненависть "
+                   "2, Парир —, Броня 1; Составной лук 3 (3/14, Укол), Зазубренный нож 2 (2/14); Орочий "
+                   "яд, Трус); Орк-вождь (Ур.5, Выносл 20, Мощь 1, Ненависть 5, Парир +3, Броня 3; Ятаган "
+                   "3 (3/16), Копьё 3 (3/14, Укол); Гигантский прыжок, Змеиная быстрота, Победный клич); "
+                   "Орк-страж (Ур.4, Выносл 16, Мощь 1, Ненависть 4, Парир +2, Броня 3; Ятаган 3 (3/16), "
+                   "Копьё 3 (3/14, Укол); без особых способностей); Орк-солдат (Ур.3, Выносл 12, Мощь 1, "
+                   "Ненависть 3, Парир +1, Броня 2; Ятаган 3 (3/16), Копьё 2 (3/14, Укол); Трус).",
+        "parameters": {
+            "general_abilities": ["Вражда", "Ненависть к солнечному свету"],
+            "abilities_glossary": {
+                "Вражда": "all attack checks against the enmity's object are favoured (keeper names the people, e.g. dwarves or hobbits)",
+                "Ненависть к солнечному свету": "loses 1 Hatred at the start of each round it is in direct sunlight",
+                "Змеиная быстрота": "if targeted by an attack, may spend 1 Hatred to make that attack check ill-fated",
+                "Победный клич": "for 1 Hatred, restores 1 Hatred to every other orc in the fight",
+                "Ужасающая сила": "on a Piercing blow in melee, may spend 1 Hatred to make the target's PROTECTION check ill-fated",
+                "Невероятная стойкость": "immune to unarmed attacks; damage that would drop its Endurance to 0 instead Pierces; if it survives, it restores half its maximum Endurance",
+                "Орочий яд": "if its attack wounds, the target is also poisoned (стр.134 on poison)",
+                "Трус": "if «Запугать врага» is successfully used on it, it loses 1 more Hatred",
+                "Гигантский прыжок": "for 1 Hatred, may attack a hero in any combat position, even ranged",
+            },
+            "enemies": {
+                "velikiy_ork_glavar": {"name_ru": "Великий орк-главарь", "distinctive": ["Остроумие", "Смелость"],
+                    "level": 7, "endurance": 48, "might": 2, "hatred": 7, "parry": 3, "armour": 4,
+                    "weapons": [{"name": "Тяжёлый ятаган", "rating": 3, "damage": 5, "wound": 18, "special": ["Сокрушение щита"]},
+                                {"name": "Копьё с широким наконечником", "rating": 3, "damage": 5, "wound": 16, "special": ["Укол"]}],
+                    "abilities": ["Змеиная быстрота", "Победный клич", "Ужасающая сила"]},
+                "velikiy_ork_telohranitel": {"name_ru": "Великий орк-телохранитель", "distinctive": ["Свирепость", "Подозрительность"],
+                    "level": 6, "endurance": 24, "might": 2, "hatred": 6, "parry": 2, "armour": 3,
+                    "weapons": [{"name": "Орочий топор", "rating": 3, "damage": 5, "wound": 18, "special": ["Сокрушение щита"]},
+                                {"name": "Копьё с широким наконечником", "rating": 3, "damage": 5, "wound": 16, "special": ["Укол"]}],
+                    "abilities": ["Невероятная стойкость"]},
+                "goblin_luchnik": {"name_ru": "Гоблин-лучник", "distinctive": ["Остроглазость", "Остроумие"],
+                    "level": 2, "endurance": 8, "might": 1, "hatred": 2, "parry": None, "armour": 1,
+                    "weapons": [{"name": "Составной лук", "rating": 3, "damage": 3, "wound": 14, "special": ["Укол"]},
+                                {"name": "Зазубренный нож", "rating": 2, "damage": 2, "wound": 14, "special": []}],
+                    "abilities": ["Орочий яд", "Трус"]},
+                "ork_vozhd": {"name_ru": "Орк-вождь", "distinctive": ["Жестокость", "Чёрствость"],
+                    "level": 5, "endurance": 20, "might": 1, "hatred": 5, "parry": 3, "armour": 3,
+                    "weapons": [{"name": "Ятаган", "rating": 3, "damage": 3, "wound": 16, "special": []},
+                                {"name": "Копьё", "rating": 3, "damage": 3, "wound": 14, "special": ["Укол"]}],
+                    "abilities": ["Гигантский прыжок", "Змеиная быстрота", "Победный клич"]},
+                "ork_strazh": {"name_ru": "Орк-страж", "distinctive": ["Внимательность", "Могучесть"],
+                    "level": 4, "endurance": 16, "might": 1, "hatred": 4, "parry": 2, "armour": 3,
+                    "weapons": [{"name": "Ятаган", "rating": 3, "damage": 3, "wound": 16, "special": []},
+                                {"name": "Копьё", "rating": 3, "damage": 3, "wound": 14, "special": ["Укол"]}],
+                    "abilities": []},
+                "ork_soldat": {"name_ru": "Орк-солдат", "distinctive": ["Мятежность", "Мстительность"],
+                    "level": 3, "endurance": 12, "might": 1, "hatred": 3, "parry": 1, "armour": 2,
+                    "weapons": [{"name": "Ятаган", "rating": 3, "damage": 3, "wound": 16, "special": []},
+                                {"name": "Копьё", "rating": 2, "damage": 3, "wound": 14, "special": ["Укол"]}],
+                    "abilities": ["Трус"]},
+            },
+        },
+        "related": [AD + "format_opisaniya", FEAT],
+        "notes": "Владелец статблоков орков (ф.152-154). Vision-assisted: 6 статблоков и способности "
+                 "сверены по скану; числа в текст-слое трассируются. Орк-страж — без особых способностей. "
+                 "Вражда/Пронзающий/«Запугать врага»/яд (стр.134) → combat (B4) и shadow; механика врага "
+                 "→ adversaries.format_opisaniya.",
+    },
+    {
+        "id": AD + "trolli", "title": "Тролли",
+        "subsystem": "adversaries", "section": "Противники → ТРОЛЛИ", "pages": [155, 157],
+        "quotes": [("тролли Великий Враг вывел троллей",
+                    "восстанавливает по 1 баллу Ненависти всем другим троллям в бою. Ужасающая сила. "
+                    "Нанеся Пронзающий удар при атаке в ближнем бою, может потратить 1 балл Ненависти, "
+                    "чтобы сделать бросок при проверке ЗАЩИТЫ цели злополучным.")],
+        "summary": "Владелец статблоков троллей. У всех троллей общие способности: Невероятная стойкость "
+                   "(невосприимчив к безоружным атакам; урон до 0 наносит Пронзающий удар, после чего "
+                   "тролль восстанавливает половину максимальной Выносливости) и Недалёкость (герой на "
+                   "передовой проверяет ЗАГАДКИ основным действием раунда: при успехе тролль теряет 1 "
+                   "балл Ненависти и ещё по 1 за каждый знак успеха). Пещерные тролли: Великий пещерный "
+                   "тролль (Ур.10, Выносл 80, Мощь 2, Ненависть 10, Парир —, Броня 3; Сокрушение 3 (6/12, "
+                   "Захват), Укус 2 (6/14, Укол); Толстая шкура, Удар страха); Пещерный тролль-скрытень "
+                   "(Ур.6, Выносл 50, Мощь 2, Ненависть 6, Парир —, Броня 3; Дубина 3 (6/16, Сокрушение "
+                   "щита), Укус 2 (6/14, Укол); Боязнь огня, Обитатель тьмы, Толстая шкура). Каменные "
+                   "тролли: Каменный тролль-грабитель (Ур.8, Выносл 60, Мощь 2, Ненависть 8, Парир —, "
+                   "Броня 3; Дубина 3 (6/16, Сокрушение щита), Сокрушение 2 (6/12, Захват); Вражда "
+                   "(гномы), Ужасающая сила); Каменный тролль-главарь (Ур.9, Выносл 70, Мощь 2, Ненависть "
+                   "9, Парир —, Броня 3; Дубина 3 (6/16, Сокрушение щита), Сокрушение 2 (6/12, Захват); "
+                   "Вражда (гномы), Победный клич, Ужасающая сила).",
+        "parameters": {
+            "general_abilities": ["Невероятная стойкость", "Недалёкость"],
+            "abilities_glossary": {
+                "Невероятная стойкость": "immune to unarmed attacks; damage that would drop its Endurance to 0 instead Pierces; if it survives, it restores half its maximum Endurance",
+                "Недалёкость": "a hero in the front may take a special combat task: roll ЗАГАДКИ as the round's main action; on a success the troll loses 1 Hatred, plus 1 more per success-sign rolled",
+                "Толстая шкура": "for 1 Hatred, may gain +2 dice on its PROTECTION check",
+                "Удар страха": "for 1 Hatred, all heroes in sight gain 2 Shadow (Fear); those who fail the Shadow check are frightened and cannot spend Hope until the fight ends",
+                "Боязнь огня": "loses 1 Hatred at the start of each round it is in melee with a foe holding a torch or burning item",
+                "Обитатель тьмы": "while it is in darkness, all its attack checks are favoured",
+                "Вражда": "in a fight against dwarves all its checks are favoured (keeper names the people)",
+                "Победный клич": "for 1 Hatred, restores 1 Hatred to every other troll in the fight",
+                "Ужасающая сила": "on a Piercing blow in melee, may spend 1 Hatred to make the target's PROTECTION check ill-fated",
+            },
+            "enemies": {
+                "velikiy_peshchernyy_troll": {"name_ru": "Великий пещерный тролль", "distinctive": ["Звероподобность", "Злобность"],
+                    "level": 10, "endurance": 80, "might": 2, "hatred": 10, "parry": None, "armour": 3,
+                    "weapons": [{"name": "Сокрушение", "rating": 3, "damage": 6, "wound": 12, "special": ["Захват"]},
+                                {"name": "Укус", "rating": 2, "damage": 6, "wound": 14, "special": ["Укол"]}],
+                    "abilities": ["Толстая шкура", "Удар страха"]},
+                "peshchernyy_troll_skryten": {"name_ru": "Пещерный тролль-скрытень", "distinctive": ["Незаметность", "Подозрительность"],
+                    "level": 6, "endurance": 50, "might": 2, "hatred": 6, "parry": None, "armour": 3,
+                    "weapons": [{"name": "Дубина", "rating": 3, "damage": 6, "wound": 16, "special": ["Сокрушение щита"]},
+                                {"name": "Укус", "rating": 2, "damage": 6, "wound": 14, "special": ["Укол"]}],
+                    "abilities": ["Боязнь огня", "Обитатель тьмы", "Толстая шкура"]},
+                "kamennyy_troll_grabitel": {"name_ru": "Каменный тролль-грабитель", "distinctive": ["Голод", "Раздражительность"],
+                    "level": 8, "endurance": 60, "might": 2, "hatred": 8, "parry": None, "armour": 3,
+                    "weapons": [{"name": "Дубина", "rating": 3, "damage": 6, "wound": 16, "special": ["Сокрушение щита"]},
+                                {"name": "Сокрушение", "rating": 2, "damage": 6, "wound": 12, "special": ["Захват"]}],
+                    "abilities": ["Вражда", "Ужасающая сила"]},
+                "kamennyy_troll_glavar": {"name_ru": "Каменный тролль-главарь", "distinctive": ["Жестокость", "Подозрительность"],
+                    "level": 9, "endurance": 70, "might": 2, "hatred": 9, "parry": None, "armour": 3,
+                    "weapons": [{"name": "Дубина", "rating": 3, "damage": 6, "wound": 16, "special": ["Сокрушение щита"]},
+                                {"name": "Сокрушение", "rating": 2, "damage": 6, "wound": 12, "special": ["Захват"]}],
+                    "abilities": ["Вражда", "Победный клич", "Ужасающая сила"]},
+            },
+        },
+        "related": [AD + "format_opisaniya", SHADOW_SRC, FEAT],
+        "notes": "Владелец статблоков троллей (ф.155-157). Vision-assisted: 4 статблока и способности "
+                 "сверены по скану; числа в текст-слое трассируются. Общие (Невероятная стойкость/"
+                 "Недалёкость) и пер-враг — в abilities_glossary. Страх → shadow.istochniki_teni (B6); "
+                 "Недалёкость использует ЗАГАДКИ → checks; Пронзающий/раунд → combat (B4); механика врага "
+                 "→ adversaries.format_opisaniya.",
+    },
 ]
 
 
