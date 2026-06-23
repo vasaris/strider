@@ -35,7 +35,7 @@ LAYERS = [
     ("build_mechanics_b21",   "mechanics"),
     ("build_mechanics_b22",   "mechanics"),
     ("build_mechanics_b3",    "mechanics"),
-    # ("build_mechanics_b4",  "mechanics"),   # <- add this line when B4 lands
+    ("build_mechanics_b4",    "mechanics"),
     ("build_solo_tables",     "tables/solo"),
     ("build_lifepath_tables", "lifepaths"),
 ]
