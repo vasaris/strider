@@ -22,6 +22,8 @@
 | cultural stat blocks ×6 | 32–43 | characteristic_sets/derived/skills/weapon_skills — 246 чисел, 0 расхождений (reproducible: `tools/extraction/verify_gate2b_cultures.py`) |
 | cultural features ×6 (36 virtues) | 81–90 | имена+count 36 особенностей и 14 числовых магнитуд (endurance/hope max, parry +2, тяга 4, Травма 12…) + семантика построчно — 0 расхождений (reproducible: `tools/extraction/verify_gate2b_cultural_features.py`) |
 | starting gear ×3 | 49–51 | useful_items (кол-во по достатку 0/1/2/3/4/4, max 1), ponies_and_horses (тяга 0/0/1/2/3/3, кладь 10), starting_rewards_and_virtues (Доблесть/Мудрость старт 1, 6 наград + 6 особенностей) — 22 числа, 0 расхождений (reproducible: `tools/extraction/verify_gate2b_starting_gear.py`) |
+| scalars (valour/wisdom, endurance/hope recovery, fellowship/companion) | 54–55, 69–72, 78 | формулы + редкие числа: при 0 выносл. +1 через час; короткий отдых ≥1ч = Сила (раненый 0); долгий = всё/Сила; усталость ≤ Нагрузка; несчастье Тень ≥ Надежда; Надежда: братство/Сердце/Йоль=всё, при 0 +1; Доблесть vs ЦЧ Сердца, Мудрость vs ЦЧ Разума; братство старт = число героев; Важный товарищ помощь 2к, цена Тени 1. derived-константы уже сверены покультурно. 0 расхождений (прозой — числовой объём слишком мал для код-верификатора) |
 
-## Осталось для 2b (фреш-сеанс, батчем)
-- скаляры: valour_wisdom (78), endurance_hope recovery (69–72), derived/fellowship/companion
+## Осталось для 2b
+**(пусто — все цели gate-2b сверены со сканами, 0 расхождений)**
+Дальше: gate-2a (семантика) + gate-3 (lynn-review) во ФРЕШ-сессиях по ADR-001 → затем `mark_verified.py` → выход из Stage 0.
