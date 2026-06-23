@@ -20,8 +20,8 @@
 | spisok_osobennostey (virtues) | 80 | все 6 эффектов (привязка+магнитуды) |
 | spisok_nagrad (rewards) | 79–80 | все 6 эффектов (текст: 9, +2, −2, +1...) |
 | cultural stat blocks ×6 | 32–43 | characteristic_sets/derived/skills/weapon_skills — 246 чисел, 0 расхождений (reproducible: `tools/extraction/verify_gate2b_cultures.py`) |
+| cultural features ×6 (36 virtues) | 81–90 | имена+count 36 особенностей и 14 числовых магнитуд (endurance/hope max, parry +2, тяга 4, Травма 12…) + семантика построчно — 0 расхождений (reproducible: `tools/extraction/verify_gate2b_cultural_features.py`) |
 
 ## Осталось для 2b (фреш-сеанс, батчем)
-- Культурные особенности ×6 = 36 эффектов (фолио 81–90)
 - ponies_and_horses (50–51), useful_items (49–50), starting_rewards_and_virtues (51)
 - скаляры: valour_wisdom (78), endurance_hope recovery (69–72), derived/fellowship/companion
