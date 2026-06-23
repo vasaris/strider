@@ -154,7 +154,7 @@ def main() -> int:
         check(listed == havefile,
               f"culture cross-ref mismatch: listed {sorted(listed)} vs files {sorted(havefile)}")
 
-    expected_count = 134  # +8: B4 (combat, pages 93-104)
+    expected_count = 150  # +16: B5 (pages 92-123)
     check(len(docs) == expected_count, f"file count {len(docs)} != {expected_count}")
 
     if errors:
