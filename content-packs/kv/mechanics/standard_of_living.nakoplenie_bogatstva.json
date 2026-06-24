@@ -11,7 +11,7 @@
       73
     ]
   },
-  "verified": false,
+  "verified": true,
   "locale": "ru",
   "terminology": "pandora_box",
   "notes": "Лестница 0/30/90/180/300+ — под gate 2b. Семантика «Бедный → Скромный» и «300+» сверяется по скану.",
@@ -37,5 +37,15 @@
       "kv.mechanics.standard_of_living.obraz_zhizni",
       "kv.mechanics.standard_of_living.opisaniya_obrazov_zhizni"
     ]
+  },
+  "verification": {
+    "method": "auto-v1",
+    "adr": "ADR-001",
+    "date": "2026-06-24",
+    "gates": {
+      "text_fidelity": "independent_check.py: зелёный на момент простановки (см. лог)",
+      "vision_sweep": "2a:GATE2A_KV_FINDINGS.md @4b616ac + F1/F2/F3/J5 @636171d, F4 @0becd6b; re-confirm GATE2A_KV_RECONFIRM.md @92c1016; 2b:gate2b_evidence/MANIFEST.md incl. training_cost(F4)",
+      "lynn_review": "gate-3 lynn-review PASS 2026-06-24: 6 gates green (validate 222 / independent_check 676-0 / check_param_numbers / determinism byte-identical / confirm_gate2a F1+F2+F3 / gate2b training_cost 0-mismatch); rune canon eye=11 gandalf=12 non-inverted; bare-znak=Eye consistent pack-wide; 342 edges 1-empty(checks.retry) 0-dangling reconciles to map-S6 (delta=F3 only); 6 hubs ok; J1 keep-split J2 defensible J3 hubs-ok J4 keep-for-stage0 J5 register-normalized J6 sound J7 accept; 3 INFO non-blocking (structural-num provenance / notes gloss / token naming)"
+    }
   }
 }
