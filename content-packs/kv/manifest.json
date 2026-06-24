@@ -1,0 +1,93 @@
+{
+  "content": [
+    {
+      "count": 189,
+      "dir": "mechanics/",
+      "types": [
+        "rule_card"
+      ]
+    },
+    {
+      "count": 25,
+      "dir": "tables/solo/",
+      "types": [
+        "feat_die_event_table",
+        "journey_scenes_table",
+        "lookup_table",
+        "lore_table",
+        "oracle_yes_no",
+        "patron_tasks_table",
+        "rule_parameters",
+        "scene_detail_table"
+      ]
+    },
+    {
+      "count": 8,
+      "dir": "lifepaths/",
+      "types": [
+        "lifepath_backgrounds",
+        "lifepath_cultures",
+        "lifepath_events"
+      ]
+    }
+  ],
+  "dependencies": {
+    "packs": []
+  },
+  "pack_id": "kv",
+  "pack_version": "0.1.0",
+  "schema_version": "1.0",
+  "schemas": {
+    "feat_die_event_table": "../schemas/feat_die_event_table.schema.json",
+    "journey_scenes_table": "../schemas/journey_scenes_table.schema.json",
+    "lifepath_backgrounds": "../schemas/lifepath_backgrounds.schema.json",
+    "lifepath_cultures": "../schemas/lifepath_cultures.schema.json",
+    "lifepath_events": "../schemas/lifepath_events.schema.json",
+    "lookup_table": "../schemas/lookup_table.schema.json",
+    "lore_table": "../schemas/lore_table.schema.json",
+    "oracle_yes_no": "../schemas/oracle_yes_no.schema.json",
+    "patron_tasks_table": "../schemas/patron_tasks_table.schema.json",
+    "rule_card": "../schemas/rule_card.schema.json",
+    "rule_parameters": "../schemas/rule_parameters.schema.json",
+    "scene_detail_table": "../schemas/scene_detail_table.schema.json"
+  },
+  "sources": {
+    "igra_dlya_odnogo": {
+      "pages": 32,
+      "title": "Игра для одного"
+    },
+    "kv_core": {
+      "pages": 242,
+      "title": "Кольцо Всевластья (книга правил)"
+    },
+    "zhizn_puti_geroev": {
+      "pages": 12,
+      "title": "Жизненные пути героев"
+    }
+  },
+  "system": {
+    "id": "tor2e",
+    "locale": "ru",
+    "terminology": "pandora_box",
+    "title": "Кольцо Всевластья"
+  },
+  "verified": {
+    "all_verified": true,
+    "by_dir": {
+      "lifepaths/": {
+        "total": 8,
+        "verified": 8
+      },
+      "mechanics/": {
+        "total": 189,
+        "verified": 189
+      },
+      "tables/solo/": {
+        "total": 25,
+        "verified": 25
+      }
+    },
+    "total": 222,
+    "verified": 222
+  }
+}

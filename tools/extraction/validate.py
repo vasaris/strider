@@ -157,6 +157,21 @@ def main() -> int:
     expected_count = 222  # +21: B-ИдО.3/.4 solo overlay Phase (folios 17-22, 30)
     check(len(docs) == expected_count, f"file count {len(docs)} != {expected_count}")
 
+    # --- content-pack manifest (arch §3 load interface) -------------------
+    # Optional-but-validated: absent before build_manifest.py lands (keeps the
+    # gate green on pre-manifest commits); shape-checked once present. Counts
+    # are guaranteed real by build_manifest.py --check (byte-identical rebuild),
+    # so validate only asserts the manifest conforms to its schema.
+    manifest_path = ROOT / "kv" / "manifest.json"
+    if manifest_path.exists():
+        man = json.loads(manifest_path.read_text(encoding="utf-8"))
+        mvalidator = validators.get("manifest")
+        if mvalidator is None:
+            errors.append("manifest.json present but manifest.schema.json missing")
+        else:
+            for e in mvalidator.iter_errors(man):
+                errors.append(f"manifest.json: {'/'.join(map(str, e.absolute_path))}: {e.message}")
+
     if errors:
         print(f"FAIL: {len(errors)} problem(s)")
         for e in errors:
