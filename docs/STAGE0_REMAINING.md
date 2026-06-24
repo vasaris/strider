@@ -4,7 +4,7 @@
 Критерий выхода Stage 0 (arch §9): «**Пак kv с `verified` контентом**» — практически: все 189 rule_cards `verified:true` (33 таблицы уже verified, Sessions 1/2).
 ADR-001: author ≠ reviewer. gate-2a и gate-3 — всегда **свежие НЕ-авторские** сессии; правки и подготовка карт — авторские.
 
-Состояние на HEAD `e1c1845`. Авто-гейты зелёные: `validate` 222 · `independent_check` 676/0 · `check_determinism` byte-identical · `check_param_numbers solo.` 49/0 · `confirm_s1_edges` PASS 14/14 + Q2 ok.
+**Stage 0 ЗАКРЫТ** (КВ-стэмп `eabd9d1`, манифест `5e46b16`). Все 222 файла `verified:true` (140 КВ-ядро + 49 ИдО + 25 solo + 8 lifepaths). Гейты зелёные: `validate` 222 (+ манифест по схеме) · `independent_check` 676/0 · `check_param_numbers` ok · `check_determinism` byte-identical · `build_manifest --check` 222/222 all_verified=true · `confirm_kv_gate2a_fixes` PASS · `verify_gate2b_training_cost` PASS.
 
 ---
 
@@ -18,46 +18,34 @@ ADR-001: author ≠ reviewer. gate-2a и gate-3 — всегда **свежие 
 
 ---
 
-## ТРЕК ИдО (49 карт) — один шаг до готовности
+## ТРЕК ИдО (49 карт) — ✅ ЗАКРЫТ
 
-- [ ] **Шаг 1 · gate-3 lynn-review ИдО** — свежая НЕ-авторская сессия. Бриф: `docs/HANDOFF_IDO_GATE3_LYNN.md`. REVIEW-ONLY, PASS/FAIL + file:line, `verified` не трогать. Выход: вердикт + находки.
-- [ ] **Шаг 2 · простановка ИдО** (только после PASS шага 1; автор/Иван):
-  ```
-  python3 tools/extraction/mark_verified.py --dir content-packs/kv/mechanics --id-prefix solo. \
-    --gate2 "<2a: GATE2A_IDO_FINDINGS.md @647fd6b + S1 backfill; 2b: verify_2b_ido 5/5>" \
-    --gate3 "<lynn-review PASS evidence>"
-  ```
-  `--id-prefix solo.` штампует **только 49** (КВ-140 пропускаются: `eligible 49 / skipped 140`). После этого ИдО полностью закрыт.
+- [x] **Шаг 1 · gate-3 lynn-review ИдО** — пройден (свежая НЕ-авторская сессия по `HANDOFF_IDO_GATE3_LYNN.md`).
+- [x] **Шаг 2 · простановка ИдО** — выполнено: 49 карт `verified:true` (подтверждено idempotent-skip при КВ-стэмпе: `already verified: 49`).
 
 ---
 
-## ТРЕК КВ-ядро (140 карт) — основная масса оставшегося Stage 0
+## ТРЕК КВ-ядро (140 карт) — ✅ ЗАКРЫТ
 
-- [ ] **Шаг 3 · автор: построить ревью-карту КВ** — свежая авторская сессия готовит `docs/HANDOFF_KV_REVIEW.md` (аналог `HANDOFF_IDO_REVIEW.md`: карта 140 карт по кластерам, judgment-calls, §-структура). **Сейчас её НЕТ** — обязательный задел (у ИдО такая карта была — это давало фору).
-- [ ] **Шаг 4 · gate-2a КВ** — свежая reviewer-сессия по карте шага 3 → SUPPORTED/PARTIAL/UNSUPPORTED + findings (как `GATE2A_IDO_FINDINGS.md`). *(gate-2b для КВ уже ✅.)*
-- [ ] **Шаг 5 · автор: применить 2a-правки КВ** (если есть) → регенерация → гейты зелёные.
-- [ ] **Шаг 6 · gate-3 lynn-review КВ** — свежая НЕ-авторская сессия.
-- [ ] **Шаг 7 · простановка КВ** (автор/Иван):
-  ```
-  python3 tools/extraction/mark_verified.py --dir content-packs/kv/mechanics \
-    --gate2 "<КВ 2a+2b evidence>" --gate3 "<КВ lynn PASS>"
-  ```
-  Без `--id-prefix` → флипнет оставшиеся 140; 49 ИдО уже `verified` → idempotent-skip их пропустит.
+- [x] **Шаг 3 · ревью-карта КВ** — `docs/HANDOFF_KV_REVIEW.md` (карта 140 карт по кластерам, §6 + Appendix A, judgment-calls).
+- [x] **Шаг 4 · gate-2a КВ** — `GATE2A_KV_FINDINGS.md` (+ re-confirm `GATE2A_KV_RECONFIRM.md`): F1–F4/J1–J5.
+- [x] **Шаг 5 · 2a-правки КВ** — применены (F1/F2/F3 @`636171d`, F4 @`0becd6b`), регенерация, гейты зелёные.
+- [x] **Шаг 6 · gate-3 lynn-review КВ** — PASS (свежая НЕ-авторская сессия, 2026-06-24): 6 гейтов зелёные, рун-канон не инвертирован, граф 342 рёбер сошёлся с картой, J1–J7 закрыты, 3 INFO non-blocking.
+- [x] **Шаг 7 · простановка КВ** — `eabd9d1`: `verified flipped: 140, already verified: 49`. Все 189 карт `verified`.
 
 ---
 
-## Полнота пака против arch pack-layout (после верификации всех 189) — нужны решения по скоупу
+## Полнота пака против arch pack-layout — ✅ решено
 
-- [ ] **Шаг 8 · `manifest.json`** — построить (система, версия, зависимости, verified-статус). Интерфейс загрузки для движка; нужен к Stage 1. (Естественный артефакт на стыке Stage 0 → 1.)
-- [ ] **Шаг 9 · РЕШЕНИЕ: `lore/` + `tone.md`** — явно решить Stage 0 vs Stage 2.
-  - `lore/` — RAG-чанки (Эриадор, регионы, покровители), arch §3.2.
-  - `tone.md` — тоновый контракт (регистр, стоп-лист пака, голоса культур).
-  - Функционально оба нужны Stage 2 (нарратив/RAG); в roadmap-выходе Stage 0 явно не перечислены, но в pack-layout присутствуют. → решение за Иваном.
-- [ ] (мелочь, не блокер) adversaries живут как 7 карт в `mechanics/`, а не отдельным `adversaries/` — оставить так или вынести.
+- [x] **Шаг 8 · `manifest.json`** — построен (`5e46b16`). Деривируемый интерфейс загрузки: `system`/`pack_version`/`sources`/`schemas`/`content`/`dependencies`/`verified`. Сборка `build_manifest.py` (детерминирована; `--check` = байт-идентичная пересборка-гейт); `validate.py` валидирует форму по `manifest.schema.json`. 222 файла, all_verified=true.
+- [x] **Шаг 9 · РЕШЕНИЕ: `lore/` + `tone.md`** → **отложены в Stage 2** (см. `ADR-003-lore-tone-stage2.md`). Оба — нарративный/RAG-слой, потребитель Stage 2; под verified-дисциплину сейчас наполнить нечем без сочинения мимо гейтов. Манифест расширяется бампом без поломки интерфейса. Долг вынесен в Stage 2 явным пунктом.
+- [x] (мелочь) adversaries — **оставлены** как 7 `rule_card` в `mechanics/` (gate-3 J4); вынос в отдельный `adversaries/` = рефактор Stage 1, не Stage 0.
 
 ---
 
-## Выход
-После **шага 7** (все 189 карт verified) + шага 8, и по решению шага 9 — **Stage 0 закрыт**, переход к Stage 1 (движок; критерий — CLI-прохождение путешествия без LLM).
-
-Порядок (рекомендация): добить ИдО (шаги 1–2) → КВ-ядро (3–7) → `manifest.json` (8) → решить lore/tone (9). Треки ИдО и КВ независимы и в принципе параллелятся в разных чатах.
+## Выход — ✅ ДОСТИГНУТ
+Шаги 7 (189 verified) + 8 (manifest) выполнены, шаг 9 решён (ADR-003). **Stage 0 закрыт.**
+Переход к **Stage 1** (движок; критерий выхода — CLI-прохождение путешествия без LLM):
+TypeScript strict, чистые функции `(state, action, rng) → (result, statePatch)`,
+юнит-тесты на сидированном RNG (распределения таблиц, формулы ЦЧ, рост Ока),
+загрузка пака через `manifest.json`, отказ грузить неверифицированное в проде.
