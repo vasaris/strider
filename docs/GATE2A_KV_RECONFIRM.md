@@ -65,7 +65,7 @@ confirm-скрипт **неваккумный** (проверено чтение
 - F4-таблица **согласована** со scan-evidence (MANIFEST ф.119) и verifier; C1 верно помечена scan-only.
 - Content-фиделити КВ-ядра: **140/140 SUPPORTED · 0 PARTIAL · 0 UNSUPPORTED** на этом HEAD.
 
-**Передача:** → **gate-3 (lynn-review)**, ещё одна свежая НЕ-авторская сессия (`docs/lynn_review_brief_stage0_session*.md`) → затем `mark_verified.py --id-prefix kv.` → **выход Stage 0**. `verified` НЕ трогать до gate-3.
+**Передача:** → **gate-3 (lynn-review)**, ещё одна свежая НЕ-авторская сессия по `docs/HANDOFF_KV_GATE3_LYNN.md` → затем `mark_verified.py` (140 КВ; **без** `--id-prefix` — 49 ИдО уже `verified` → idempotent-skip) → **выход Stage 0**. *(Эрратум к первой редакции: `--id-prefix kv.` ошибочен — скрипт строит префикс `"kv.mechanics."+<arg>`, так что `kv.` резолвится в `kv.mechanics.kv.` = 0 eligible.)* `verified` НЕ трогать до gate-3.
 
 ---
 
