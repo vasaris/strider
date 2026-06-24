@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.mechanics.solo.raschet_celevogo_chisla",
+  "type": "rule_card",
+  "title": "Расчёт целевого числа",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "section": "система",
+    "pages": [
+      10
+    ]
+  },
+  "verified": false,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "",
+  "payload": {
+    "subsystem": "solo",
+    "title": "Расчёт целевого числа",
+    "source_text": [
+      "Используя альтернативный метод (книга основных правил, стр. 18), игроку-одиночке следует рассчитывать целевое число (ЦЧ), вычитая рейтинг характеристики своего героя из 18, а не из 20. Так герой игрока будет более умелым и самодостаточным при столкновении с опасностями Средиземья в одиночку."
+    ],
+    "summary": "Соло-правка ЦЧ (альтернативный метод, КВ стр. 18): целевое число = 18 − рейтинг характеристики (а не из 20), делая героя более умелым и самодостаточным. Число — в kv.solo.hero_adjustments (target_number_base).",
+    "parameters": {
+      "params_ref": "kv.solo.hero_adjustments"
+    },
+    "related": []
+  }
+}

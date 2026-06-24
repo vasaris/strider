@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.mechanics.solo.porog_presledovaniya",
+  "type": "rule_card",
+  "title": "Порог преследования",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "section": "система",
+    "pages": [
+      15
+    ]
+  },
+  "verified": false,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "",
+  "payload": {
+    "subsystem": "solo",
+    "title": "Порог преследования",
+    "source_text": [
+      "И для героя-одиночки, и для отряда действуют одинаковые правила Порога преследования (книга основных правил, стр. 172). Используйте таблицу регионов и таблицу модификаторов преследования, чтобы определить Порог преследования."
+    ],
+    "summary": "Порог преследования у соло-героя и отряда одинаков (КВ стр. 172); определяется по таблицам регионов и модификаторов преследования. Значения (18/16/14 и модификаторы) — в kv.solo.eye_of_mordor (pursuit_thresholds / pursuit_modifiers).",
+    "parameters": {
+      "params_ref": "kv.solo.eye_of_mordor"
+    },
+    "related": []
+  }
+}

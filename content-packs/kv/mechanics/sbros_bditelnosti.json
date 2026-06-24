@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.mechanics.solo.sbros_bditelnosti",
+  "type": "rule_card",
+  "title": "Сброс рейтинга Бдительности Ока",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "section": "система",
+    "pages": [
+      15
+    ]
+  },
+  "verified": false,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "",
+  "payload": {
+    "subsystem": "solo",
+    "title": "Сброс рейтинга Бдительности Ока",
+    "source_text": [
+      "Рейтинг Бдительности Ока не увеличивается во время Фазы братства. В начале следующей Фазы приключений сбросьте рейтинг до начального значения."
+    ],
+    "summary": "Рейтинг не растёт в Фазе братства и сбрасывается к начальному значению в начале следующей Фазы приключений. Закреплено в kv.solo.eye_of_mordor (fellowship_phase).",
+    "parameters": {
+      "params_ref": "kv.solo.eye_of_mordor"
+    },
+    "related": []
+  }
+}
