@@ -1,12 +1,16 @@
 """mark_verified.py — flips verified:true per ADR-001 (auto-verify v1).
 
 Usage:
-  python3 mark_verified.py --dir <content dir> --gate2 "<evidence>" --gate3 "<evidence>"
+  python3 mark_verified.py --dir <content dir> --gate2 "<evidence>" --gate3 "<evidence>" [--id-prefix <p>]
 
 Refuses to run unless gate 1 passes RIGHT NOW (validate + independent_check
 re-executed in-process). Gates 2 and 3 are human-supplied evidence strings
 stamped into each file's verification block. Idempotent: already-verified
 files are skipped, so per-session runs never restamp older packs.
+
+--id-prefix narrows scope to ids starting with "kv.mechanics.<id-prefix>"; e.g.
+"--id-prefix solo." stamps only the 49 ИдО overlay cards and skips the 140 КВ
+core cards (which await their own gate 2a/2b/3). Unset => every file in --dir.
 """
 from __future__ import annotations
 
@@ -33,6 +37,9 @@ def main() -> None:
     ap.add_argument("--dir", required=True, help="content dir with *.json to flip")
     ap.add_argument("--gate2", required=True, help="vision-sweep evidence")
     ap.add_argument("--gate3", required=True, help="lynn-review evidence")
+    ap.add_argument("--id-prefix", default=None,
+                    help="if set, only stamp files whose id startswith 'kv.mechanics.<id-prefix>' "
+                         "(e.g. 'solo.' => the 49 ИдО cards; КВ core skipped)")
     args = ap.parse_args()
     tables = Path(args.dir)
     if not tables.is_dir():
@@ -51,17 +58,32 @@ def main() -> None:
             "lynn_review": args.gate3,
         },
     }
-    flipped = skipped = 0
-    for p in sorted(tables.glob("*.json")):
-        doc = json.loads(p.read_text(encoding="utf-8"))
+    prefix = None if args.id_prefix is None else "kv.mechanics." + args.id_prefix
+
+    # Classify by id-prefix eligibility BEFORE stamping (read each file once, reuse).
+    docs = [(p, json.loads(p.read_text(encoding="utf-8"))) for p in sorted(tables.glob("*.json"))]
+
+    def eligible(doc: dict) -> bool:
+        return prefix is None or doc.get("id", "").startswith(prefix)
+
+    n_eligible = sum(1 for _, d in docs if eligible(d))
+    n_skipped_prefix = len(docs) - n_eligible
+    label = "(no id-prefix; all files)" if prefix is None else f"(id-prefix {prefix!r})"
+    print(f"id-prefix eligibility {label}: eligible {n_eligible}, skipped {n_skipped_prefix}")
+
+    flipped = already = 0
+    for p, doc in docs:
+        if not eligible(doc):
+            continue  # not in scope of --id-prefix; never touched
         if doc.get("verified") is True:
-            skipped += 1
+            already += 1
             continue
         doc["verified"] = True
         doc["verification"] = stamp
         p.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         flipped += 1
-    print(f"verified flipped: {flipped}, already verified: {skipped}")
+    print(f"verified flipped: {flipped}, already verified: {already}, "
+          f"skipped (id-prefix): {n_skipped_prefix}")
 
 
 if __name__ == "__main__":
