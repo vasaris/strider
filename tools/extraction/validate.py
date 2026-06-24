@@ -154,7 +154,7 @@ def main() -> int:
         check(listed == havefile,
               f"culture cross-ref mismatch: listed {sorted(listed)} vs files {sorted(havefile)}")
 
-    expected_count = 201  # +11: B-ИдО.2 solo overlay Система (folios 10-11, 15-16)
+    expected_count = 222  # +21: B-ИдО.3/.4 solo overlay Phase (folios 17-22, 30)
     check(len(docs) == expected_count, f"file count {len(docs)} != {expected_count}")
 
     if errors:

@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.mechanics.solo.roli_v_puteshestvii",
+  "type": "rule_card",
+  "title": "Роли в путешествии",
+  "source": {
+    "book": "igra_dlya_odnogo",
+    "edition": "на_рассылку_03_04_2026",
+    "section": "путешествия",
+    "pages": [
+      18
+    ]
+  },
+  "verified": false,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "",
+  "payload": {
+    "subsystem": "solo",
+    "title": "Роли в путешествии",
+    "source_text": [
+      "В «Игре для одного» нет ролей в путешествии. Взамен ваш герой должен сам заботиться обо всём в пути; проверки сцен путешествия проводятся (см. ниже), но зависят напрямую от навыков, а не от ролей."
+    ],
+    "summary": "В соло-путешествии ролей нет: герой сам отвечает за всё, проверки сцен зависят напрямую от навыков, а не от назначенных ролей.",
+    "parameters": {},
+    "related": [
+      "kv.mechanics.journey.puteshestvuyuschiy_otryad"
+    ]
+  }
+}
