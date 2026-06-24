@@ -55,7 +55,7 @@ CARDS = [
                     "правилами помощи («Помощь», стр. 20).")],
         "summary": "Кости бросает игрок действующего героя; при реакции на события хранителя проверку выполняет один игрок за лучше всего подходящего героя, кроме случаев, касающихся всего отряда.",
         "parameters": {},
-        "related": [],  # kv.mechanics.checks.help добавится при полном прогоне 3a
+        "related": ["kv.mechanics.checks.assistance"],
     },
     {
         "id": "kv.mechanics.checks.which_ability",
@@ -65,7 +65,8 @@ CARDS = [
                     "чтобы не поддаться Страху, Колдовству и Жадности.")],
         "summary": "Три типа проверок: навыка (18 навыков бланка), боевая (Боевые умения: атака и ЗАЩИТА), Тени (ДОБЛЕСТЬ и МУДРОСТЬ против Страха, Колдовства, Жадности).",
         "parameters": {"check_types": ["skill", "combat", "shadow"]},
-        "related": [],
+        "related": ["kv.mechanics.traits.navyki", "kv.mechanics.traits.boevye_umeniya",
+                    "kv.mechanics.valour_wisdom.doblest", "kv.mechanics.valour_wisdom.mudrost"],
     },
     {
         "id": "kv.mechanics.checks.procedure",

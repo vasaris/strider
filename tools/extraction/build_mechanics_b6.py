@@ -103,7 +103,7 @@ CARDS = [
             "shadow_check": {"resisted_with": ["valour", "wisdom"], "which": "depends_on_cause",
                              "on_success": "reduce gained shadow by one, plus one per success sign"},
             "miserable_when": "shadow >= current_hope",
-            "miserable_effect": "success_sign_on_feat_die_counts_as_failure",
+            "miserable_effect": "eye_on_feat_die = auto_failure",
             "overwhelmed_when": "shadow >= max_hope",
             "overwhelmed_effect": "all_rolls_ill_fated",
             "overwhelmed_escape": "bout_of_madness",

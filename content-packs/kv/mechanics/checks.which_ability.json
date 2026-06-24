@@ -29,6 +29,11 @@
         "shadow"
       ]
     },
-    "related": []
+    "related": [
+      "kv.mechanics.traits.navyki",
+      "kv.mechanics.traits.boevye_umeniya",
+      "kv.mechanics.valour_wisdom.doblest",
+      "kv.mechanics.valour_wisdom.mudrost"
+    ]
   }
 }
