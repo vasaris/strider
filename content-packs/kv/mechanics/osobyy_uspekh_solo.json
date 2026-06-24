@@ -27,6 +27,8 @@
         "kv.solo.special_successes"
       ]
     },
-    "related": []
+    "related": [
+      "kv.mechanics.checks.special_successes"
+    ]
   }
 }

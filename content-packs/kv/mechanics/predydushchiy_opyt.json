@@ -25,6 +25,8 @@
     "parameters": {
       "params_ref": "kv.solo.hero_adjustments"
     },
-    "related": []
+    "related": [
+      "kv.mechanics.hero_creation.previous_experience"
+    ]
   }
 }

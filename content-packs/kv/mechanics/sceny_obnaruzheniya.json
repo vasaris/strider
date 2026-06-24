@@ -28,6 +28,8 @@
         "kv.solo.detection_scenes"
       ]
     },
-    "related": []
+    "related": [
+      "kv.mechanics.eye.presledovanie"
+    ]
   }
 }

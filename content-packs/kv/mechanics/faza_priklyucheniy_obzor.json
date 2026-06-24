@@ -14,7 +14,7 @@
   "verified": false,
   "locale": "ru",
   "terminology": "pandora_box",
-  "notes": "Forward-ref: «манёвренная позиция» (стр. 17) — карта блока B-ИдО.3, ещё не создана; её ключ появится там.",
+  "notes": "Развёрнуто в B-ИдО.3: «манёвренная позиция» (стр. 17) — kv.mechanics.solo.manevrennaya_poziciya.",
   "payload": {
     "subsystem": "solo",
     "title": "Фаза приключений (обзор)",

@@ -25,6 +25,8 @@
     "parameters": {
       "params_ref": "kv.solo.eye_of_mordor"
     },
-    "related": []
+    "related": [
+      "kv.mechanics.eye.oko_mordora"
+    ]
   }
 }

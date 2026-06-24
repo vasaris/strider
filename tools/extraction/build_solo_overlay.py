@@ -190,8 +190,8 @@ CARDS = [
         "герой реагирует и проверяет навыки сам; расширенная таблица сцен путешествия; "
         "новая боевая манёвренная позиция. Развёрнутые правила — стр. 17/19.",
         {"oracle_refs": ["kv.solo.journey_scenes"]},
-        notes="Forward-ref: «манёвренная позиция» (стр. 17) — карта блока B-ИдО.3, "
-              "ещё не создана; её ключ появится там.",
+        notes="Развёрнуто в B-ИдО.3: «манёвренная позиция» (стр. 17) — "
+              "kv.mechanics.solo.manevrennaya_poziciya.",
     ),
     envelope(
         "faza_bratstva_obzor", "Фаза братства (обзор)", SEC_B, [5],
@@ -201,8 +201,9 @@ CARDS = [
         "силы и занимается личными делами — лечит шрамы, собирает слухи, беседует с "
         "покровителем. Подробности — стр. 22.",
         {},
-        notes="Forward-ref: «духовное восстановление героев-одиночек» (стр. 22) — "
-              "карта блока B-ИдО.3, ещё не создана.",
+        notes="Развёрнуто в B-ИдО.3: «духовное восстановление героев-одиночек» "
+              "(стр. 22) — kv.mechanics.solo.duhovnoe_vosstanovlenie, "
+              "kv.mechanics.solo.faza_bratstva_solo.",
     ),
     envelope(
         "sovmestnaya_igra", "Совместная игра", SEC_B, [5],
@@ -232,6 +233,7 @@ CARDS = [
         "отражая особенности и опыт одиночных странствий. Число канонизировано в "
         "kv.solo.hero_adjustments (previous_experience_points).",
         {"params_ref": HA},
+        related=["kv.mechanics.hero_creation.previous_experience"],
     ),
     envelope(
         "bezopasnoe_mesto", "Безопасное место", SEC_C, [6],
@@ -251,6 +253,7 @@ CARDS = [
         "землями — его надежду вне власти Тени. Число — в kv.solo.hero_adjustments "
         "(fellowship_rating_base).",
         {"params_ref": HA},
+        related=["kv.mechanics.hero_creation.fellowship_rating"],
     ),
     envelope(
         "vazhnyy_tovarishch", "Важный товарищ", SEC_C, [7],
@@ -260,6 +263,7 @@ CARDS = [
         "создания пропускается. Флаг important_companion=false — в "
         "kv.solo.hero_adjustments.",
         {"params_ref": HA},
+        related=["kv.mechanics.hero_creation.important_companion"],
     ),
     envelope(
         "osobennosti_solo", "Особенности (соло)", SEC_C, [7],
@@ -271,6 +275,7 @@ CARDS = [
         "на характер героя. Исчерпывающего списка «бесполезных» книга не даёт — это "
         "рантайм-суждение по тексту самих Особенностей.",
         {},
+        related=["kv.mechanics.rewards_virtues.osobennosti"],
     ),
     envelope(
         "kachestvo_strannik", "Новое отличительное качество: Странник", SEC_C, [7],
@@ -280,6 +285,7 @@ CARDS = [
         "проверках навыков в путешествии герой считается вдохновлённым. Структурно — "
         "extra_distinctive_quality в kv.solo.hero_adjustments.",
         {"params_ref": HA},
+        related=["kv.mechanics.traits.otlichitelnye_kachestva"],
     ),
     envelope(
         "pokrovitel", "Ваш покровитель", SEC_C, [7],
@@ -315,6 +321,7 @@ CARDS = [
         "может повлиять на сюжет; проверки дают равные шансы и на провал, и на триумф "
         "(КВ «Когда требуется проверка», стр. 16).",
         {},
+        related=["kv.mechanics.checks.when_required"],
     ),
     envelope(
         "raschet_celevogo_chisla", "Расчёт целевого числа", SEC_D, [10],
@@ -333,6 +340,7 @@ CARDS = [
         "таблицы удачи; знак при провале — подсказка из таблицы неудачи; результаты можно "
         "и пропустить, оценив исход по ситуации.",
         {"oracle_refs": ["kv.solo.luck", "kv.solo.misfortune"]},
+        related=["kv.mechanics.checks.feat_die_values"],
     ),
     envelope(
         "osobyy_uspekh_solo", "Особый успех в одиночной игре", SEC_D, [11],
@@ -343,6 +351,7 @@ CARDS = [
         "1 за знак), кроме боевого снаряжения и Культурных особенностей, у которых свои "
         "эффекты за знак.",
         {"oracle_refs": ["kv.solo.special_successes"]},
+        related=["kv.mechanics.checks.special_successes"],
     ),
     envelope(
         "primenenie_stepeney_riska", "Применение степеней риска", SEC_D, [11],
@@ -362,6 +371,7 @@ CARDS = [
         "стр. 169) для отслеживания заметности героя Врагу; в одиночной игре они "
         "подчёркивают постоянную угрозу Тени. Структура — в kv.solo.eye_of_mordor.",
         {"params_ref": EM},
+        related=["kv.mechanics.eye.oko_mordora"],
     ),
     envelope(
         "nachalnyy_reyting_bditelnosti", "Начальный рейтинг Бдительности Ока", SEC_D, [15],
@@ -371,6 +381,7 @@ CARDS = [
         "культуру (гном / эльф или дунэдайн / высший эльф) и каждое Знаменитое оружие или "
         "броню. Значения — в kv.solo.eye_of_mordor (initial_rating).",
         {"params_ref": EM},
+        related=["kv.mechanics.eye.bditelnost_oka"],
     ),
     envelope(
         "rost_bditelnosti", "Рост Бдительности Ока", SEC_D, [15],
@@ -381,6 +392,7 @@ CARDS = [
         "таблице неудачи добавляет +2 поверх исходного. Структура — в kv.solo.eye_of_mordor "
         "(growth_triggers).",
         {"params_ref": EM, "oracle_refs": ["kv.solo.misfortune"]},
+        related=["kv.mechanics.eye.bditelnost_oka"],
     ),
     envelope(
         "sbros_bditelnosti", "Сброс рейтинга Бдительности Ока", SEC_D, [15],
@@ -389,6 +401,7 @@ CARDS = [
         "Рейтинг не растёт в Фазе братства и сбрасывается к начальному значению в начале "
         "следующей Фазы приключений. Закреплено в kv.solo.eye_of_mordor (fellowship_phase).",
         {"params_ref": EM},
+        related=["kv.mechanics.eye.bditelnost_oka"],
     ),
     envelope(
         "porog_presledovaniya", "Порог преследования", SEC_D, [15],
@@ -398,6 +411,7 @@ CARDS = [
         "таблицам регионов и модификаторов преследования. Значения (18/16/14 и "
         "модификаторы) — в kv.solo.eye_of_mordor (pursuit_thresholds / pursuit_modifiers).",
         {"params_ref": EM},
+        related=["kv.mechanics.eye.presledovanie"],
     ),
     envelope(
         "sceny_obnaruzheniya", "Сцены обнаружения", SEC_D, [16],
@@ -407,6 +421,7 @@ CARDS = [
         "бросок по таблице сцен обнаружения (или придуманная угроза); скрытые сцены "
         "записываются на будущее; после завершения рейтинг сбрасывается к начальному.",
         {"params_ref": EM, "oracle_refs": ["kv.solo.detection_scenes"]},
+        related=["kv.mechanics.eye.presledovanie"],
     ),
     # ---- B-ИдО.3: «Сражение» (folio 17) ------------------------------------
     # Solo combat overlay; related-edges point at the КВ core combat cards modified.
@@ -563,7 +578,7 @@ CARDS = [
         "значимым для сюжета; при сомнении — «принцип крутизны»; таблицы ответов и "
         "преданий помогают.",
         {"oracle_refs": ["kv.solo.answers", "kv.solo.lore"]},
-        related=["kv.mechanics.combat.boy"],
+        related=[],
     ),
     envelope(
         "sceny_puteshestviya_solo", "Сцены путешествия в одиночку", SEC_PUT, [19, 22],

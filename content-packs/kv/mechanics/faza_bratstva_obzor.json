@@ -14,7 +14,7 @@
   "verified": false,
   "locale": "ru",
   "terminology": "pandora_box",
-  "notes": "Forward-ref: «духовное восстановление героев-одиночек» (стр. 22) — карта блока B-ИдО.3, ещё не создана.",
+  "notes": "Развёрнуто в B-ИдО.3: «духовное восстановление героев-одиночек» (стр. 22) — kv.mechanics.solo.duhovnoe_vosstanovlenie, kv.mechanics.solo.faza_bratstva_solo.",
   "payload": {
     "subsystem": "solo",
     "title": "Фаза братства (обзор)",
