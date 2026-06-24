@@ -81,7 +81,9 @@ python3 tools/extraction/verify_gate2b_training_cost.py
 1. **gate-3 (lynn-review)** — отдельная свежая НЕ-авторская сессия (ADR-001) по `docs/lynn_review_brief_stage0_session*.md`; читает финальные 140 КВ (+ 49 ИдО, если ещё не стэмпнуты). Идёт ПОСЛЕДНИМ из ревью (видит то, что станет `verified`).
 2. **Штамп (механический, после gate-3):**
 ```
-python3 tools/extraction/mark_verified.py --dir content-packs/kv/mechanics --id-prefix kv. \
+# ЭРРАТУМ: БЕЗ --id-prefix. `kv.` резолвится в `kv.mechanics.kv.` = 0 eligible (штампует НИЧЕГО).
+# 49 ИдО уже verified -> idempotent-skip; флипнутся только 140 КВ.
+python3 tools/extraction/mark_verified.py --dir content-packs/kv/mechanics \
   --gate2 "2a:GATE2A_KV_FINDINGS.md @0becd6b + F1/F2/F3 re-confirm; 2b:gate2b_evidence/MANIFEST.md incl. training_cost(F4)" \
   --gate3 "<lynn evidence>"
 ```
