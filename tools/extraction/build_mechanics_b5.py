@@ -403,10 +403,18 @@ CARDS = [
                            "new_valour_or_wisdom_level_grants": "reward_or_virtue",
                            "max_per_weapon_skill_per_phase": 1,
                            "valour_or_wisdom_per_phase": "one_only"},
-                "training_cost": {"status": "pending_gate_2b",
-                                  "cost_values_seen": [4, 8, 12, 20, 26, 30],
-                                  "applies_to_new_levels": "skill/weapon-skill and valour/wisdom; "
-                                                           "exact level<->cost column mapping from scan"},
+                "training_cost": {
+                    "spend": {"skill_or_weapon_skill": "skill_points",
+                              "valour_or_wisdom": "adventure_points"},
+                    "rows": [
+                        {"new_skill_or_weapon_skill_level": 1, "new_valour_or_wisdom_level": None, "cost": 4},
+                        {"new_skill_or_weapon_skill_level": 2, "new_valour_or_wisdom_level": 2, "cost": 8},
+                        {"new_skill_or_weapon_skill_level": 3, "new_valour_or_wisdom_level": 3, "cost": 12},
+                        {"new_skill_or_weapon_skill_level": 4, "new_valour_or_wisdom_level": 4, "cost": 20},
+                        {"new_skill_or_weapon_skill_level": 5, "new_valour_or_wisdom_level": 5, "cost": 26},
+                        {"new_skill_or_weapon_skill_level": 6, "new_valour_or_wisdom_level": 6, "cost": 30},
+                    ],
+                },
             },
             "spiritual_recovery": {
                 "hope_recovered": "heart_rating", "yule": "full_hope",
@@ -416,11 +424,12 @@ CARDS = [
         "related": [FP + "nachinaniya_fazy_bratstva", FP + "yol",
                     "kv.mechanics.valour_wisdom.doblest", "kv.mechanics.valour_wisdom.mudrost",
                     "kv.mechanics.endurance_hope.nadezhda"],
-        "notes": "Владелец структуры и роста. ⚠ ГЕЙТ-2b (ф.119-120): таблица СТОИМОСТЬ ОБУЧЕНИЯ — "
-                 "значения 4/8/12/20/26/30 читаются, но три колонки (уровень навыка/умения | уровень "
-                 "Доблести/Мудрости | цена) слой переколотил; точная привязка уровень↔цена — по скану "
-                 "(parameters помечены status=pending_gate_2b). Награды/Особенности (стр.78) — "
-                 "rewards_virtues (B3). Баллы Тени — гл. «Тень» (B-later).",
+        "notes": "Владелец структуры и роста. Таблица СТОИМОСТЬ ОБУЧЕНИЯ разрешена по скану ф.119 "
+                 "(gate2b_evidence/MANIFEST.md): C1 «уровень навыка/умения» — пиктограммные пипсы 1-6 "
+                 "(текст-слой их роняет), C2 «уровень Доблести/Мудрости» — none,2,3,4,5,6, C3 «цена» — "
+                 "4/8/12/20/26/30; цена привязана к строке (навык/умение N и Доблесть/Мудрость N делят "
+                 "цену строки; у Доблести/Мудрости нет строки уровня 1). Награды/Особенности (стр.78) - "
+                 "rewards_virtues (B3). Баллы Тени - гл. «Тень» (B-later).",
     },
     {
         "id": FP + "yol", "title": "Йоль",
