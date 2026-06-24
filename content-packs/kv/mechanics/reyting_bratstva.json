@@ -11,7 +11,7 @@
       6
     ]
   },
-  "verified": false,
+  "verified": true,
   "locale": "ru",
   "terminology": "pandora_box",
   "notes": "",
@@ -28,5 +28,15 @@
     "related": [
       "kv.mechanics.hero_creation.fellowship_rating"
     ]
+  },
+  "verification": {
+    "method": "auto-v1",
+    "adr": "ADR-001",
+    "date": "2026-06-24",
+    "gates": {
+      "text_fidelity": "independent_check.py: зелёный на момент простановки (см. лог)",
+      "vision_sweep": "2a: GATE2A_IDO_FINDINGS.md @647fd6b + S1 backfill; 2b: verify_2b_ido 5/5",
+      "lynn_review": "lynn-review @e1c1845 PASS 9/9; rune canon 11=Око/12=руна verified vs kv_core L699+schema+arch:86; 5 gates green (validate 222/indep 676:0/determ ident/param solo 49:0/s1 14:14); 41 oracle+13 params_ref resolve; scans f6,f10 vision-OK; 1 LOW non-blocking: sposobnosti_vraga related under-specific (KNOWN_ISSUES L1)"
+    }
   }
 }
