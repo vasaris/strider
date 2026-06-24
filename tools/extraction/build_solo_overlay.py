@@ -11,9 +11,11 @@ full КВ game. Batches built in this file:
   B-ИдО.4 — «Советы»/«Путешествия»/«Фаза братства»/«Приложение» (13): соло-Совет,
             соло-путешествие и его сцены, духовное восстановление, др. таблицы,
             folios 18–22, 30.
-From B-ИдО.3 on, overlay cards carry `related` edges to the КВ CORE cards they modify
-(kv.mechanics.combat/council/journey/fellowship_phase.*); these resolve through
-validate.py's dangling-ref check. Numbers stay canonical in the verified solo tables.
+Overlay cards carry `related` edges to the КВ CORE cards they modify
+(kv.mechanics.hero_creation/checks/eye/traits/rewards_virtues/combat/journey/...);
+these resolve through validate.py's dangling-ref check. B-ИдО.3 introduced the
+convention; the B-ИдО.1/.2 setup cards were back-filled in the gate-2a S1 pass.
+Numbers stay canonical in the verified solo tables.
 The solo ORACLE TABLES (answers/lore/luck/… patron_tasks/…) were extracted in
 Session 1 and live in content-packs/kv/tables/solo — this batch does NOT touch them.
 
@@ -38,10 +40,11 @@ CONTRACT (same fidelity posture as build_mechanics_b3.py / build_solo_tables.py)
   as part of landing). id scheme kv.mechanics.solo.<name>; dir content-packs/kv/
   mechanics (so validate/independent_check/check_determinism pick it up with no new
   registration; the cards are told apart from КВ core by source.book = igra_dlya_odnogo).
-- Forward references to not-yet-built overlay cards (B-ИдО.2/.3) go in `notes`,
-  never in `related` (keeps validate's dangling check clean). `related` is empty
-  for this batch — these intro/setup cards cross-reference only core-book pages
-  (handled in prose) and the param/oracle tables (handled in parameters).
+- `related` carries edges to the КВ CORE cards a card modifies (gate-2a S1 back-fill
+  extended this to the B-ИдО.1/.2 setup cards). Cards modifying no core rule keep
+  `related` empty (the four intro cards, glavnye_tablicy/sovmestnaya_igra, advice
+  cards such as srazhayas_s_soboy). Cross-refs to OTHER overlay cards live in `notes`
+  as resolved pointers; numbers stay canonical via parameters (params_ref/oracle_refs).
 """
 from __future__ import annotations
 
