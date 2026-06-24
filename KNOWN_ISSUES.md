@@ -65,3 +65,7 @@ JSON корректен; отчёт вводит в заблуждение. Ур
 - **KI-I · LOW · [ИСПРАВЛЕНО]** — мусорный каталог `./{tools...` удалён.
 - **KI-J · LOW · [ИСПРАВЛЕНО]** — историческая справка в VERIFICATION_REPORT.md.
 - **OPEN · этап 1** — hope_delta (ЖП) vs hope_points (ИдО): решить при движке, один эффект или два.
+
+## Из gate-3 lynn-review ИдО (PASS, 24.06)
+
+- **L1 · LOW · [ИСПРАВЛЕНО]** — `sposobnosti_vraga.payload.related` ретаргетирован `combat.boy` -> `adversaries.format_opisaniya`. Концепт «Способности врага» и экономика Ненависти/Решимости буквально описаны в `format_opisaniya` (владелец формата описания врага); `combat.boy` был лишь общим контекстом применения. Count-нейтрально (40 related->core сохранено). Правка в `build_solo_overlay.py` (envelope `sposobnosti_vraga`), JSON перевыведен ребилдом; 49 ИдО-карт ре-штампованы.

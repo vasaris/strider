@@ -111,7 +111,7 @@ Legend: PR = `params_ref` (number canonical in a verified table); OR×n = n `ora
 | `sovet_solo` | 18 | советы | — | council.sovet | 1 |
 | `sovmestnaya_igra` | 5 | введение | OR×2 | — | 1 |
 | `sozdanie_geroya_obzor` | 6 | ваш искатель приключений | PR | — | 1 |
-| `sposobnosti_vraga` | 17 | сражение | OR×1 | combat.boy | 1 |
+| `sposobnosti_vraga` | 17 | сражение | OR×1 | adversaries.format_opisaniya | 1 |
 | `srazhayas_s_soboy` | 18 | сражение | OR×2 | — | 1 |
 | `srazhenie` | 17 | сражение | — | combat.boy | 2 |
 | `v_odinochku_v_dikih_krayah` | 4 | в одиночку в диких краях | — | — | 2 |

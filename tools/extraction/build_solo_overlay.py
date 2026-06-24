@@ -502,7 +502,7 @@ CARDS = [
         "Враг применяет Способности (тратя Решимость/Ненависть), когда это даёт явное "
         "преимущество; если дорого или рискованно для него — поведение определяется "
         "броском по таблице ответов.",
-        {"oracle_refs": ["kv.solo.answers"]}, related=["kv.mechanics.combat.boy"],
+        {"oracle_refs": ["kv.solo.answers"]}, related=["kv.mechanics.adversaries.format_opisaniya"],
     ),
     # ---- B-ИдО.4: «Советы» (folio 18) --------------------------------------
     envelope(
