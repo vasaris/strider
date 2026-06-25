@@ -79,5 +79,6 @@ export function spawnEnemy(block: EnemyStatBlock): EnemyState {
     woundsTaken: 0,
     engaged: true,
     alive: true,
+    attackDiceModUntilRoundEnd: 0,
   };
 }

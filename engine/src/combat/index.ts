@@ -63,6 +63,19 @@ export type { SpecialDamageContext, SpecialDamageResult, SpecialDamageSpends } f
 export { applySpecialDamage, deriveSpecialDamageConfig } from "./specialDamage.js";
 export type { CombatConfigs } from "./configs.js";
 export { combatConfigsFromPack } from "./configs.js";
+export type { ExitMethodKey, ExitResult } from "./exit.js";
+export { assertExitMethod, resolveExit } from "./exit.js";
+export type { FullAttackResult } from "./pipeline.js";
+export { heroIsDown, resolveFullAttack } from "./pipeline.js";
+export type {
+  EnemyTurnPlan,
+  HeroMainAction,
+  HeroSecondaryAction,
+  RoundEvent,
+  RoundOutcome,
+  RoundPlan,
+} from "./round.js";
+export { runRound, startRound } from "./round.js";
 export {
   attackConfigFromPack,
   combatConfigFromPack,

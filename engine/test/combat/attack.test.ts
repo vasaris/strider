@@ -136,6 +136,8 @@ function makeFrame(over: Partial<HeroCombatFrame> = {}): HeroCombatFrame {
     armourProtection: 2,
     equippedWeapon: { group: "swords", damage: 5, injury: 16 },
     drivenBackUsedThisRound: false,
+    parryBonusThisRound: 0,
+    outOfPosition: false,
     ...over,
   };
 }
@@ -316,11 +318,12 @@ describe("anti-hardcode: deriveAttackConfig reflects the card, bakes nothing", (
     const real = deriveAttackConfig(pack.requireById("kv.mechanics.combat.sovershenie_atak").raw);
     expect(real.drivenBackTimesPerRound).toBe(1);
     expect(real.drivenBackHalveRoundUp).toBe(true);
+    expect(real.drivenBackCostsMainAction).toBe(true);
     expect(real.piercingTriggerFaces).toEqual({ numbers: [10], eye: true });
 
     const stub = deriveAttackConfig(
       card({
-        driven_back: { times_per_round: 3, effect: "halve_endurance_loss_round_up" },
+        driven_back: { times_per_round: 3, effect: "halve_endurance_loss_round_up", cost: "next_main_action_restores_stance" },
         piercing_blow: { trigger_feat_die: [7, 8, "eye"] },
       }),
     );

@@ -167,6 +167,13 @@ export interface EnemyState {
   readonly woundsTaken: number;
   readonly engaged: boolean; // false once taken out / killed / fled
   readonly alive: boolean; // false only on a confirmed kill (woundsTaken===might or after_battle death)
+  /**
+   * Round-local Success-die modifier applied to THIS enemy's own attack checks
+   * until round end (e.g. Shield Thrust pushes it to -1). Signed; reset by the
+   * round boundary (startRound). The loop folds it into the attack's
+   * extraSuccessDice; resolveAttack stays pool-/debuff-agnostic.
+   */
+  readonly attackDiceModUntilRoundEnd: number;
 }
 
 // --- Hero combat frame + combat state ---
@@ -199,6 +206,17 @@ export interface HeroCombatFrame {
   readonly hasShield?: boolean;
   /** Driven-back is once per round (combat.sovershenie_atak.driven_back). */
   readonly drivenBackUsedThisRound: boolean;
+  /**
+   * Round-local PARRY bonus from a successful Fend Off (special damage); added
+   * to parryRating when an enemy attacks this hero. Reset by startRound.
+   */
+  readonly parryBonusThisRound: number;
+  /**
+   * The hero was driven back out of position (elected to halve incoming damage).
+   * Costs the next main action to restore stance (driven_back.cost). Persists
+   * across the round boundary; cleared only by a restore_stance main action.
+   */
+  readonly outOfPosition: boolean;
 }
 
 /** The container a fight mutates: persistent hero + combat frame + enemies. */
@@ -226,6 +244,8 @@ export type ModifierTier = "moderate" | "serious";
 export interface AttackConfig {
   readonly drivenBackTimesPerRound: number;
   readonly drivenBackHalveRoundUp: boolean;
+  /** Being driven back costs the next main action to restore stance (driven_back.cost). */
+  readonly drivenBackCostsMainAction: boolean;
   /** Feat faces that trigger a Piercing blow (numbers + the Eye); resolved in Tact 3. */
   readonly piercingTriggerFaces: { readonly numbers: readonly number[]; readonly eye: boolean };
 }
@@ -240,6 +260,14 @@ export interface AttackParams {
   readonly advantage?: ModifierTier; // battlefield bonus on this check
   /** Hero electing to be driven back to halve incoming damage (enemy -> hero only). */
   readonly heroDrivenBack?: boolean;
+  /**
+   * Signed Success-die delta the combat loop injects on this attack: positive
+   * for an enemy spending pool (+1 die per point, format_opisaniya) or any other
+   * loop-owned bonus, negative for a round-local debuff (e.g. Shield Thrust).
+   * resolveAttack folds it into bonus/penalty and stays unaware of its origin;
+   * the loop owns when pool is spent (combat owns dice, not tactics). Default 0.
+   */
+  readonly extraSuccessDice?: number;
 }
 
 /** The outcome of one attack; special damage and Piercing resolution are Tact 3. */

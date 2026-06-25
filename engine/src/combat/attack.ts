@@ -46,6 +46,7 @@ export function deriveAttackConfig(raw: unknown): AttackConfig {
   const driven = asObject(params["driven_back"], "driven_back");
   const drivenBackTimesPerRound = intField(driven, "times_per_round", "driven_back");
   const drivenBackHalveRoundUp = strField(driven, "effect", "driven_back") === "halve_endurance_loss_round_up";
+  const drivenBackCostsMainAction = strField(driven, "cost", "driven_back") === "next_main_action_restores_stance";
 
   const piercing = asObject(params["piercing_blow"], "piercing_blow");
   const triggers = piercing["trigger_feat_die"];
@@ -58,7 +59,12 @@ export function deriveAttackConfig(raw: unknown): AttackConfig {
     else fail(`piercing_blow.trigger_feat_die: unexpected entry ${JSON.stringify(t)}`);
   }
 
-  return { drivenBackTimesPerRound, drivenBackHalveRoundUp, piercingTriggerFaces: { numbers, eye } };
+  return {
+    drivenBackTimesPerRound,
+    drivenBackHalveRoundUp,
+    drivenBackCostsMainAction,
+    piercingTriggerFaces: { numbers, eye },
+  };
 }
 
 // --- roll evaluation (side-aware) ---
@@ -177,6 +183,12 @@ function diceMods(
   bonus += tierBonus(params.advantage, cfgs.combat.complicationTiers.advantage);
   // complication tier values are negative in the pack (-1 / -2) -> add to penalty.
   penalty += -tierBonus(params.complication, cfgs.combat.complicationTiers.complication);
+
+  // Loop-injected signed Success-die delta (pool grantedDice / round-local debuffs).
+  // resolveAttack is agnostic to its origin; the combat loop owns the policy.
+  const extra = params.extraSuccessDice ?? 0;
+  if (extra >= 0) bonus += extra;
+  else penalty += -extra;
 
   return { bonus, penalty };
 }
