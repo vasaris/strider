@@ -1,7 +1,7 @@
 /**
  * Eye of Mordor subsystem types.
  *
- * The Eye Awareness rating (Бдительность Ока) grows out of combat from Eye
+ * The Eye Awareness rating grows out of combat from Eye
  * results on the Feat die, Shadow gained, and misfortune-table Eye results;
  * when it reaches the pursuit threshold a detection scene fires and the rating
  * resets to its initial value. All numbers come from kv.solo.eye_of_mordor.
