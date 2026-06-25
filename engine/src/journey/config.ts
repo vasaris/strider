@@ -50,6 +50,19 @@ export interface JourneyConfigs {
   readonly scenes: JourneyScenesTable;
   readonly detailTables: ReadonlyMap<string, SceneDetailTable>; // by sceneType
   readonly skillAttribute: Readonly<Record<string, Attribute>>;
+  readonly rules: JourneyRulesConfig;
+}
+
+/** Journey procedure numbers, read from journey.poryadok_puteshestviya. */
+export interface JourneyRulesConfig {
+  readonly difficultTerrainDayPerHex: number;
+  readonly mountedHalveRoundUp: boolean;
+  readonly forcedMarchHexesPerDay: number;
+  readonly forcedMarchExtraFatiguePerDay: number;
+  /** Base Fatigue removed by the end-of-journey travel check (before per-sign). */
+  readonly endFatigueTravelCheckBase: number;
+  /** Fatigue removed per safe long rest after the journey. */
+  readonly perSafeLongRest: number;
 }
 
 function fail(msg: string): never {
@@ -157,6 +170,51 @@ function parseSkillAttribute(pack: Pack): Record<string, Attribute> {
   return out;
 }
 
+/** Parse the journey procedure numbers from journey.poryadok_puteshestviya. */
+export function deriveJourneyRulesConfig(pack: Pack): JourneyRulesConfig {
+  const p = asObject(
+    asObject(pack.requireById("kv.mechanics.journey.poryadok_puteshestviya").raw, "poryadok")["payload"],
+    "poryadok.payload",
+  )["parameters"];
+  const params = asObject(p, "poryadok.parameters");
+
+  const duration = asObject(params["duration_days"], "poryadok.duration_days");
+  const baseStr = duration["base"];
+  if (typeof baseStr !== "string") fail("duration_days.base: expected string");
+  const diffMatch = baseStr.match(/(\d+)\s*per\s*difficult/);
+  if (!diffMatch) fail("duration_days.base: cannot read difficult-terrain coefficient");
+  const difficultTerrainDayPerHex = Number(diffMatch[1]);
+  const mountedHalveRoundUp = duration["mounted"] === "halve_round_up";
+  if (!mountedHalveRoundUp) fail("duration_days.mounted: expected halve_round_up");
+
+  const fm = asObject(params["forced_march"], "poryadok.forced_march");
+  const forcedMarchHexesPerDay = fm["hexes_per_day"];
+  const forcedMarchExtraFatiguePerDay = fm["extra_fatigue_per_day"];
+  if (typeof forcedMarchHexesPerDay !== "number" || typeof forcedMarchExtraFatiguePerDay !== "number") {
+    fail("forced_march: expected numeric hexes_per_day and extra_fatigue_per_day");
+  }
+
+  const fatigue = asObject(params["fatigue"], "poryadok.fatigue");
+  const perRestRaw = fatigue["per_safe_long_rest"];
+  if (typeof perRestRaw !== "number") fail("fatigue.per_safe_long_rest: expected number");
+  const perSafeLongRest = Math.abs(perRestRaw);
+  const endSteps = fatigue["end_of_journey"];
+  if (!Array.isArray(endSteps)) fail("fatigue.end_of_journey: expected array");
+  const travelStep = endSteps.find((s) => typeof s === "string" && s.includes("travel_check"));
+  const baseMatch = typeof travelStep === "string" ? travelStep.match(/-(\d+)/) : null;
+  if (!baseMatch) fail("fatigue.end_of_journey: cannot read travel-check base reduction");
+  const endFatigueTravelCheckBase = Number(baseMatch[1]);
+
+  return {
+    difficultTerrainDayPerHex,
+    mountedHalveRoundUp,
+    forcedMarchHexesPerDay,
+    forcedMarchExtraFatiguePerDay,
+    endFatigueTravelCheckBase,
+    perSafeLongRest,
+  };
+}
+
 export function journeyConfigsFromPack(pack: Pack): JourneyConfigs {
   const scenes = parseJourneyScenesTable(pack.requireById("kv.solo.journey_scenes").raw);
   const detailTables = new Map<string, SceneDetailTable>();
@@ -174,5 +232,6 @@ export function journeyConfigsFromPack(pack: Pack): JourneyConfigs {
     scenes,
     detailTables,
     skillAttribute: parseSkillAttribute(pack),
+    rules: deriveJourneyRulesConfig(pack),
   };
 }

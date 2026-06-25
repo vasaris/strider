@@ -28,7 +28,21 @@ function baseState(): JourneyState {
       inspired: true,
       wounded: false,
     },
-    journey: { totalHexes: 5, remainingHexes: 5, region: "wild_lands", season: "summer_spring", daysElapsed: 0, arrived: false },
+    journey: {
+      route: {
+        totalHexes: 5,
+        difficultHexes: 0,
+        mounted: false,
+        forcedMarch: false,
+        mountCarry: 0,
+        dangerZones: [],
+        region: "wild_lands",
+        season: "summer_spring",
+      },
+      remainingHexes: 5,
+      durationDays: 5,
+      arrived: false,
+    },
     rng: makeRng("u"),
     log: [],
   };
@@ -72,7 +86,7 @@ describe("effect interpreter", () => {
       cfg,
     );
     expect(s.hero.fatigue).toBe(2);
-    expect(s.journey.daysElapsed).toBe(1);
+    expect(s.journey.durationDays).toBe(6);
     expect(s.hero.wounded).toBe(true);
     expect(s.hero.eye.awareness).toBe(3);
   });

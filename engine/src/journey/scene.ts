@@ -34,7 +34,7 @@ function consequenceFires(c: Consequence, outcome: "success" | "failure"): boole
  *      showed the Eye (out of combat).
  */
 export function resolveScene(state: JourneyState, cfg: JourneyConfigs): JourneyState {
-  const modifier = biasToModifier(cfg.scenes.bias[state.journey.region]);
+  const modifier = biasToModifier(cfg.scenes.bias[state.journey.route.region]);
   const [{ chosen }, rng1] = rollFeatWithModifier(cfg.dice.feat, modifier, state.rng);
   const sceneRow = matchSceneRow(cfg.scenes.rows, featFaceKey(chosen));
 

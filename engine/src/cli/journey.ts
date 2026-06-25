@@ -8,7 +8,7 @@ import { makeMilestoneState } from "./scenario.js";
 export interface JourneyReport {
   readonly seed: string;
   readonly arrived: boolean;
-  readonly daysElapsed: number;
+  readonly durationDays: number;
   readonly hero: {
     readonly hope: number;
     readonly shadow: number;
@@ -27,7 +27,7 @@ export function runMilestoneJourney(packRoot: string, seed: number | string): Jo
   return {
     seed: String(seed),
     arrived: final.journey.arrived,
-    daysElapsed: final.journey.daysElapsed,
+    durationDays: final.journey.durationDays,
     hero: {
       hope: final.hero.hope.current,
       shadow: final.hero.shadow.points,

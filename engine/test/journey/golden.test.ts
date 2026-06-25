@@ -51,14 +51,14 @@ describe("Stage 1 milestone: CLI journey playthrough", () => {
     const r = runMilestoneJourney(packRoot, GOLDEN_SEED);
     expect({
       arrived: r.arrived,
-      daysElapsed: r.daysElapsed,
+      durationDays: r.durationDays,
       hero: r.hero,
       sceneTypes: r.log.filter((e) => e.kind === "scene").map((e) => (e as { sceneType: string }).sceneType),
       eventKinds: r.log.map((e) => e.kind),
     }).toMatchInlineSnapshot(`
       {
         "arrived": true,
-        "daysElapsed": 8,
+        "durationDays": 8,
         "eventKinds": [
           "travel_check",
           "scene",

@@ -43,7 +43,7 @@ export function applyEffect(state: JourneyState, effect: Effect, cfg: JourneyCon
     }
     case "journey_days_delta": {
       const v = intValue(effect, "journey_days_delta");
-      return { ...state, journey: { ...journey, daysElapsed: Math.max(0, journey.daysElapsed + v) } };
+      return { ...state, journey: { ...journey, durationDays: Math.max(0, journey.durationDays + v) } };
     }
     case "wound":
       return { ...state, hero: { ...hero, wounded: true } };

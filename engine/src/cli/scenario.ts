@@ -1,6 +1,7 @@
 import { newEyeState } from "../eye/initial.js";
 import { makeRng } from "../rng/rng.js";
 import type { JourneyConfigs } from "../journey/config.js";
+import { forcedMarchFatigue, journeyDuration, type Route } from "../journey/route.js";
 import type { HeroState, JourneyState } from "../journey/state.js";
 
 /**
@@ -23,17 +24,26 @@ export function makeTestHero(cfg: JourneyConfigs): HeroState {
   };
 }
 
+const MILESTONE_ROUTE: Route = {
+  totalHexes: 7,
+  difficultHexes: 0,
+  mounted: false,
+  forcedMarch: false,
+  mountCarry: 0,
+  dangerZones: [],
+  region: "dark_lands",
+  season: "winter_autumn",
+};
+
 export function makeMilestoneState(cfg: JourneyConfigs, seed: number | string): JourneyState {
+  const baseDuration = journeyDuration(MILESTONE_ROUTE, cfg.rules);
+  const hero = makeTestHero(cfg);
+  const withMarch = MILESTONE_ROUTE.forcedMarch
+    ? { ...hero, fatigue: hero.fatigue + forcedMarchFatigue(baseDuration, cfg.rules) }
+    : hero;
   return {
-    hero: makeTestHero(cfg),
-    journey: {
-      totalHexes: 7,
-      remainingHexes: 7,
-      region: "dark_lands",
-      season: "winter_autumn",
-      daysElapsed: 0,
-      arrived: false,
-    },
+    hero: withMarch,
+    journey: { route: MILESTONE_ROUTE, remainingHexes: MILESTONE_ROUTE.totalHexes, durationDays: baseDuration, arrived: false },
     rng: makeRng(seed),
     log: [],
   };

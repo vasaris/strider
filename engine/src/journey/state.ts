@@ -1,19 +1,18 @@
 import type { CheckResult } from "../checks/types.js";
-import type { EyeRegion } from "../eye/types.js";
 import type { HeroState } from "../hero/state.js";
 import type { Effect } from "../oracles/types.js";
 import type { Rng } from "../rng/rng.js";
+import type { Route } from "./route.js";
 
 export type { Attribute, HeroState } from "../hero/state.js";
 
 export type Season = "summer_spring" | "winter_autumn";
 
 export interface JourneyProgress {
-  readonly totalHexes: number;
+  readonly route: Route;
   readonly remainingHexes: number;
-  readonly region: EyeRegion;
-  readonly season: Season;
-  readonly daysElapsed: number;
+  /** Base duration (from the route) adjusted by scene journey_days_delta effects. */
+  readonly durationDays: number;
   readonly arrived: boolean;
 }
 
@@ -51,7 +50,7 @@ export type JourneyEvent =
       readonly sceneText: string;
       readonly resetTo: number;
     }
-  | { readonly kind: "arrival"; readonly daysElapsed: number };
+  | { readonly kind: "arrival"; readonly durationDays: number };
 
 /** A scene consequence: effects applied when the check outcome matches the trigger. */
 export interface Consequence {
