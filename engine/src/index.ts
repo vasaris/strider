@@ -9,3 +9,4 @@ export * from "./eye/index.js";
 export * from "./hero/index.js";
 export * from "./conditions/index.js";
 export * from "./journey/index.js";
+export * from "./combat/index.js";
