@@ -9,10 +9,12 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "journey": "tsx src/cli/journey.ts ../content-packs/kv dark-1"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",
+    "tsx": "^4.22.4",
     "typescript": "^5.5.4",
     "vitest": "^2.0.5"
   }
