@@ -21,6 +21,10 @@ export function makeTestHero(cfg: JourneyConfigs): HeroState {
     eye: newEyeState({ valourAtLeast4: false, culture: "other", famousItemCount: 0 }, cfg.eye),
     inspired: true, // Wanderer is inspired on journey skill checks
     wounded: false,
+    wound: null,
+    dying: false,
+    dead: false,
+    permanentInjuryMarks: 0,
   };
 }
 

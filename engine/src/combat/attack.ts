@@ -294,6 +294,7 @@ export function resolveAttack(
     spendableIcons: evalRes.hit ? evalRes.successIcons : 0,
     enduranceLoss,
     piercingTriggered: evalRes.piercingTriggered,
+    featFace: roll.feat.face,
     targetDestroyed,
     heroUnconscious,
     drivenBackApplied,

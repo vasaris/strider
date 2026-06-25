@@ -46,6 +46,10 @@ function hero(overrides: Partial<HeroState> = {}): HeroState {
     eye: newEyeState({ valourAtLeast4: false, culture: "other", famousItemCount: 0 }, eyeCfg),
     inspired: false,
     wounded: false,
+    wound: null,
+    dying: false,
+    dead: false,
+    permanentInjuryMarks: 0,
     ...overrides,
   };
 }

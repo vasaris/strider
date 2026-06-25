@@ -3,6 +3,23 @@ import type { EyeState } from "../eye/types.js";
 /** The three core attributes; their rating sets a check's target number. */
 export type Attribute = "strength" | "heart" | "wits";
 
+/** Severity of an Injury, from the wound-severity table (combat.raneniya). */
+export type WoundSeverity = "light" | "serious" | "terrible";
+
+/**
+ * The detail of a hero's current Injury. The boolean `wounded` flag stays the
+ * sheet Injury mark (it already drives slower recovery in conditions); this
+ * carries the severity, the outstanding healing days and whether THIS wound put
+ * a mark on the sheet (relevant to the dying-rescue +days rule). Null when the
+ * hero carries no injury detail. Wounds outlive a fight by definition (Rest,
+ * p. 71), so the authoritative model is persistent here, not combat-local.
+ */
+export interface WoundState {
+  readonly severity: WoundSeverity;
+  readonly healingDays: number; // outstanding days of recovery (serious: feat result)
+  readonly marked: boolean; // this wound placed the Injury mark
+}
+
 /**
  * The hero's mechanical state. Foundational and shared across subsystems
  * (journey, conditions, combat, council, progression), so it lives here rather
@@ -19,5 +36,13 @@ export interface HeroState {
   readonly shadow: { readonly points: number; readonly scars: number };
   readonly eye: EyeState;
   readonly inspired: boolean; // Wanderer on journey skill checks
-  readonly wounded: boolean;
+  readonly wounded: boolean; // the Injury sheet mark
+  /** Current Injury detail; null when the hero has taken no wound. */
+  readonly wound: WoundState | null;
+  /** Crisis: 0 Endurance, needs a successful HEALING rescue within ~1h (raneniya). */
+  readonly dying: boolean;
+  /** A dying hero who was not rescued in time. Ends the run. */
+  readonly dead: boolean;
+  /** Permanent marks left by survived Injuries (scar/limp/...); flavour, no mechanics. */
+  readonly permanentInjuryMarks: number;
 }

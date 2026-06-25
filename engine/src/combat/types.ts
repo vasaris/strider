@@ -8,7 +8,8 @@
  * content carried as values and never branched on. No book number lives here.
  */
 
-import type { HeroState } from "../hero/state.js";
+import type { FeatDieFace } from "../dice/types.js";
+import type { HeroState, WoundSeverity } from "../hero/state.js";
 
 /** The four canonical combat positions (kv.mechanics.combat.shagi...). */
 export type StanceKey = "forward" | "open" | "defensive" | "ranged";
@@ -169,6 +170,8 @@ export interface HeroWeapon {
   readonly nameRu?: string; // opaque, optional
   readonly damage: number;
   readonly injury: number; // injury rating (the weapon's wound TN)
+  /** Two-handed weapons add +1 to Heavy Blow Endurance loss (sovershenie_atak). */
+  readonly twoHanded?: boolean;
 }
 
 /**
@@ -181,6 +184,8 @@ export interface HeroCombatFrame {
   readonly parryRating: number; // the hero's PARRY: enemies attack against this TN
   readonly armourProtection: number; // hero PROTECTION success dice
   readonly equippedWeapon: HeroWeapon;
+  /** A shield enables the Shield Thrust special damage (sovershenie_atak). */
+  readonly hasShield?: boolean;
   /** Driven-back is once per round (combat.sovershenie_atak.driven_back). */
   readonly drivenBackUsedThisRound: boolean;
 }
@@ -235,7 +240,46 @@ export interface AttackOutcome {
   readonly spendableIcons: number; // icons available for special damage (Tact 3)
   readonly enduranceLoss: number; // applied to the target
   readonly piercingTriggered: boolean; // 10 or Eye on the Feat die (Tact 3 resolves)
+  /** Physical Feat face of the attack; Tact 3 reads it to recompute Piercing after Pierce. */
+  readonly featFace: FeatDieFace;
   readonly targetDestroyed: boolean; // enemy reduced to 0 Endurance
   readonly heroUnconscious: boolean; // hero reduced to 0 Endurance
   readonly drivenBackApplied: boolean;
+}
+
+// --- Wounds (Tact 3, kv.mechanics.combat.raneniya) ---
+
+/** First-aid HEALING numbers; all read from the pack, none baked here. */
+export interface FirstAidConfig {
+  readonly reduceDaysBase: number; // days removed by a successful check
+  readonly perSuccessSign: number; // extra days removed per success icon
+  readonly minDays: number; // healing can never drop below this
+  readonly retryAfterDaysOnFail: number; // a failed check may be retried after this many days
+}
+
+/** Dying-rescue numbers (raneniya.dying). */
+export interface DyingConfig {
+  readonly addRecoveryDaysIfMarked: number; // extra days if the wound was marked
+  readonly reviveEndurance: number; // Endurance on a successful rescue
+}
+
+/** The full wound rule vocabulary derived from combat.raneniya. */
+export interface WoundConfig {
+  /** Display name per severity (opaque pack strings), keyed by engine severity. */
+  readonly severityNameRu: Readonly<Record<WoundSeverity, string>>;
+  readonly firstAid: FirstAidConfig;
+  readonly dying: DyingConfig;
+}
+
+// --- Special damage (Tact 3, sovershenie_atak.special_damage) ---
+
+/** A hero special-damage effect. Enemy special damage is opaque (Tact 4). */
+export type SpecialDamageKey = "heavy_blow" | "fend_off" | "pierce" | "shield_thrust";
+
+/** Numbers for the four hero special-damage effects, derived from the pack. */
+export interface SpecialDamageConfig {
+  readonly heavyBlow: { readonly twoHandedBonus: number }; // extra loss = STRENGTH (+bonus if two-handed)
+  readonly fendOff: { readonly parryByGroup: Readonly<Record<string, number>> };
+  readonly pierce: { readonly featBonusByGroup: Readonly<Record<string, number>>; readonly cap: number };
+  readonly shieldThrust: { readonly targetMinusDice: number };
 }

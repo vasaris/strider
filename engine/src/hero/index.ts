@@ -1,1 +1,1 @@
-export type { Attribute, HeroState } from "./state.js";
+export type { Attribute, HeroState, WoundSeverity, WoundState } from "./state.js";

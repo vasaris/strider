@@ -27,6 +27,10 @@ function baseState(): JourneyState {
       eye: newEyeState({ valourAtLeast4: false, culture: "other", famousItemCount: 0 }, cfg.eye),
       inspired: true,
       wounded: false,
+      wound: null,
+      dying: false,
+      dead: false,
+      permanentInjuryMarks: 0,
     },
     journey: {
       route: {

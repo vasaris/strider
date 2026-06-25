@@ -8,7 +8,9 @@ import type { Pack } from "../pack/pack.js";
 import { deriveCombatConfig } from "./config.js";
 import { deriveAttackConfig } from "./attack.js";
 import { deriveEnemyStatBlock } from "./enemy.js";
-import type { AttackConfig, CombatConfig, EnemyStatBlock } from "./types.js";
+import { deriveSpecialDamageConfig } from "./specialDamage.js";
+import { deriveWoundConfig } from "./wounds.js";
+import type { AttackConfig, CombatConfig, EnemyStatBlock, SpecialDamageConfig, WoundConfig } from "./types.js";
 
 /** Build the CombatConfig from the four verified combat rule cards. */
 export function combatConfigFromPack(pack: Pack): CombatConfig {
@@ -23,6 +25,16 @@ export function combatConfigFromPack(pack: Pack): CombatConfig {
 /** Build the AttackConfig from kv.mechanics.combat.sovershenie_atak. */
 export function attackConfigFromPack(pack: Pack): AttackConfig {
   return deriveAttackConfig(pack.requireById("kv.mechanics.combat.sovershenie_atak").raw);
+}
+
+/** Build the WoundConfig from kv.mechanics.combat.raneniya. */
+export function woundConfigFromPack(pack: Pack): WoundConfig {
+  return deriveWoundConfig(pack.requireById("kv.mechanics.combat.raneniya").raw);
+}
+
+/** Build the SpecialDamageConfig from kv.mechanics.combat.sovershenie_atak. */
+export function specialDamageConfigFromPack(pack: Pack): SpecialDamageConfig {
+  return deriveSpecialDamageConfig(pack.requireById("kv.mechanics.combat.sovershenie_atak").raw);
 }
 
 /** Build one enemy stat block, e.g. (pack, "kv.mechanics.adversaries.orki", "goblin_luchnik"). */
