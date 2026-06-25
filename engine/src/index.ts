@@ -3,3 +3,4 @@ export { makeRng, nextU32, randIntBelow, rollDie } from "./rng/rng.js";
 
 export * from "./dice/index.js";
 export * from "./checks/index.js";
+export * from "./pack/index.js";
