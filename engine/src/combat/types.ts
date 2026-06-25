@@ -181,6 +181,8 @@ export interface HeroCombatFrame {
   readonly parryRating: number; // the hero's PARRY: enemies attack against this TN
   readonly armourProtection: number; // hero PROTECTION success dice
   readonly equippedWeapon: HeroWeapon;
+  /** Driven-back is once per round (combat.sovershenie_atak.driven_back). */
+  readonly drivenBackUsedThisRound: boolean;
 }
 
 /** The container a fight mutates: persistent hero + combat frame + enemies. */
@@ -190,4 +192,50 @@ export interface CombatState {
   readonly enemies: readonly EnemyState[];
   readonly round: number;
   readonly phase: CombatPhase;
+}
+
+// --- Attack resolution (Tact 2) ---
+
+/** Identifies a combatant: the lone hero, or an enemy by index. */
+export type Combatant = "hero" | { readonly enemyIndex: number };
+
+/** A battlefield modifier tier (combat.oslozhneniya_i_preimuschestva). */
+export type ModifierTier = "moderate" | "serious";
+
+/**
+ * Attack-resolution numbers, from kv.mechanics.combat.sovershenie_atak.
+ * Endurance thresholds (weary at <= Load, out at 0) are NOT duplicated here:
+ * the hero side reuses the Conditions subsystem and 0 is a structural boundary.
+ */
+export interface AttackConfig {
+  readonly drivenBackTimesPerRound: number;
+  readonly drivenBackHalveRoundUp: boolean;
+  /** Feat faces that trigger a Piercing blow (numbers + the Eye); resolved in Tact 3. */
+  readonly piercingTriggerFaces: { readonly numbers: readonly number[]; readonly eye: boolean };
+}
+
+/** One attack to resolve. */
+export interface AttackParams {
+  readonly attacker: Combatant;
+  readonly target: Combatant;
+  /** Which enemy weapon the attacker uses (default 0); the hero uses equippedWeapon. */
+  readonly enemyWeaponIndex?: number;
+  readonly complication?: ModifierTier; // battlefield penalty on this check
+  readonly advantage?: ModifierTier; // battlefield bonus on this check
+  /** Hero electing to be driven back to halve incoming damage (enemy -> hero only). */
+  readonly heroDrivenBack?: boolean;
+}
+
+/** The outcome of one attack; special damage and Piercing resolution are Tact 3. */
+export interface AttackOutcome {
+  readonly hit: boolean;
+  readonly autoSuccess: boolean;
+  readonly total: number | null; // null on auto-success
+  readonly successIcons: number;
+  readonly spendableIcons: number; // icons available for special damage (Tact 3)
+  readonly enduranceLoss: number; // applied to the target
+  readonly piercingTriggered: boolean; // 10 or Eye on the Feat die (Tact 3 resolves)
+  readonly targetDestroyed: boolean; // enemy reduced to 0 Endurance
+  readonly heroUnconscious: boolean; // hero reduced to 0 Endurance
+  readonly drivenBackApplied: boolean;
 }

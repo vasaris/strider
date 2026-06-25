@@ -6,8 +6,9 @@
 
 import type { Pack } from "../pack/pack.js";
 import { deriveCombatConfig } from "./config.js";
+import { deriveAttackConfig } from "./attack.js";
 import { deriveEnemyStatBlock } from "./enemy.js";
-import type { CombatConfig, EnemyStatBlock } from "./types.js";
+import type { AttackConfig, CombatConfig, EnemyStatBlock } from "./types.js";
 
 /** Build the CombatConfig from the four verified combat rule cards. */
 export function combatConfigFromPack(pack: Pack): CombatConfig {
@@ -17,6 +18,11 @@ export function combatConfigFromPack(pack: Pack): CombatConfig {
     pack.requireById("kv.mechanics.combat.oslozhneniya_i_preimuschestva").raw,
     pack.requireById("kv.mechanics.combat.vyhod_iz_boya").raw,
   );
+}
+
+/** Build the AttackConfig from kv.mechanics.combat.sovershenie_atak. */
+export function attackConfigFromPack(pack: Pack): AttackConfig {
+  return deriveAttackConfig(pack.requireById("kv.mechanics.combat.sovershenie_atak").raw);
 }
 
 /** Build one enemy stat block, e.g. (pack, "kv.mechanics.adversaries.orki", "goblin_luchnik"). */
