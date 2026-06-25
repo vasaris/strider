@@ -148,14 +148,25 @@ export interface EnemyStatBlock {
   readonly distinctive: readonly string[]; // opaque
 }
 
-/** A live enemy instance during a fight. Destroyed when woundsTaken === might. */
+/**
+ * A live enemy instance during a fight.
+ *
+ * Two distinct exits (kv.mechanics.adversaries.format_opisaniya):
+ *  - Endurance reaches 0  -> TAKEN OUT of combat: `engaged=false`, but `alive`
+ *    stays true (still breathing); `after_battle` decides survival if helped.
+ *  - woundsTaken === might -> DESTROYED (killed): `engaged=false, alive=false`.
+ * So `alive` is false only on a confirmed kill; "out at 0 Endurance, survivable"
+ * is the derived state `!engaged && alive && endurance===0 && woundsTaken<might`.
+ */
 export interface EnemyState {
   readonly block: EnemyStatBlock;
   readonly endurance: number; // current
   readonly pool: number; // current Hatred/Resolve (without points -> counts as weary)
+  /** Hatred/Resolve already spent THIS round; capped at Might (round-local, reset each round). */
+  readonly poolSpentThisRound: number;
   readonly woundsTaken: number;
-  readonly engaged: boolean; // false once left behind / fled
-  readonly alive: boolean;
+  readonly engaged: boolean; // false once taken out / killed / fled
+  readonly alive: boolean; // false only on a confirmed kill (woundsTaken===might or after_battle death)
 }
 
 // --- Hero combat frame + combat state ---
@@ -242,7 +253,8 @@ export interface AttackOutcome {
   readonly piercingTriggered: boolean; // 10 or Eye on the Feat die (Tact 3 resolves)
   /** Physical Feat face of the attack; Tact 3 reads it to recompute Piercing after Pierce. */
   readonly featFace: FeatDieFace;
-  readonly targetDestroyed: boolean; // enemy reduced to 0 Endurance
+  /** Target reduced to 0 Endurance -> taken OUT of combat (not necessarily killed; see after_battle). */
+  readonly targetTakenOut: boolean;
   readonly heroUnconscious: boolean; // hero reduced to 0 Endurance
   readonly drivenBackApplied: boolean;
 }

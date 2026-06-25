@@ -86,6 +86,7 @@ describe("spawnEnemy — full Endurance and pool, unwounded, engaged", () => {
     expect(e.endurance).toBe(block.endurance);
     expect(e.pool).toBe(block.pool);
     expect(e.woundsTaken).toBe(0);
+    expect(e.poolSpentThisRound).toBe(0);
     expect(e.engaged).toBe(true);
     expect(e.alive).toBe(true);
     expect(e.block).toBe(block);

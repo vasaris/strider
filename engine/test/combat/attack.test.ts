@@ -194,14 +194,16 @@ describe("resolveAttack — hero attacks an enemy", () => {
     expect(misses).toBeGreaterThan(0); // the test exercises both branches
   });
 
-  it("destroys an enemy whose Endurance drops to 0", () => {
-    const combat = combatWith(enemyBlock({ endurance: 5 })); // weapon damage 5 -> one hit destroys
+  it("takes an enemy out (not killed) when Endurance drops to 0", () => {
+    const combat = combatWith(enemyBlock({ endurance: 5 })); // weapon damage 5 -> one hit takes it out
     for (const seed of SEEDS) {
       const [out, next] = resolveAttack(combat, { attacker: "hero", target: { enemyIndex: 0 } }, cfgs, makeRng(seed));
       if (out.hit) {
-        expect(out.targetDestroyed).toBe(true);
-        expect(next.enemies[0]!.alive).toBe(false);
+        expect(out.targetTakenOut).toBe(true);
+        // R1: out at 0 Endurance -> still alive (breathing); after_battle decides survival.
+        expect(next.enemies[0]!.alive).toBe(true);
         expect(next.enemies[0]!.engaged).toBe(false);
+        expect(next.enemies[0]!.endurance).toBe(0);
       }
     }
   });

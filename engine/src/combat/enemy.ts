@@ -75,6 +75,7 @@ export function spawnEnemy(block: EnemyStatBlock): EnemyState {
     block,
     endurance: block.endurance,
     pool: block.pool,
+    poolSpentThisRound: 0,
     woundsTaken: 0,
     engaged: true,
     alive: true,

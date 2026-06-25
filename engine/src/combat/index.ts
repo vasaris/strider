@@ -33,6 +33,17 @@ export type {
 
 export { deriveCombatConfig } from "./config.js";
 export { deriveEnemyStatBlock, spawnEnemy } from "./enemy.js";
+export type { EnemyWoundEvent, PoolSpendResult } from "./adversary.js";
+export {
+  afterBattle,
+  applyEnemyWound,
+  enemyIsWeary,
+  isTakenOutSurvivable,
+  resetRoundPool,
+  spendPool,
+} from "./adversary.js";
+export type { EnemyDecisionKind, EnemyDecisionResult } from "./soloConduct.js";
+export { resolveEnemySurvival, rollEnemyDecision } from "./soloConduct.js";
 export type { AttackEval, AttackEvalOpts } from "./attack.js";
 export { deriveAttackConfig, evaluateAttackRoll, resolveAttack } from "./attack.js";
 export type { PiercingResult, WoundEvent, WoundRollResult } from "./wounds.js";

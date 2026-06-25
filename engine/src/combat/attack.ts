@@ -25,6 +25,7 @@ import { rollCheckDice } from "../dice/roll.js";
 import type { DiceRoll, FeatModifier } from "../dice/types.js";
 import type { Rng } from "../rng/rng.js";
 import { asObject, fail, intField, paramsOf, strField } from "./parse.js";
+import { enemyIsWeary } from "./adversary.js";
 import type { CombatConfigs } from "./configs.js";
 import type {
   AttackConfig,
@@ -224,7 +225,7 @@ export function resolveAttack(
     abilityRating = weapon.rating;
     featModifier = "normal"; // enemies have no overwhelmed state
     // An enemy with no Hatred/Resolve counts as weary (format_opisaniya).
-    conditions = enemy.pool === 0 ? { weary: true, wearyVoidedFaces: cfgs.conditions.wearyVoidedFaces } : undefined;
+    conditions = enemyIsWeary(enemy) ? { weary: true, wearyVoidedFaces: cfgs.conditions.wearyVoidedFaces } : undefined;
     weaponDamage = weapon.damage;
   }
 
@@ -256,7 +257,7 @@ export function resolveAttack(
 
   // Apply damage to the target and build the new state.
   let nextCombat: CombatState = combat;
-  let targetDestroyed = false;
+  let targetTakenOut = false;
   let heroUnconscious = false;
 
   if (enduranceLoss > 0) {
@@ -271,12 +272,13 @@ export function resolveAttack(
     } else {
       const { index, enemy } = enemyAt(combat, params.target, "resolveAttack.target");
       const newEndurance = Math.max(0, enemy.endurance - enduranceLoss);
-      targetDestroyed = newEndurance === 0;
+      targetTakenOut = newEndurance === 0;
+      // R1: 0 Endurance TAKES the enemy OUT (engaged=false) but does NOT kill it
+      // (alive stays true; after_battle decides survival). A kill is woundsTaken===might.
       const newEnemy: EnemyState = {
         ...enemy,
         endurance: newEndurance,
-        alive: !targetDestroyed,
-        engaged: targetDestroyed ? false : enemy.engaged,
+        engaged: targetTakenOut ? false : enemy.engaged,
       };
       const enemies = combat.enemies.map((e, i) => (i === index ? newEnemy : e));
       nextCombat = { ...combat, enemies };
@@ -295,7 +297,7 @@ export function resolveAttack(
     enduranceLoss,
     piercingTriggered: evalRes.piercingTriggered,
     featFace: roll.feat.face,
-    targetDestroyed,
+    targetTakenOut,
     heroUnconscious,
     drivenBackApplied,
   };
