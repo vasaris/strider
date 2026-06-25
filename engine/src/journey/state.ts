@@ -1,21 +1,12 @@
 import type { CheckResult } from "../checks/types.js";
-import type { EyeRegion, EyeState } from "../eye/types.js";
+import type { EyeRegion } from "../eye/types.js";
+import type { HeroState } from "../hero/state.js";
 import type { Effect } from "../oracles/types.js";
 import type { Rng } from "../rng/rng.js";
 
-export type Attribute = "strength" | "heart" | "wits";
-export type Season = "summer_spring" | "winter_autumn";
+export type { Attribute, HeroState } from "../hero/state.js";
 
-export interface HeroState {
-  readonly attributes: Readonly<Record<Attribute, number>>; // ratings -> TN = tnBase - rating
-  readonly skills: Readonly<Record<string, number>>; // skill rating -> success dice
-  readonly hope: { readonly current: number; readonly max: number };
-  readonly shadow: { readonly points: number };
-  readonly fatigue: number; // accrued load (Iznurenie)
-  readonly eye: EyeState;
-  readonly inspired: boolean; // Wanderer on journey skill checks
-  readonly wounded: boolean; // milestone: record a wound consequence
-}
+export type Season = "summer_spring" | "winter_autumn";
 
 export interface JourneyProgress {
   readonly totalHexes: number;

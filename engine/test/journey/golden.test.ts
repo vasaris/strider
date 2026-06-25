@@ -70,7 +70,7 @@ describe("Stage 1 milestone: CLI journey playthrough", () => {
           "arrival",
         ],
         "hero": {
-          "eyeAwareness": 4,
+          "eyeAwareness": 3,
           "fatigue": 7,
           "hope": 3,
           "shadow": 3,

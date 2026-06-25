@@ -19,9 +19,11 @@ function baseState(): JourneyState {
     hero: {
       attributes: { strength: 4, heart: 5, wits: 3 },
       skills: { travel: 2, exploration: 2, awareness: 1, hunting: 1 },
-      hope: { current: 2, max: 3 },
-      shadow: { points: 0 },
+      endurance: { current: 18, max: 18 },
+      loadGear: 0,
       fatigue: 0,
+      hope: { current: 2, max: 3 },
+      shadow: { points: 0, scars: 0 },
       eye: newEyeState({ valourAtLeast4: false, culture: "other", famousItemCount: 0 }, cfg.eye),
       inspired: true,
       wounded: false,

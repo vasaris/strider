@@ -1,5 +1,6 @@
 import { type CheckConfig } from "../checks/config.js";
 import { checkConfigFromPack, diceConfigFromPack } from "../pack/configFromPack.js";
+import { type ConditionsConfig, deriveConditionsConfig } from "../conditions/index.js";
 import { type DiceConfig } from "../dice/config.js";
 import { type EyeConfig } from "../eye/config.js";
 import { eyeConfigFromPack } from "../eye/fromPack.js";
@@ -42,6 +43,7 @@ export interface SceneDetailTable {
 export interface JourneyConfigs {
   readonly dice: DiceConfig;
   readonly checks: CheckConfig;
+  readonly conditions: ConditionsConfig;
   readonly eye: EyeConfig;
   readonly oracles: PackOracles;
   readonly detectionScenes: FeatDieEventTable;
@@ -165,6 +167,7 @@ export function journeyConfigsFromPack(pack: Pack): JourneyConfigs {
   return {
     dice: diceConfigFromPack(pack),
     checks: checkConfigFromPack(pack),
+    conditions: deriveConditionsConfig(pack),
     eye: eyeConfigFromPack(pack),
     oracles: oraclesFromPack(pack),
     detectionScenes: parseFeatDieEventTable(pack.requireById("kv.solo.detection_scenes").raw),

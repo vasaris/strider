@@ -49,3 +49,17 @@ export interface CheckResult {
   /** Feat die showed the Eye — hook for out-of-combat Eye growth (Eye subsystem). */
   readonly isEyeOnFeat: boolean;
 }
+
+/**
+ * Optional condition modifiers applied during evaluation (Conditions subsystem).
+ * Omitted -> no condition affects the check (backward compatible).
+ *  - weary: Success die faces in `wearyVoidedFaces` contribute 0 to the sum.
+ *  - miserable: an Eye on the Feat die forces failure regardless of the sum.
+ * `wearyVoidedFaces` is supplied by the caller from ConditionsConfig so this
+ * subsystem never bakes book numbers; it is required when `weary` is true.
+ */
+export interface CheckConditions {
+  readonly weary?: boolean;
+  readonly miserable?: boolean;
+  readonly wearyVoidedFaces?: readonly number[];
+}

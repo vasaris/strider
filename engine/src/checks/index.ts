@@ -2,6 +2,7 @@ export type { CheckConfig, CheckConfigSources } from "./config.js";
 export { deriveCheckConfig } from "./config.js";
 
 export type {
+  CheckConditions,
   CheckOutcome,
   CheckResult,
   DegreeTier,

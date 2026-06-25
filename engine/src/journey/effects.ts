@@ -1,4 +1,5 @@
 import { applyEyeAwarenessDelta, growthFromShadowGain } from "../eye/growth.js";
+import { gainShadow } from "../conditions/shadow.js";
 import type { Effect } from "../oracles/types.js";
 import type { JourneyConfigs } from "./config.js";
 import type { JourneyState } from "./state.js";
@@ -31,10 +32,10 @@ export function applyEffect(state: JourneyState, effect: Effect, cfg: JourneyCon
     }
     case "shadow_points": {
       const v = intValue(effect, "shadow_points");
-      const shadow = { points: Math.max(0, hero.shadow.points + v) };
+      const withShadow = gainShadow(hero, v); // caps at max Hope, preserves scars
       const eyeGain = growthFromShadowGain(Math.max(0, v), false, cfg.eye); // out of combat
-      const eye = applyEyeAwarenessDelta(hero.eye, eyeGain);
-      return { ...state, hero: { ...hero, shadow, eye } };
+      const eye = applyEyeAwarenessDelta(withShadow.eye, eyeGain);
+      return { ...state, hero: { ...withShadow, eye } };
     }
     case "fatigue_points": {
       const v = intValue(effect, "fatigue_points");
