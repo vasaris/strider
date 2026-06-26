@@ -51,9 +51,11 @@ export function loadVkAddendum(doc: unknown): StopEntry[] {
 /** arch sec 3: RAG lore chunks are 300-600 tokens. */
 export const TOKEN_MIN = 300;
 export const TOKEN_MAX = 600;
-/** PROVISIONAL: calibrate vs real tokenizer in 2.3. Chars-per-token proxy for Russian
- *  prose. Cyrillic tokenizes denser than Latin, so 3 is conservative (4 would let
- *  oversize chunks slip through). Until calibrated, the budget is a WARN, not a block. */
+/** PROVISIONAL: calibrate in 2.3 vs the NARRATIVE MODEL's tokenizer (Anthropic/Claude) --
+ *  the chunk goes into ITS RAG context, so a generic tokenizer is the wrong yardstick.
+ *  Chars-per-token proxy for Russian prose: Cyrillic tokenizes denser than Latin, so 3 is
+ *  conservative (4 would let oversize chunks slip through). Until calibrated, the budget
+ *  is a WARN, not a block. */
 export const CHARS_PER_TOKEN = 3;
 
 export interface BudgetVerdict {
