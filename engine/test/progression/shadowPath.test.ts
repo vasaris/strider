@@ -54,13 +54,23 @@ describe("applyShadowPathAdvance — advancing the calling's Shadow Path", () =>
     expect(() => applyShadowPathAdvance(noCallingHero, cfg)).toThrow(/no calling/);
   });
 
-  it("surfaces the messenger content gap: its shadow_path key is not in the Shadow-Path card", () => {
-    // The messenger calling card carries shadow_path "wandering_madness" while the
-    // Shadow-Path owner lists "wandering" -- a pack inconsistency to fix at the
-    // content gate. The engine refuses to alias it and fails fast instead.
-    expect(cfg.shadowPath.callingToPath["messenger"]).toBe("wandering_madness");
-    expect(cfg.shadowPath.pathFlaws["wandering_madness"]).toBeUndefined();
+  it("messenger resolves to the wandering path (content gap reconciled)", () => {
+    // The messenger calling card's shadow_path was reconciled from
+    // "wandering_madness" to the Shadow-Path owner key "wandering". The engine
+    // still aliases nothing: it works because the keys now agree in the pack.
+    expect(cfg.shadowPath.callingToPath["messenger"]).toBe("wandering");
+    expect(cfg.shadowPath.pathFlaws["wandering"]).toHaveLength(4);
     const messenger: HeroState = { ...warrior, calling: "messenger" };
-    expect(() => applyShadowPathAdvance(messenger, cfg)).toThrow(/not found in the Shadow-Path card/);
+    const [step, h] = applyShadowPathAdvance(messenger, cfg);
+    expect(step.path).toBe("wandering");
+    expect(step.flawsGainedTotal).toBe(1);
+    expect(h.flaws).toHaveLength(1);
+  });
+
+  it("still fails fast on a calling whose shadow_path is absent from the card (no aliasing)", () => {
+    // A stub config with a calling pointing at a path the owner card lacks.
+    const broken = { ...cfg, shadowPath: { ...cfg.shadowPath, callingToPath: { phantom: "no_such_path" } } };
+    const phantom: HeroState = { ...warrior, calling: "phantom" };
+    expect(() => applyShadowPathAdvance(phantom, broken)).toThrow(/not found in the Shadow-Path card/);
   });
 });

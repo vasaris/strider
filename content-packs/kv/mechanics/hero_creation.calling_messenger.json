@@ -14,7 +14,7 @@
   "verified": true,
   "locale": "ru",
   "terminology": "pandora_box",
-  "notes": "",
+  "notes": "shadow_path key reconciled wandering_madness->wandering to match the Shadow-Path owner card (shadow.ispolzovanie_izyanov key 'wandering'); both cards name the same path in the source text; source_text unchanged, text_fidelity unaffected.",
   "payload": {
     "subsystem": "hero_creation",
     "title": "Вестник",
@@ -33,7 +33,7 @@
         ]
       },
       "additional_distinctive_feature": "folklore",
-      "shadow_path": "wandering_madness"
+      "shadow_path": "wandering"
     },
     "related": [
       "kv.mechanics.hero_creation.callings"

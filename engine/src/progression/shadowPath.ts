@@ -8,9 +8,9 @@
  * The path is keyed off the hero's calling: callingToPath[calling] gives the
  * path key, and pathFlaws[pathKey] the ordered Flaws. A calling whose
  * shadow_path key is not present in the Shadow-Path card fails fast here rather
- * than being papered over -- the messenger card currently carries
- * "wandering_madness" where the path owner has "wandering", a content
- * inconsistency to fix at the pack gate, not to alias in code.
+ * than being papered over -- the engine never aliases an unknown path key in
+ * code; a mismatch is a content fix at the pack gate. (The messenger card's
+ * "wandering_madness" was reconciled to the owner card's "wandering".)
  */
 
 import type { HeroState } from "../hero/state.js";
