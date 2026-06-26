@@ -3,3 +3,4 @@
 // golden transcripts arrive in chats 2.3/2.4 and export from here too.
 export * from './antislop.js';
 export * from './lt1gate.js';
+export * from './harness/index.js';
