@@ -4,4 +4,6 @@
 export * from './types.js';
 export * from './keeper.js';
 export * from './judge.js';
+export * from './aggregate.js';
+export * from './llmJudge.js';
 export * from './run.js';

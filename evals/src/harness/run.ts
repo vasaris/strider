@@ -19,6 +19,6 @@ export async function runScenario(config: RunConfig): Promise<Transcript> {
   const { seed, packageProvider, keeper, judge, ctx = {} } = config;
   const pkg = await packageProvider(seed);
   const output = await keeper.run({ systemPrompt: seed.systemPrompt, package: pkg });
-  const verdict = judge.score(output.prose, ctx);
+  const verdict = await judge.score(output.prose, ctx);
   return { scenarioId: seed.id, package: pkg, output, verdict };
 }

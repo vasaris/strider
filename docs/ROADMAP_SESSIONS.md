@@ -84,15 +84,20 @@ deferred-вердикт исправлен); открытый остаток —
     - 2.4.L3 Suite-раннер (5–10 golden-сценариев, агрегат pass-rate ≥ 80) + цикл хода
     - 2.4.L4 End-to-end CLI-сцена; критерий выхода + handoff + проверка гейта
 
-### 🔴 ТОЧКА ПАУЗЫ Stage 2 (контент-независимый трек исчерпан)
+### Stage 2 — состояние после активации LT1-tone
 **Закрыто (контент-независимо):** контракт+промпт-скелет (2.1), anti-slop seed +
-completeness (per-entry severity, пурпур-block, `register_parasite`, addendum-severity
-фикс), eval-харнесс скаффолд, **2.4 plumbing** (SD1 Fork A + структурный provider +
+completeness, eval-харнесс скаффолд, **2.4 plumbing** (SD1 Fork A + структурный provider +
 инъекция), LT1 скаффолд+гейт+драфты.
-**Gated за активацией `tone.md` (Иван) + workspace (Stage 3):** few-shot/голоса (2.3),
-live-2.4 (AnthropicKeeper, LLM-судья, suite, цикл). **Спекулятивную live-работу без
-контента не начинать.** Анблокер — активация LT1 (проза из книг → verified → move →
-ребилд 0.2.0, см. `content-packs/kv-pending/lt1/README.md`).
+**LT1-tone активирован** (`tone.md` + `tone.stoplist.json` в живом паке, сайдкары, 0.1.0;
+`evals` читает `VK_ADDENDUM` из живого сайдкара). Тон-сторона live-2.4 **разблокирована**.
+**Порядок дальше:**
+- **Первый live-шаг = тон-судья (AnthropicJudge)** — плумбинг сейчас (сборка/парсинг/
+  ошибки на МОК-ответах, без ключа/сети) ‖ **few-shot-черновики** (`prompts/few-shot-drafts/`,
+  draft→review Ивана: ухо + догфуд).
+- **Калибровка** (реальная дискриминация хорошее/плохое) — после few-shot; гоняет Иван
+  (ключ Anthropic у владельца).
+- **Всё ещё gated:** полный цикл + suite-раннер + `AnthropicKeeper` — на **workspace**
+  (открыватель Stage 3) + **lore-активацию** (LT1 lore → 0.2.0).
 
 ---
 

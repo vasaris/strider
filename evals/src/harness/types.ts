@@ -73,9 +73,18 @@ export type RubricAxis =
   | 'anti_slop';
 
 export interface AxisScore {
-  readonly status: 'scored' | 'pending';
-  readonly score: number | null; // 0..100 when scored; null when pending
+  readonly status: 'scored' | 'pending' | 'error';
+  readonly score: number | null; // 0..100 when scored; null when pending/error
   readonly notes: string;
+}
+
+/** The >=80 pass-rate verdict (arch sec 0.7). Computed by a PLUGGABLE aggregate function
+ *  ONLY when all six axes are 'scored' -- null while any axis is pending/error. */
+export interface AggregateVerdict {
+  readonly score: number; // 0..100
+  readonly threshold: number; // 80
+  readonly pass: boolean; // score >= threshold
+  readonly rule: string; // which aggregate rule produced this (mean / mean+floor / weighted)
 }
 
 export interface Verdict {
@@ -83,6 +92,29 @@ export interface Verdict {
   readonly antiSlop: { readonly violations: readonly Violation[]; readonly blocking: boolean };
   readonly budgetWarn: boolean; // length outside target -> WARN, never blocks
   readonly pass: boolean; // deterministic HARD gate: anti-slop block-clean
+  /** >=80 rubric verdict. Present only when all six axes are scored (the LLM judge);
+   *  absent for the deterministic pre-gate (5 axes pending) -- RECONCILE 7 aggregation guard. */
+  readonly aggregate?: AggregateVerdict | null;
+  /** Set when the LLM evaluation itself failed (unparseable/refused). The judge returns
+   *  this verdict instead of throwing or silently passing; aggregate is null when set. */
+  readonly error?: string | null;
+}
+
+/** Pluggable aggregate (RECONCILE: swap mean -> mean+floor -> weighted at calibration
+ *  without touching the judge). `mean(6)` is provisional and naive -- a catastrophe on one
+ *  axis (e.g. tone=10) is masked by the average; calibration will likely add a per-axis floor. */
+export type AggregateFn = (axisScores: Readonly<Record<RubricAxis, number>>) => AggregateVerdict;
+
+/** The narrative-model call behind one seam, injectable (mock now / Anthropic at
+ *  calibration) -- symmetric with the Keeper seam. Returns the model's raw text output
+ *  (expected to be the rubric JSON); the judge does the JSON.parse + Zod validation. */
+export interface LlmRequest {
+  readonly model: string; // RECONCILE: model is config, not hardcoded in judge logic
+  readonly system: string; // rubric sec 0.7 + activated tone.md, assembled by the caller
+  readonly user: string; // the prose to score
+}
+export interface LlmClient {
+  complete(req: LlmRequest): Promise<string>;
 }
 
 export interface JudgeContext {
@@ -92,8 +124,11 @@ export interface JudgeContext {
   readonly lengthTarget?: { readonly minChars: number; readonly maxChars: number } | null;
 }
 
+/** UNIFIED async interface (no separate AsyncJudge). DeterministicJudge resolves
+ *  immediately; the LLM judge awaits the model call. One interface, one runScenario path,
+ *  symmetric with Keeper.run(): Promise. */
 export interface Judge {
-  score(prose: string, ctx: JudgeContext): Verdict;
+  score(prose: string, ctx: JudgeContext): Promise<Verdict>;
 }
 
 export interface Transcript {

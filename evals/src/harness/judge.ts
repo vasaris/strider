@@ -19,9 +19,18 @@ function pending(): AxisScore {
  * it does not stack on top of this deterministic 0/100 (no double-counting one axis).
  * RECONCILE 7 (aggregation guard): this judge computes NO aggregate >=80 verdict -- five
  * axes are 'pending', and an aggregate is assembled only once all six are 'scored' (2.4).
+ *
+ * DIVISION OF LABOUR (do not blur): deterministic = high-confidence EXACT phrases, cheap.
+ * Morphology, voice, register, and nuance are the LLM judge's job -- do NOT add stemming /
+ * lemmatization to the seed (a rabbit hole). The seed missing an inflected form (e.g.
+ * "эпической битве" vs the seeded "эпическая битва") is BY DESIGN; the LLM catches it.
+ *
+ * Returns NO aggregate/error keys -- those belong to the LLM judge. Keeping this shape
+ * unchanged is what keeps the harness golden byte-stable.
  */
 export class DeterministicJudge implements Judge {
-  score(prose: string, ctx: JudgeContext): Verdict {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async score(prose: string, ctx: JudgeContext): Promise<Verdict> {
     const vk = ctx.vkAddendum ?? null;
     const violations = scanProse(prose, vk);
     const blocking = violations.some((v) => v.severity === 'block');
