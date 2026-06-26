@@ -11,12 +11,15 @@ import type { EnemyState, EnemyStatBlock, EnemyWeapon } from "./types.js";
 function deriveWeapon(raw: unknown, where: string): EnemyWeapon {
   const o = asObject(raw, where);
   const special = o["special"] === undefined ? [] : strArray(o["special"], `${where}.special`);
+  const rangeRaw = o["range"];
+  const range = rangeRaw === "melee" || rangeRaw === "ranged" ? rangeRaw : undefined;
   return {
     name: strField(o, "name", where),
     rating: intField(o, "rating", where),
     damage: intField(o, "damage", where),
     wound: intField(o, "wound", where),
     special,
+    ...(range !== undefined ? { range } : {}),
   };
 }
 

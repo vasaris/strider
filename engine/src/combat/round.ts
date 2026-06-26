@@ -210,23 +210,29 @@ function runHeroMain(
   const main = plan.heroMain;
   switch (main.kind) {
     case "attack": {
-      // A ranged-stance attack consumes any pending bonus dice granted by a
-      // ranged-attack-buff task (Prepare Shot / Advance); cleared after use.
-      const bonus =
+      // Manoeuvre position: the hero may attack only with ranged weapons, and the
+      // ranged attack takes the manoeuvre penalty, which stacks with any Advance
+      // buff (both flow through extraSuccessDice; net may be negative).
+      if (combat.maneuverPosition === true && combat.heroFrame.stance !== "ranged") {
+        fail("maneuver position: the hero may attack only with ranged weapons");
+      }
+      const pending =
         combat.heroFrame.stance === "ranged" ? combat.heroFrame.pendingRangedBonusDice : 0;
+      const maneuverPenalty = combat.maneuverPosition === true ? cfgs.combat.maneuver.heroRangedMinus : 0;
+      const extra = pending - maneuverPenalty;
       const [res, attacked, rng2] = resolveFullAttack(
         combat,
         {
           attacker: "hero",
           target: { enemyIndex: main.targetEnemyIndex },
-          ...(bonus > 0 ? { extraSuccessDice: bonus } : {}),
+          ...(extra !== 0 ? { extraSuccessDice: extra } : {}),
         },
         plan.heroSpecialSpends,
         cfgs,
         rng,
       );
       const next =
-        bonus > 0
+        pending > 0
           ? { ...attacked, heroFrame: { ...attacked.heroFrame, pendingRangedBonusDice: 0 } }
           : attacked;
       const event: RoundEvent = {
@@ -321,7 +327,13 @@ function runEnemyTurn(
     if (heroIsDown(state)) break;
 
     // Round-local debuff (Shield Thrust) plus this enemy's pool dice on attack #1.
-    const extra = enemy.attackDiceModUntilRoundEnd + (k === 0 ? grantedDice : 0);
+    // In manoeuvre position, the hero keeps melee attackers at bay: a melee enemy
+    // attack loses dice (ranged enemy attacks are unaffected).
+    const weapon = enemy.block.weapons[plan.weaponIndex ?? 0];
+    const enemyAttackIsMelee = weapon === undefined || weapon.range !== "ranged";
+    const maneuverDebuff =
+      state.maneuverPosition === true && enemyAttackIsMelee ? -cfgs.combat.maneuver.enemyMeleeMinus : 0;
+    const extra = enemy.attackDiceModUntilRoundEnd + (k === 0 ? grantedDice : 0) + maneuverDebuff;
 
     // Fold the round-local parry buff into the TN only for this roll, then restore.
     const baseParry = state.heroFrame.parryRating;

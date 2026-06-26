@@ -153,7 +153,19 @@ describe("anti-hardcode: deriveCombatConfig reflects card numbers, bakes none", 
     },
   });
 
-  const cfg = deriveCombatConfig(stancesStub, tasksStub, complStub, exitStub, soloStub);
+  // Manoeuvre mode stub with numbers different from the book (minus_2d) to prove
+  // the deriver follows the card.
+  const maneuverStub = card({
+    maneuver_mode: {
+      name_ru: "mode",
+      hero_attacks: "ranged_only",
+      enemy_attack_modifier: { melee: "minus_2d", ranged: "none" },
+      hero_ranged_attack_modifier: "minus_2d",
+      leave_combat: { check: "ranged_attack", penalty: "none" },
+    },
+  });
+
+  const cfg = deriveCombatConfig(stancesStub, tasksStub, complStub, exitStub, soloStub, maneuverStub);
 
   it("uses the stub's numbers, not the book's", () => {
     expect(cfg.stances.forward.heroAttackMod).toEqual({ kind: "flat", dice: 2 });
@@ -168,6 +180,13 @@ describe("anti-hardcode: deriveCombatConfig reflects card numbers, bakes none", 
     expect(cfg.tasks.prodvinutsya.skillAny).toEqual(["athletics", "search"]);
     expect(cfg.tasks.prodvinutsya.skill).toBe("athletics");
     expect(cfg.tasks.prodvinutsya.stance).toBe("ranged");
+    // The manoeuvre mode reads its dice penalties from the card (minus_2d here).
+    expect(cfg.maneuver).toEqual({
+      enemyMeleeMinus: 2,
+      heroRangedMinus: 2,
+      exitCheck: "ranged_attack",
+      exitNoPenalty: true,
+    });
     expect(cfg.complicationTiers.complication).toEqual({ moderate: -7, serious: -8 });
     expect(cfg.manipulateSkill).toBe("lore");
     expect(cfg.exit.defensiveExit.requiresRoll).toBe(true);
@@ -180,6 +199,6 @@ describe("anti-hardcode: deriveCombatConfig reflects card numbers, bakes none", 
         defensive_exit: { name_ru: "de", requires_stance: "defensive", roll: 42 },
       },
     });
-    expect(() => deriveCombatConfig(stancesStub, tasksStub, complStub, bad, soloStub)).toThrow(/roll/);
+    expect(() => deriveCombatConfig(stancesStub, tasksStub, complStub, bad, soloStub, maneuverStub)).toThrow(/roll/);
   });
 });

@@ -319,3 +319,81 @@ describe("runRound — ranged-attack-buff task grants and feeds bonus dice", () 
     expect(hitCount(5)).toBeGreaterThan(hitCount(0));
   });
 });
+
+// --- manoeuvre position: solo ranged combat on the move (IdO p.17) ---
+
+describe("runRound — manoeuvre position", () => {
+  // A regime where the enemy hits about half the time, so a -1 die is visible.
+  const nimbleHero = () =>
+    makeHero({ attributes: { strength: 8, heart: 4, wits: 3 }, skills: { bows: 3 }, endurance: { current: 60, max: 60 } });
+  const archerFrame = (over = {}) =>
+    makeFrame({ stance: "ranged", parryRating: 10, equippedWeapon: { group: "bows", damage: 5, injury: 16 }, ...over });
+  const weakEnemy = (over = {}) => enemyBlock({ level: 2, endurance: 60, might: 3, parry: 0, weapons: [{ name: "club", rating: 2, damage: 6, wound: 16, special: [] }], ...over });
+  const maneuverOn = (c: CombatState): CombatState => ({ ...c, maneuverPosition: true });
+
+  const enemyHits = (state: CombatState): number => {
+    let hits = 0;
+    const plan: RoundPlan = { heroStance: "ranged", heroMain: { kind: "other" }, enemyPlans: [{ enemyIndex: 0 }] };
+    for (let i = 0; i < 200; i++) {
+      const [outcome] = runRound(state, plan, cfgs, makeRng(`em${i}`));
+      for (const e of outcome.events) if (e.kind === "enemy_attack" && e.hit) hits++;
+    }
+    return hits;
+  };
+
+  it("a melee enemy attack loses dice in manoeuvre position", () => {
+    const base = combatOf(nimbleHero(), archerFrame(), [weakEnemy()]);
+    expect(enemyHits(maneuverOn(base))).toBeLessThan(enemyHits(base));
+  });
+
+  it("a ranged enemy attack is unaffected by manoeuvre position", () => {
+    const ranged = combatOf(nimbleHero(), archerFrame(), [weakEnemy({ weapons: [{ name: "bow", rating: 2, damage: 6, wound: 16, special: [], range: "ranged" }] })]);
+    // No penalty applies -> identical rolls -> identical hit counts on and off.
+    expect(enemyHits(maneuverOn(ranged))).toBe(enemyHits(ranged));
+  });
+
+  it("the hero may only attack with ranged weapons in manoeuvre position", () => {
+    const base = maneuverOn(combatOf(nimbleHero(), makeFrame({ stance: "open" }), [weakEnemy()]));
+    const plan: RoundPlan = { heroStance: "open", heroMain: { kind: "attack", targetEnemyIndex: 0 }, enemyPlans: [] };
+    expect(() => runRound(base, plan, cfgs, makeRng("melee"))).toThrow(/ranged/);
+  });
+
+  it("the hero's ranged attack takes the penalty, which the Advance buff stacks over", () => {
+    const heroHits = (state: CombatState): number => {
+      let hits = 0;
+      const plan: RoundPlan = { heroStance: "ranged", heroMain: { kind: "attack", targetEnemyIndex: 0 }, enemyPlans: [] };
+      for (let i = 0; i < 150; i++) {
+        const [outcome] = runRound(state, plan, cfgs, makeRng(`hh${i}`));
+        const ev = outcome.events.find((e) => e.kind === "hero_attack");
+        if (ev && ev.kind === "hero_attack" && ev.hit) hits++;
+      }
+      return hits;
+    };
+    const enemy = [weakEnemy({ parry: 6, armour: 2 })];
+    const off = heroHits(combatOf(nimbleHero(), archerFrame(), enemy));
+    const onNoBuff = heroHits(maneuverOn(combatOf(nimbleHero(), archerFrame(), enemy)));
+    const onBuff = heroHits(maneuverOn(combatOf(nimbleHero(), archerFrame({ pendingRangedBonusDice: 5 }), enemy)));
+    expect(onNoBuff).toBeLessThan(off); // the -1d penalty bites
+    expect(onBuff).toBeGreaterThan(onNoBuff); // the Advance buff stacks over it
+  });
+
+  it("the manoeuvre leave-combat consumes pending bonus and deals no damage", () => {
+    const enemy = weakEnemy();
+    const base = maneuverOn(combatOf(nimbleHero(), archerFrame({ pendingRangedBonusDice: 5 }), [enemy]));
+    const endBefore = base.enemies[0]!.endurance;
+    const plan: RoundPlan = { heroStance: "ranged", heroMain: { kind: "exit", method: "maneuver", targetEnemyIndex: 0 }, enemyPlans: [] };
+    const [outcome, next] = runRound(base, plan, cfgs, makeRng("mexit"));
+    const ev = outcome.events.find((e) => e.kind === "hero_exit");
+    expect(ev && ev.kind === "hero_exit" ? ev.method : "").toBe("maneuver");
+    expect(next.heroFrame.pendingRangedBonusDice).toBe(0); // pending spent on the attempt
+    expect(next.enemies[0]!.endurance).toBe(endBefore); // exit deals no damage
+  });
+
+  it("the manoeuvre leave-combat requires the ranged stance", () => {
+    const base = maneuverOn(combatOf(nimbleHero(), makeFrame({ stance: "open" }), [weakEnemy()]));
+    const plan: RoundPlan = { heroStance: "open", heroMain: { kind: "exit", method: "maneuver", targetEnemyIndex: 0 }, enemyPlans: [] };
+    const [outcome] = runRound(base, plan, cfgs, makeRng("noexit"));
+    const ev = outcome.events.find((e) => e.kind === "hero_exit");
+    expect(ev && ev.kind === "hero_exit" ? ev.left : true).toBe(false);
+  });
+});

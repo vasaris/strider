@@ -116,6 +116,24 @@ export interface CombatConfig {
   /** Skill used by the manipulate action to gain advantage / clear complication. */
   readonly manipulateSkill: string; // battle
   readonly exit: ExitMethods;
+  /** Solo manoeuvre position (ranged combat on the move); kv.mechanics.solo.manevrennaya_poziciya_dalniy_boy. */
+  readonly maneuver: ManeuverModeConfig;
+}
+
+/**
+ * The solo "manoeuvre position (ranged combat)" mode: a lone archer fights on the
+ * move, trading ranged attacks while keeping melee attackers at bay. All numbers
+ * come from the verified pack descriptors (minus_1d -> 1).
+ */
+export interface ManeuverModeConfig {
+  /** Enemy MELEE attacks against the hero lose this many dice (ranged: none). */
+  readonly enemyMeleeMinus: number;
+  /** The hero's own ranged attack loses this many dice. */
+  readonly heroRangedMinus: number;
+  /** Leaving combat: a ranged-attack check (descriptor from the card). */
+  readonly exitCheck: string;
+  /** The leave-combat check is rolled WITHOUT the hero ranged penalty ("ne ubiraya 1k"). */
+  readonly exitNoPenalty: boolean;
 }
 
 // --- Enemy stat block (adversaries.format_opisaniya + type cards) ---
@@ -127,6 +145,9 @@ export interface EnemyWeapon {
   readonly damage: number; // Endurance loss inflicted on a hit
   readonly wound: number; // Injury rating: TN of the hero's PROTECTION roll when Pierced
   readonly special: readonly string[]; // opaque special-damage labels
+  /** Reach of the weapon; absent means melee. Read by the manoeuvre mode (which
+   * penalises only enemy MELEE attacks). */
+  readonly range?: "melee" | "ranged";
 }
 
 /**
@@ -236,6 +257,9 @@ export interface CombatState {
   readonly enemies: readonly EnemyState[];
   readonly round: number;
   readonly phase: CombatPhase;
+  /** Solo manoeuvre position is in effect for this fight (ranged-only, enemy
+   * melee -1d, hero ranged -1d, special leave-combat). Absent means off. */
+  readonly maneuverPosition?: boolean;
 }
 
 // --- Attack resolution (Tact 2) ---

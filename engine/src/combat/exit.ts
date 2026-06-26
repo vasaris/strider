@@ -20,7 +20,7 @@ import type { CombatConfigs } from "./configs.js";
 import { fail } from "./parse.js";
 import type { AttackOutcome, CombatState, ExitMethod } from "./types.js";
 
-export type ExitMethodKey = "ranged" | "defensive";
+export type ExitMethodKey = "ranged" | "defensive" | "maneuver";
 
 export interface ExitResult {
   /** The hero successfully left the field this turn. */
@@ -54,6 +54,31 @@ export function resolveExit(
   rng: Rng,
   targetEnemyIndex?: number,
 ): readonly [ExitResult, CombatState, Rng] {
+  // Manoeuvre-position leave-combat: a ranged-attack check WITHOUT the manoeuvre
+  // ranged penalty ("ne ubiraya 1k"); on success the hero leaves dealing no
+  // damage. Any pending Advance bonus dice may be spent on the attempt.
+  if (method === "maneuver") {
+    if (combat.heroFrame.stance !== "ranged") {
+      return [{ left: false, method, unavailableReason: "requires ranged stance" }, combat, rng] as const;
+    }
+    const index = targetEnemyIndex ?? firstEngagedEnemyIndex(combat);
+    const pending = combat.heroFrame.pendingRangedBonusDice;
+    const cleared =
+      pending > 0
+        ? { ...combat, heroFrame: { ...combat.heroFrame, pendingRangedBonusDice: 0 } }
+        : combat;
+    if (index === null) {
+      return [{ left: true, method }, cleared, rng] as const;
+    }
+    const [outcome, , rng2] = resolveAttack(
+      combat,
+      { attacker: "hero", target: { enemyIndex: index }, ...(pending > 0 ? { extraSuccessDice: pending } : {}) },
+      cfgs,
+      rng,
+    );
+    return [{ left: outcome.hit, method, attack: outcome }, cleared, rng2] as const;
+  }
+
   const spec: ExitMethod = method === "ranged" ? cfgs.combat.exit.rangedExit : cfgs.combat.exit.defensiveExit;
 
   // Both methods require the hero to already hold the matching stance.
@@ -83,6 +108,6 @@ export function resolveExit(
 
 /** Guard against a programming error: the two methods are the only valid keys. */
 export function assertExitMethod(v: string): ExitMethodKey {
-  if (v === "ranged" || v === "defensive") return v;
+  if (v === "ranged" || v === "defensive" || v === "maneuver") return v;
   return fail(`resolveExit: unknown method ${JSON.stringify(v)}`);
 }

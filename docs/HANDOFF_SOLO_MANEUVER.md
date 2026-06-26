@@ -56,9 +56,40 @@ effect-driven, invalid check rejected, ranged consumes/non-ranged preserves, and
 a hit-rate property test proving the dice feed the attack). Golden `ork-2`
 unchanged (it uses no tasks).
 
-## Still deferred
+## Engine follow-on 2 (DONE -- manoeuvre MODE wired)
 
-The manoeuvre MODE (`manevrennaya_poziciya_dalniy_boy`): ranged-only attacks,
-enemy-melee `-1d`, hero-ranged `-1d`, the no-penalty ranged leave-combat, and the
-"bonus dice to leave combat" use of the buff. This is a combat-frame mode wider
-than the melee-round loop -- its own beat if/when solo ranged combat is wired.
+The manoeuvre position (`manevrennaya_poziciya_dalniy_boy`) is now a combat-frame
+mode. All dice numbers come from the card descriptors (`minus_1d` -> 1); nothing
+baked.
+
+1. State/config: `CombatState.maneuverPosition?: boolean` (whole-fight flag; off
+   when absent -- golden `ork-2` is unaffected). `EnemyWeapon.range?:
+   "melee"|"ranged"` (absent = melee), read by `deriveWeapon`. New
+   `ManeuverModeConfig` on `CombatConfig.maneuver`, derived by `deriveManeuver`
+   from the card (`enemyMeleeMinus`, `heroRangedMinus`, `exitCheck`,
+   `exitNoPenalty`); `deriveCombatConfig` gains a 6th param, `fromPack` passes the
+   card. The deriver asserts the card's enemy `ranged` modifier is `none`.
+2. Round (`combat/round.ts`): in manoeuvre position a melee enemy attack takes
+   `-enemyMeleeMinus` (ranged enemy weapons untouched); the hero may attack only
+   from the ranged stance (else it throws), and the hero's ranged attack takes
+   `-heroRangedMinus`, which STACKS with any pending Advance buff (both flow
+   through `extraSuccessDice`; net may be negative -> penalty dice).
+3. Exit (`combat/exit.ts`): new `maneuver` exit method -- a ranged-attack check
+   WITHOUT the manoeuvre penalty ("ne ubiraya 1k"); on success the hero leaves
+   dealing no damage. Any pending Advance bonus dice are spent on the attempt
+   (cleared whether it lands or not). Requires the ranged stance.
+
+Tests: `combat/config.test.ts` (manoeuvre stub with `minus_2d` proves
+pack-sourcing); `combat/round.test.ts` (+6: enemy melee debuff statistical,
+ranged enemy exact-equal on/off, ranged-only throw, hero penalty + buff-stack
+statistical, manoeuvre exit consumes pending + no damage, exit requires ranged
+stance). Suite 383 -> 389. Goldens unchanged.
+
+## Still deferred (non-blocking)
+
+- The mode is a whole-fight flag (M1a); no mid-fight enter/leave action exists
+  (the book frames it as the nature of the engagement, not a turn action).
+- `pre_melee_volleys` stays scene-determined (distance-driven, no fixed table in
+  the pack).
+- Independent reviewer re-confirm of the four content cards touched this session
+  (messenger + 3 Sec 3.7) remains author-external.

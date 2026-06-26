@@ -17,6 +17,7 @@ import type {
   ExitMethod,
   ExitMethods,
   GrappleLimits,
+  ManeuverModeConfig,
   StanceDiceMod,
   StanceKey,
   StanceSpec,
@@ -174,6 +175,33 @@ function deriveExitMethod(raw: Record<string, unknown>, where: string): ExitMeth
   return { nameRu, requiresStance, requiresRoll };
 }
 
+/** Parse a "minus_Nd" descriptor into its die count ("minus_1d" -> 1). */
+function minusDice(descriptor: string, where: string): number {
+  const m = /minus_(\d+)d/.exec(descriptor);
+  if (!m || m[1] === undefined) fail(`${where}: cannot parse minus-dice descriptor ${JSON.stringify(descriptor)}`);
+  return Number(m[1]);
+}
+
+/** Solo manoeuvre position (solo.manevrennaya_poziciya_dalniy_boy). */
+function deriveManeuver(raw: unknown): ManeuverModeConfig {
+  const where = "solo.manevrennaya_poziciya_dalniy_boy";
+  const mode = asObject(paramsOf(raw, where)["maneuver_mode"], `${where}.maneuver_mode`);
+  const enemyMod = asObject(mode["enemy_attack_modifier"], `${where}.enemy_attack_modifier`);
+  const enemyMeleeMinus = minusDice(strField(enemyMod, "melee", `${where}.enemy_attack_modifier`), `${where}.enemy_attack_modifier.melee`);
+  // Ranged enemy attacks take no penalty; assert the card says so.
+  if (enemyMod["ranged"] !== "none") {
+    fail(`${where}.enemy_attack_modifier.ranged: expected "none", got ${JSON.stringify(enemyMod["ranged"])}`);
+  }
+  const heroRangedMinus = minusDice(
+    strField(mode, "hero_ranged_attack_modifier", where),
+    `${where}.hero_ranged_attack_modifier`,
+  );
+  const leave = asObject(mode["leave_combat"], `${where}.leave_combat`);
+  const exitCheck = strField(leave, "check", `${where}.leave_combat`);
+  const exitNoPenalty = leave["penalty"] === "none";
+  return { enemyMeleeMinus, heroRangedMinus, exitCheck, exitNoPenalty };
+}
+
 function deriveExit(raw: Record<string, unknown>): ExitMethods {
   const methods = asObject(raw["methods"], "methods");
   return {
@@ -193,6 +221,8 @@ function deriveExit(raw: Record<string, unknown>): ExitMethods {
  *  - exitRaw:      kv.mechanics.combat.vyhod_iz_boya
  *  - soloTasksRaw: kv.mechanics.solo.prodvinutsya (the solo Advance task; kept in
  *                  its own overlay card, merged into tasks here)
+ *  - maneuverRaw:  kv.mechanics.solo.manevrennaya_poziciya_dalniy_boy (the ranged
+ *                  manoeuvre-position mode)
  */
 export function deriveCombatConfig(
   stancesRaw: unknown,
@@ -200,6 +230,7 @@ export function deriveCombatConfig(
   complRaw: unknown,
   exitRaw: unknown,
   soloTasksRaw: unknown,
+  maneuverRaw: unknown,
 ): CombatConfig {
   const sParams = paramsOf(stancesRaw, "combat.shagi");
   const stancesObj = asObject(sParams["stances"], "stances");
@@ -242,5 +273,6 @@ export function deriveCombatConfig(
     complicationTiers: deriveComplicationTiers(cParams),
     manipulateSkill,
     exit: deriveExit(eParams),
+    maneuver: deriveManeuver(maneuverRaw),
   };
 }
