@@ -121,3 +121,33 @@ npm run journey     # демо-прохождение журнея (golden dark-
 Иван попросил **явно** предупреждать о пересадке в новый чат. Триггеры: пошли подряд `[Older tool result cleared]`, начал переспрашивать решённое, **или перед следующим крупным куском** (после ~2–3 тяжёлых тактов). Сигналь отдельной заметной строкой `🔴 ПОРА В НОВЫЙ ЧАТ` + собери обновлённый handoff (этот файл + дельта по бою). Долговечное состояние — git + этот handoff + пак, не чат. Бой большой — вероятно, потребует своей пересадки между тактами.
 
 **Топология пересадки:** новый чат в том же Project → первым сообщением стартер (см. ниже) → сессия идёт по `/goal` автономно.
+
+---
+
+## 7. ДЕЛЬТА — Бой такт 5b: драйвер `runCombat` (подсистема Бой ЗАКРЫТА)
+
+Замыкает боевую петлю end-to-end, детерминированно, без LLM. Драйвер только оркеструет существующее (такты 1-5a + такт 4): он не переписывает ни цикл раунда, ни врага, ни оракул.
+
+### Что добавлено
+- `engine/src/combat/runCombat.ts` — драйвер `runCombat(combat, policy, cfgs, answers, rng) -> [CombatResult, Rng]` + типы `CombatResult` / `CombatPolicy` / `CombatOutcome` / `EnemyFate` / `EnemyFateStatus` / `AfterBattleRoll`; экспортированы из barrel.
+- `engine/src/cli/combatScenario.ts` — фикстура: Странник (`makeTestHero` + навык `swords`) поверх `HeroCombatFrame`, реальный `ork_soldat` из пака; минимальная детерминированная полиси.
+- `engine/src/cli/combat.ts` — CLI `npm run combat <pack> <seed>`, печатает структурный JSON-отчёт (зеркало `journey.ts`).
+- `engine/test/combat/runCombat.test.ts` (9) + `engine/test/combat/golden.test.ts` (4). Итог: **246 -> 259** тестов, typecheck чист, скан кириллицы CLEAN, журней-golden `dark-1` не дрейфит (`durationDays: 8`).
+
+### Решения (НЕ переоткрывать)
+- **Петля выхода — из правил, не из головы.** Драйвер крутит `startRound -> runRound`, выходит по `outcome.combatEnded` (его уже считает `runRound`: `heroExited || heroDown || noEnemiesLeft`). `posledovatelnost_boya` подтверждает структуру фаз; машинного предиката «бой окончен» в карте нет — он деривирован в `runRound`. Раунд 1 — без `startRound`; `startRound` (бамп раунда + сброс round-local) зовётся только перед раундами 2+.
+- **`CombatResult` — шов Stage 2: и плоско, и полно.** Плоско: `outcome`/`rounds`/финал героя+фрейма/`EnemyFate[]`. Полно: `events: RoundEvent[]` (склейка всех раундов, **закрытый union round.ts — не расширялся**) + `afterBattle: AfterBattleRoll[]` (пост-боевые броски выживания вынесены в своё поле, а не в RoundEvent).
+- **`CombatPolicy` — чистая, БЕЗ RNG.** `planRound(state, cfgs) -> RoundPlan`. Вся случайность в движке. Golden детерминирован; Stage 2 подменит полиси на LLM-ассистированную, не трогая кости. `survivalLikelihood?` — опциональный «прочтение игрока» для оракула выживания (нет функции -> дефолт таблицы). Бинарные решения врага (`press_or_flee`/`surrender`) — точка расширения, минимальная полиси их не зовёт. `outOfPosition` полиси игнорирует — `runRound` сам форсит `restore_stance`.
+- **after_battle — фаза в конце боя.** Пак `adversaries.format_opisaniya` дословно: выбитые с 0 Выносливости «после сражения ещё дышат и могут выжить, если им помочь». Катим `resolveEnemySurvival` одной фазой по всем `isTakenOutSurvivable`, независимо от исхода героя.
+- **`EnemyFateStatus`** разбивает `(alive, engaged)`: `destroyed` (`!alive && woundsTaken>=might`), `taken_out_died` (`!alive && woundsTaken<might`), `taken_out_survived` (`alive && !engaged`), `still_standing` (`alive && engaged`). Ветка `fled` зарезервирована под будущий `press_or_flee` (соло-движок её пока не порождает).
+- **`MAX_COMBAT_ROUNDS = 100`** — инженерный предохранитель от незавершаемого боя (НЕ book-литерал; не правило).
+- **Scope 5b — только `melee_rounds`.** Первый залп и внезапная атака вне ядра; `CombatState` приходит уже в фазе `melee_rounds`.
+
+### Демо/golden
+`npm run combat` (seed `ork-2`): hero_won за 4 раунда, орк `taken_out_survived`, after_battle `yes` — прогон через весь цикл включая оракул выживания. (seed `ork-1` — проигрыш, орк `still_standing` — ветка поражения.) Все 4 ветки `EnemyFateStatus` и оба исхода воспроизводятся на разных сидах детерминированно.
+
+### Критерий выхода — закрыт
+Бой прогоняется end-to-end детерминированно: `spawnEnemy -> runCombat -> CombatResult`, выживание/гибель врагов через `afterBattle`, без LLM. Golden-сид стабилен. **Подсистема Бой завершена.**
+
+### Дальше по роадмапу (Stage 1)
+Советы (`council` 3) -> Прогрессия (`rewards_virtues` 11 + `valour_wisdom` 2) -> **Фаза братства** (`fellowship_phase` 4, закрывает механический Stage 1). Из поздних этапов ничего не тащить без явной просьбы.

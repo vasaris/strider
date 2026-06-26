@@ -83,3 +83,12 @@ export {
   specialDamageConfigFromPack,
   woundConfigFromPack,
 } from "./fromPack.js";
+export type {
+  AfterBattleRoll,
+  CombatOutcome,
+  CombatPolicy,
+  CombatResult,
+  EnemyFate,
+  EnemyFateStatus,
+} from "./runCombat.js";
+export { MAX_COMBAT_ROUNDS, runCombat } from "./runCombat.js";

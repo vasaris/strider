@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "journey": "tsx src/cli/journey.ts ../content-packs/kv dark-1"
+    "journey": "tsx src/cli/journey.ts ../content-packs/kv dark-1",
+    "combat": "tsx src/cli/combat.ts ../content-packs/kv ork-2"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",
