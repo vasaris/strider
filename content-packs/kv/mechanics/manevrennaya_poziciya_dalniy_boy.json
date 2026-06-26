@@ -14,7 +14,7 @@
   "verified": true,
   "locale": "ru",
   "terminology": "pandora_box",
-  "notes": "",
+  "notes": "Structured parameters authored from the verified source_text (Sec 3.7 maneuver position / Prodvinutsya, IdO p.17); source_text unchanged. Schema mirrors combat.boevye_zadachi.tasks.* so the combat reader can consume it. Reviewer re-confirm (vision sweep p.17 + check_param_numbers) recommended.",
   "payload": {
     "subsystem": "solo",
     "title": "Манёвренная позиция (дальний бой)",
@@ -22,7 +22,26 @@
       "Герой сражается на ходу, двигаясь по местности и обстреливая преследующих или убегающих врагов. ♦ Герой может атаковать противников только оружием дальнего боя. При бросках за противников, атакующих героя оружием ближнего боя, убирается 1к, а за атакующих оружием дальнего боя штрафа нет. ♦ При проверках атак дальнего боя героя убирается 1к. ♦ Чтобы герой покинул бой, совершите проверку атаки дальнего боя (не убирая 1к). При успехе герой не наносит урон, а покидает поле боя, в противном случае он остаётся в бою. ♦ Боевая задача: Продвинуться."
     ],
     "summary": "Механика манёвренной позиции: герой атакует только дальним оружием; врагам ближнего боя −1к, дальнего — без штрафа; атакам героя −1к; выход из боя — проверкой дальней атаки без −1к (при успехе уходит без урона); доступна боевая задача Продвинуться.",
-    "parameters": {},
+    "parameters": {
+      "maneuver_mode": {
+        "name_ru": "Манёвренная позиция (дальний бой)",
+        "hero_attacks": "ranged_only",
+        "enemy_attack_modifier": {
+          "melee": "minus_1d",
+          "ranged": "none"
+        },
+        "hero_ranged_attack_modifier": "minus_1d",
+        "leave_combat": {
+          "check": "ranged_attack",
+          "penalty": "none",
+          "on_success": "leave_without_dealing_damage",
+          "on_failure": "stay_in_combat"
+        },
+        "available_tasks": [
+          "prodvinutsya"
+        ]
+      }
+    },
     "related": [
       "kv.mechanics.combat.sovershenie_atak",
       "kv.mechanics.combat.vyhod_iz_boya"

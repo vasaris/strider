@@ -14,7 +14,7 @@
   "verified": true,
   "locale": "ru",
   "terminology": "pandora_box",
-  "notes": "",
+  "notes": "Structured parameters authored from the verified source_text (Sec 3.7 maneuver position / Prodvinutsya, IdO p.17); source_text unchanged. Schema mirrors combat.boevye_zadachi.tasks.* so the combat reader can consume it. Reviewer re-confirm (vision sweep p.17 + check_param_numbers) recommended.",
   "payload": {
     "subsystem": "solo",
     "title": "Манёвренная позиция",
@@ -22,7 +22,15 @@
       "В «Игре для одного» бои в целом проходят по правилам книги основных правил. Перед тем, как схватиться с врагами в ближнем бою, можно сделать количество первых залпов, зависящее от расстояния между противниками. Герою-одиночке, предпочитающему луки и метательное оружие, манёвренная позиция позволяет сражаться «на ходу» и обмениваться атаками дальнего боя, одновременно ища выгодную позицию для удара."
     ],
     "summary": "Манёвренная позиция: перед ближним боем можно сделать залпы дальним оружием в зависимости от дистанции; герою с луком/метательным она позволяет драться «на ходу», обмениваясь дальними атаками и ища выгодную точку.",
-    "parameters": {},
+    "parameters": {
+      "maneuver_position": {
+        "name_ru": "Манёвренная позиция",
+        "pre_melee_volleys": "scene_determined",
+        "pre_melee_volleys_ref": "kv.mechanics.combat.nachalo_boya",
+        "for_ranged_focused_heroes": true,
+        "enables_mode": "kv.mechanics.solo.manevrennaya_poziciya_dalniy_boy"
+      }
+    },
     "related": [
       "kv.mechanics.combat.boy",
       "kv.mechanics.combat.shagi_v_raunde_blizhnego_boya"

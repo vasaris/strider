@@ -14,7 +14,7 @@
   "verified": true,
   "locale": "ru",
   "terminology": "pandora_box",
-  "notes": "",
+  "notes": "Structured parameters authored from the verified source_text (Sec 3.7 maneuver position / Prodvinutsya, IdO p.17); source_text unchanged. Schema mirrors combat.boevye_zadachi.tasks.* so the combat reader can consume it. Reviewer re-confirm (vision sweep p.17 + check_param_numbers) recommended.",
   "payload": {
     "subsystem": "solo",
     "title": "Продвинуться — манёвренная позиция",
@@ -22,7 +22,28 @@
       "На ходу герой может попробовать занять выгодное для атаки место, чтобы устроить засаду на врагов или стрелять по ним с возвышенности. Для этого в свой раунд игрок тратит основное действие на проверку АТЛЕТИКИ или ПОИСКА. При успехе атакующий получает 1к к своей следующей атаке дальнего боя, плюс ещё 1к за каждый выпавший знак успеха . Эти бонусные кости можно использовать при проверке атаки дальнего боя или чтобы покинуть бой (см. Манёвренная позиция)."
     ],
     "summary": "Боевая задача Продвинуться: основное действие на проверку АТЛЕТИКИ или ПОИСКА; при успехе +1к к следующей дальней атаке и ещё +1к за каждый выпавший знак; бонусные кости идут в дальнюю атаку или на выход из боя.",
-    "parameters": {},
+    "parameters": {
+      "tasks": {
+        "prodvinutsya": {
+          "name_ru": "Продвинуться",
+          "stance": "ranged",
+          "action": "main_action",
+          "check_any": [
+            "athletics",
+            "search"
+          ],
+          "effect": {
+            "on_success": "plus_1d_next_ranged_attack",
+            "per_sign": "plus_1d"
+          },
+          "bonus_dice_usable_for": [
+            "ranged_attack",
+            "leave_combat"
+          ],
+          "maneuver_mode": "manevrennaya_poziciya_dalniy_boy"
+        }
+      }
+    },
     "related": [
       "kv.mechanics.combat.boevye_zadachi"
     ]
