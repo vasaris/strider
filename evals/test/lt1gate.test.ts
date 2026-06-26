@@ -8,7 +8,7 @@ import {
   gateToneExamples,
   loadVkAddendum,
 } from '../src/lt1gate.js';
-import type { StopEntry } from '../src/antislop.js';
+import { scanProse, type StopEntry } from '../src/antislop.js';
 
 // Fixture VK addendum standing in for the loaded tone.stoplist.json. Tests stay
 // decoupled from the (verified:false) draft content on purpose.
@@ -42,6 +42,34 @@ describe('LT1 gate: VK addendum loader', () => {
 
   it('throws loudly on the wrong type', () => {
     expect(() => loadVkAddendum({ ...VK_FIXTURE_DOC, type: 'rule_card' })).toThrow();
+  });
+
+  it('REGRESSION: preserves curated per-entry severity end-to-end (избранный=warn, воистину=block)', () => {
+    // Guards the found bug: loadVkAddendum dropped severity and scanProse flattened the
+    // whole addendum to block, so избранный (curated warn) scanned as block. If a future
+    // loader refactor drops severity again, this fails.
+    const doc = {
+      ...VK_FIXTURE_DOC,
+      payload: {
+        entries: [
+          { term: 'избранный', reason: 'chosen-one trope; ambiguous single word', severity: 'warn' },
+          { term: 'воистину', reason: 'mock-archaic tic', severity: 'block' },
+        ],
+      },
+    };
+    const vk = loadVkAddendum(doc);
+    expect(vk.find((e) => e.term === 'избранный')?.severity).toBe('warn');
+    expect(vk.find((e) => e.term === 'воистину')?.severity).toBe('block');
+
+    const v = scanProse('Воистину, он избранный.', vk);
+    const sev = Object.fromEntries(v.map((x) => [x.term, x.severity]));
+    expect(sev['избранный']).toBe('warn');
+    expect(sev['воистину']).toBe('block');
+  });
+
+  it('throws on an invalid severity value', () => {
+    const doc = { ...VK_FIXTURE_DOC, payload: { entries: [{ term: 'x', reason: 'y', severity: 'fatal' }] } };
+    expect(() => loadVkAddendum(doc)).toThrow();
   });
 });
 

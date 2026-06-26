@@ -47,7 +47,36 @@ describe('anti-slop seed', () => {
     const withVk = scanProse(bad, vk);
     expect(withVk).toHaveLength(1);
     expect(withVk[0]?.list).toBe('vk_addendum');
-    expect(withVk[0]?.severity).toBe('block');
+    expect(withVk[0]?.severity).toBe('block'); // no per-entry severity -> list default (block)
     expect(hasBlockingSlop(bad, vk)).toBe(true);
+  });
+
+  it('flags purple "abstract-mood" phrases as blocking (per-entry severity in SLOP_RU)', () => {
+    const bad = 'Тишина давит, и атмосфера пронизана ожиданием.';
+    const blocks = scanProse(bad).filter((x) => x.severity === 'block');
+    expect(blocks.map((x) => x.term)).toEqual(
+      expect.arrayContaining(['тишина давит', 'атмосфера пронизана']),
+    );
+    expect(hasBlockingSlop(bad)).toBe(true);
+  });
+
+  it('flags register parasites as WARN in their own bucket (never block)', () => {
+    const bad = 'Данный путник, безусловно, является вестником.';
+    const parasites = scanProse(bad).filter((x) => x.list === 'register_parasite');
+    expect(parasites.map((x) => x.term)).toEqual(
+      expect.arrayContaining(['данный', 'безусловно', 'является']),
+    );
+    expect(parasites.every((x) => x.severity === 'warn')).toBe(true);
+    expect(hasBlockingSlop(bad)).toBe(false); // parasites are noisy/contextual -> never block
+  });
+
+  it('distinguishes purple "воздух наполнен напряжением" (block) from "воздух наполнился" (warn) by phrase', () => {
+    const purple = scanProse('Воздух наполнен напряжением.');
+    expect(purple.some((x) => x.term === 'воздух наполнен напряжением' && x.severity === 'block')).toBe(true);
+    expect(purple.some((x) => x.term === 'воздух наполнился')).toBe(false); // not a substring
+
+    const plain = scanProse('Воздух наполнился запахом хвои.');
+    expect(plain.some((x) => x.term === 'воздух наполнился' && x.severity === 'warn')).toBe(true);
+    expect(plain.some((x) => x.term === 'воздух наполнен напряжением')).toBe(false);
   });
 });

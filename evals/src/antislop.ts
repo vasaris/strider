@@ -10,18 +10,27 @@
 //  - `calque`  : wrong-system terminology that must NEVER appear (TOR is not D&D).
 //                Concrete and system-position-specific -> safe to seed here.
 //  - `slop_ru` / `slop_en` : generic LLM prose cliches in both languages
-//                (arch sec 0.2.1 "both languages"). System-agnostic.
+//                (arch sec 0.2.1 "both languages"). System-agnostic. Phrase-cliches.
+//  - `register_parasite` : high-frequency officialese filler words (данный, является, ...).
+//                A SEPARATE bucket from phrase-cliches so chat 2.3 can tune or suppress this
+//                noisy, context-dependent class independently (e.g. a frequency threshold).
 //  - VK-ADDENDUM stop-list (Middle-earth pastiche, e.g. genre cliches of the setting)
 //                is NOT embedded here. It is pack-side content under its own gates
 //                (content-packs/kv/tone.md) -- DEFERRED LT1 -- and is loaded as data,
 //                never hardcoded in this source. See VK_ADDENDUM_SLOT below.
+//
+// SEVERITY is per-entry (StopEntry.severity), falling back to the list default. Severity is
+// thus a property of the term along the WHOLE path -- including the VK addendum loaded from
+// tone.md, whose curated per-entry severity (e.g. избранный=warn) is honored, not flattened.
 
 export type Severity = 'block' | 'warn';
-export type ListId = 'calque' | 'slop_ru' | 'slop_en' | 'vk_addendum';
+export type ListId = 'calque' | 'slop_ru' | 'slop_en' | 'register_parasite' | 'vk_addendum';
 
 export interface StopEntry {
   readonly term: string;
   readonly reason: string;
+  /** Per-entry severity. Falls back to the list default when absent. */
+  readonly severity?: Severity;
 }
 
 export interface Violation {
@@ -53,8 +62,9 @@ export const CALQUE_TERMS: readonly StopEntry[] = [
 ];
 
 /**
- * Generic Russian prose-slop cliches (seed). These are register-agnostic LLM tics, not
- * setting-specific. Multi-word phrases are matched as a whole.
+ * Generic Russian prose-slop cliches (seed). Register-agnostic LLM tics, not
+ * setting-specific. Multi-word phrases are matched as a whole. Mixed severity: plain
+ * cliches WARN; purple "abstract-mood" phrases BLOCK (they replace percept with vapour).
  */
 export const SLOP_RU: readonly StopEntry[] = [
   { term: 'время словно остановилось', reason: 'cliche; stops the scene dead' },
@@ -63,6 +73,29 @@ export const SLOP_RU: readonly StopEntry[] = [
   { term: 'не передать словами', reason: 'evasion; refuses the concrete' },
   { term: 'воздух наполнился', reason: 'filler opener' },
   { term: 'словно сама природа', reason: 'pathetic-fallacy cliche' },
+  // Purple "abstract-mood" phrases -> block (concrete percept, not vapour).
+  { term: 'атмосфера пронизана', reason: 'purple; abstract mood, not percept', severity: 'block' },
+  { term: 'воздух наполнен напряжением', reason: 'purple; abstract tension (cf. warn "воздух наполнился")', severity: 'block' },
+  { term: 'тишина давит', reason: 'purple; abstract menace, not a sound/percept', severity: 'block' },
+  { term: 'незримая угроза витает', reason: 'purple; invisible-threat filler', severity: 'block' },
+];
+
+/**
+ * Register parasites: high-frequency officialese / filler words off-register for narrative
+ * prose. WARN, not block -- they have legitimate uses, so this is a noisy, context-dependent
+ * class.
+ *
+ * CALIBRATION INTENT (chat 2.3): kept in its OWN bucket (list = 'register_parasite') so it
+ * is a candidate for a per-text frequency threshold / suppression in the judge calibration,
+ * tuned INDEPENDENTLY of the phrase-cliche tiers. The bucket separation exists for exactly
+ * this -- do not merge it back into slop_ru.
+ */
+export const REGISTER_PARASITE: readonly StopEntry[] = [
+  { term: 'данный', reason: 'officialese filler; prefer этот or the concrete noun' },
+  { term: 'является', reason: 'bureaucratic copula; flatten to a verb' },
+  { term: 'поистине', reason: 'empty intensifier (distinct from VK addendum воистину)' },
+  { term: 'безусловно', reason: 'empty intensifier' },
+  { term: 'стоит отметить', reason: 'essayistic filler; breaks the scene' },
 ];
 
 /**
@@ -84,10 +117,11 @@ export const SLOP_EN: readonly StopEntry[] = [
  */
 export const VK_ADDENDUM_SLOT: readonly StopEntry[] | null = null;
 
-const SEVERITY: Readonly<Record<ListId, Severity>> = {
+const LIST_DEFAULT_SEVERITY: Readonly<Record<ListId, Severity>> = {
   calque: 'block',
   slop_ru: 'warn',
   slop_en: 'warn',
+  register_parasite: 'warn',
   vk_addendum: 'block',
 };
 
@@ -105,7 +139,7 @@ function scanList(text: string, list: ListId, entries: readonly StopEntry[]): Vi
   for (const e of entries) {
     const index = findTerm(text, e.term);
     if (index >= 0) {
-      out.push({ list, term: e.term, reason: e.reason, severity: SEVERITY[list], index });
+      out.push({ list, term: e.term, reason: e.reason, severity: e.severity ?? LIST_DEFAULT_SEVERITY[list], index });
     }
   }
   return out;
@@ -125,6 +159,7 @@ export function scanProse(
     ...scanList(text, 'calque', CALQUE_TERMS),
     ...scanList(text, 'slop_ru', SLOP_RU),
     ...scanList(text, 'slop_en', SLOP_EN),
+    ...scanList(text, 'register_parasite', REGISTER_PARASITE),
   ];
   if (vkAddendum) {
     violations.push(...scanList(text, 'vk_addendum', vkAddendum));
@@ -132,7 +167,8 @@ export function scanProse(
   return violations;
 }
 
-/** True iff the prose trips any 'block'-severity entry (calque or VK-addendum). */
+/** True iff the prose trips any 'block'-severity entry (a calque, a block-tagged purple
+ *  phrase, or a block VK-addendum term). Severity is per-entry, read off each match. */
 export function hasBlockingSlop(
   text: string,
   vkAddendum: readonly StopEntry[] | null = VK_ADDENDUM_SLOT,

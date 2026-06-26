@@ -34,9 +34,14 @@ export function loadVkAddendum(doc: unknown): StopEntry[] {
     const eo = e as Record<string, unknown>;
     const term = eo['term'];
     const reason = eo['reason'];
+    const severity = eo['severity'];
     if (typeof term !== 'string' || term.length === 0) throw new Error(`tone stoplist: entries[${i}].term`);
     if (typeof reason !== 'string' || reason.length === 0) throw new Error(`tone stoplist: entries[${i}].reason`);
-    return { term, reason };
+    if (severity !== undefined && severity !== 'block' && severity !== 'warn') {
+      throw new Error(`tone stoplist: entries[${i}].severity must be 'block' | 'warn'`);
+    }
+    // Preserve curated per-entry severity (e.g. избранный=warn) -- scanProse honors it.
+    return severity === undefined ? { term, reason } : { term, reason, severity };
   });
 }
 
