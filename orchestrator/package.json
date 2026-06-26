@@ -1,0 +1,20 @@
+{
+  "name": "@brodyazhnik/orchestrator",
+  "version": "0.1.0",
+  "description": "Brodyazhnik orchestrator: assembles the engine->Keeper narrative package. Thin Stage-2 slice; grows in Stage 3. Content-clean structure, no VK content in source.",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED",
+  "main": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "tsx": "^4.22.4",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}
