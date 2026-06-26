@@ -12,4 +12,5 @@ export * from "./journey/index.js";
 export * from "./combat/index.js";
 export * from "./council/index.js";
 export * from "./progression/index.js";
+export * from "./fellowship/index.js";
 export { parseSkillAttribute } from "./pack/skills.js";
