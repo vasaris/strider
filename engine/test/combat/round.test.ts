@@ -45,6 +45,7 @@ function makeFrame(over: Partial<HeroCombatFrame> = {}): HeroCombatFrame {
     equippedWeapon: { group: "swords", damage: 5, injury: 16 },
     drivenBackUsedThisRound: false,
     parryBonusThisRound: 0,
+    pendingRangedBonusDice: 0,
     outOfPosition: false,
     ...over,
   };
@@ -227,5 +228,94 @@ describe("runRound — invariants", () => {
       }
     }
     expect(ended).toBe(true);
+  });
+});
+
+// --- ranged-attack-buff task (solo Advance / Prepare Shot): Sec 3.7 buff ---
+
+describe("runRound — ranged-attack-buff task grants and feeds bonus dice", () => {
+  const archer = (over = {}) =>
+    makeHero({ attributes: { strength: 5, heart: 4, wits: 5 }, skills: { athletics: 6, search: 6, bows: 1 }, ...over });
+  const rangedFrame = (over = {}) =>
+    makeFrame({ stance: "ranged", equippedWeapon: { group: "bows", damage: 5, injury: 16 }, ...over });
+  const taskPlan = (main: RoundPlan["heroMain"]): RoundPlan => ({
+    heroStance: "ranged",
+    heroMain: main,
+    enemyPlans: [],
+  });
+
+  it("a successful Advance grants 1d + 1d per sign (numbers from the pack descriptor)", () => {
+    const combat = combatOf(archer(), rangedFrame(), [enemyBlock({ might: 1 })]);
+    const plan = taskPlan({ kind: "task", task: "prodvinutsya", checkSkill: "athletics" });
+    const [outcome, next] = runRound(combat, plan, cfgs, makeRng("t0"));
+    const ev = outcome.events.find((e) => e.kind === "hero_task");
+    expect(ev && ev.kind === "hero_task" ? ev.outcome : "").toBe("success");
+    expect(ev && ev.kind === "hero_task" ? ev.successIcons : -1).toBe(1);
+    expect(ev && ev.kind === "hero_task" ? ev.grantedDice : -1).toBe(2); // 1 + 1 sign
+    expect(ev && ev.kind === "hero_task" ? ev.buffApplied : false).toBe(true);
+    expect(next.heroFrame.pendingRangedBonusDice).toBe(2);
+  });
+
+  it("the granted dice scale with success signs (per_sign read from the card)", () => {
+    const combat = combatOf(archer(), rangedFrame(), [enemyBlock({ might: 1 })]);
+    const plan = taskPlan({ kind: "task", task: "prodvinutsya", checkSkill: "athletics" });
+    const [outcome, next] = runRound(combat, plan, cfgs, makeRng("t2")); // two signs
+    const ev = outcome.events.find((e) => e.kind === "hero_task");
+    expect(ev && ev.kind === "hero_task" ? ev.successIcons : -1).toBe(2);
+    expect(ev && ev.kind === "hero_task" ? ev.grantedDice : -1).toBe(3); // 1 + 2 signs
+    expect(next.heroFrame.pendingRangedBonusDice).toBe(3);
+  });
+
+  it("the core Prepare Shot task grants the same buff (effect-driven, no key special-casing)", () => {
+    const combat = combatOf(archer(), rangedFrame(), [enemyBlock({ might: 1 })]);
+    const plan = taskPlan({ kind: "task", task: "prepare_shot" });
+    const [outcome, next] = runRound(combat, plan, cfgs, makeRng("t0"));
+    const ev = outcome.events.find((e) => e.kind === "hero_task");
+    // Same descriptor as Advance -> same buff path through the engine.
+    const signs = ev && ev.kind === "hero_task" ? ev.successIcons : 0;
+    const expected = ev && ev.kind === "hero_task" && ev.outcome === "success" ? 1 + signs : 0;
+    expect(ev && ev.kind === "hero_task" ? ev.grantedDice : -1).toBe(expected);
+    expect(next.heroFrame.pendingRangedBonusDice).toBe(expected);
+    expect(expected).toBeGreaterThan(0); // t0 is a success here too
+  });
+
+  it("rejects a check skill outside the task's choices", () => {
+    const combat = combatOf(archer(), rangedFrame(), [enemyBlock()]);
+    const plan = taskPlan({ kind: "task", task: "prodvinutsya", checkSkill: "swords" });
+    expect(() => runRound(combat, plan, cfgs, makeRng("bad"))).toThrow(/choices/);
+  });
+
+  it("a ranged-stance attack consumes the pending bonus dice and clears them", () => {
+    const combat = combatOf(archer(), rangedFrame({ pendingRangedBonusDice: 5 }), [enemyBlock()]);
+    const plan: RoundPlan = { heroStance: "ranged", heroMain: { kind: "attack", targetEnemyIndex: 0 }, enemyPlans: [] };
+    const [, next] = runRound(combat, plan, cfgs, makeRng("consume"));
+    expect(next.heroFrame.pendingRangedBonusDice).toBe(0);
+  });
+
+  it("a non-ranged-stance attack does not consume the pending bonus dice", () => {
+    const combat = combatOf(archer(), makeFrame({ stance: "open", pendingRangedBonusDice: 5 }), [enemyBlock()]);
+    const plan: RoundPlan = { heroStance: "open", heroMain: { kind: "attack", targetEnemyIndex: 0 }, enemyPlans: [] };
+    const [, next] = runRound(combat, plan, cfgs, makeRng("keep"));
+    expect(next.heroFrame.pendingRangedBonusDice).toBe(5);
+  });
+
+  it("the bonus dice actually feed the attack: more dice -> more hits over many seeds", () => {
+    const weakEnemy = enemyBlock({ level: 3, endurance: 30, parry: 6, armour: 2 });
+    const hitCount = (pending: number): number => {
+      let hits = 0;
+      for (let i = 0; i < 120; i++) {
+        const combat = combatOf(
+          archer(),
+          rangedFrame({ pendingRangedBonusDice: pending }),
+          [weakEnemy],
+        );
+        const plan: RoundPlan = { heroStance: "ranged", heroMain: { kind: "attack", targetEnemyIndex: 0 }, enemyPlans: [] };
+        const [outcome] = runRound(combat, plan, cfgs, makeRng(`hit${i}`));
+        const ev = outcome.events.find((e) => e.kind === "hero_attack");
+        if (ev && ev.kind === "hero_attack" && ev.hit) hits++;
+      }
+      return hits;
+    };
+    expect(hitCount(5)).toBeGreaterThan(hitCount(0));
   });
 });

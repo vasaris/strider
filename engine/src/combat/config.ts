@@ -1,12 +1,13 @@
 /**
- * Derive the CombatConfig from four verified rule cards. Every number and key
- * is read from the pack; nothing is baked. The solo overlay (manoeuvre position
- * + the Advance task) is NOT derived here: those cards carry their mechanics in
- * prose with empty structured `parameters`, so they await a params backfill
- * before they can be derived without parsing free text.
+ * Derive the CombatConfig from the verified rule cards. Every number and key is
+ * read from the pack; nothing is baked. The four core tasks come from
+ * combat.boevye_zadachi; the solo Advance task (prodvinutsya) is merged from its
+ * own overlay card (kept separate per the overlay principle). The wider manoeuvre
+ * MODE (ranged-only fighting, enemy/hero -1d, the special exit) is still carried
+ * in prose and awaits its own combat-frame beat.
  */
 
-import { asArray, asObject, boolField, fail, intField, paramsOf, strField } from "./parse.js";
+import { asArray, asObject, boolField, fail, intField, paramsOf, strArray, strField } from "./parse.js";
 import type {
   ActionEconomy,
   CombatConfig,
@@ -23,7 +24,11 @@ import type {
 } from "./types.js";
 
 const STANCE_KEYS: readonly StanceKey[] = ["forward", "open", "defensive", "ranged"];
-const TASK_KEYS: readonly CombatTaskKey[] = ["cow", "rally", "protect", "prepare_shot"];
+// All valid task keys (for plan validation); the four core tasks live in
+// combat.boevye_zadachi, while prodvinutsya (solo Advance) lives in the solo
+// overlay card and is merged in separately.
+const TASK_KEYS: readonly CombatTaskKey[] = ["cow", "rally", "protect", "prepare_shot", "prodvinutsya"];
+const CORE_TASK_KEYS: readonly CombatTaskKey[] = ["cow", "rally", "protect", "prepare_shot"];
 
 function asStanceKey(v: unknown, where: string): StanceKey {
   if (typeof v === "string" && (STANCE_KEYS as readonly string[]).includes(v)) return v as StanceKey;
@@ -91,7 +96,18 @@ function deriveTask(raw: Record<string, unknown>, key: CombatTaskKey): CombatTas
   const where = `tasks.${key}`;
   const nameRu = strField(raw, "name_ru", where);
   const stance = asStanceKey(raw["stance"], `${where}.stance`);
-  const skill = strField(raw, "check", where);
+  // A task carries either a single `check` or a `check_any` choice (solo Advance:
+  // athletics OR search). When a choice is given, the first is the default skill.
+  let skill: string;
+  let skillAny: readonly string[] | undefined;
+  if (raw["check_any"] !== undefined) {
+    skillAny = strArray(raw["check_any"], `${where}.check_any`);
+    const first = skillAny[0];
+    if (first === undefined) fail(`${where}.check_any: empty`);
+    skill = first;
+  } else {
+    skill = strField(raw, "check", where);
+  }
   const maxPerRound = raw["max_per_round"] === undefined ? undefined : intField(raw, "max_per_round", where);
   const effect = deriveTaskEffect(asObject(raw["effect"], `${where}.effect`), `${where}.effect`);
   return {
@@ -99,6 +115,7 @@ function deriveTask(raw: Record<string, unknown>, key: CombatTaskKey): CombatTas
     nameRu,
     stance,
     skill,
+    ...(skillAny !== undefined ? { skillAny } : {}),
     ...(maxPerRound !== undefined ? { maxPerRound } : {}),
     effect,
   };
@@ -170,16 +187,19 @@ function deriveExit(raw: Record<string, unknown>): ExitMethods {
 
 /**
  * Build the CombatConfig.
- *  - stancesRaw: kv.mechanics.combat.shagi_v_raunde_blizhnego_boya
- *  - tasksRaw:   kv.mechanics.combat.boevye_zadachi
- *  - complRaw:   kv.mechanics.combat.oslozhneniya_i_preimuschestva
- *  - exitRaw:    kv.mechanics.combat.vyhod_iz_boya
+ *  - stancesRaw:   kv.mechanics.combat.shagi_v_raunde_blizhnego_boya
+ *  - tasksRaw:     kv.mechanics.combat.boevye_zadachi
+ *  - complRaw:     kv.mechanics.combat.oslozhneniya_i_preimuschestva
+ *  - exitRaw:      kv.mechanics.combat.vyhod_iz_boya
+ *  - soloTasksRaw: kv.mechanics.solo.prodvinutsya (the solo Advance task; kept in
+ *                  its own overlay card, merged into tasks here)
  */
 export function deriveCombatConfig(
   stancesRaw: unknown,
   tasksRaw: unknown,
   complRaw: unknown,
   exitRaw: unknown,
+  soloTasksRaw: unknown,
 ): CombatConfig {
   const sParams = paramsOf(stancesRaw, "combat.shagi");
   const stancesObj = asObject(sParams["stances"], "stances");
@@ -194,9 +214,18 @@ export function deriveCombatConfig(
   const tParams = paramsOf(tasksRaw, "combat.boevye_zadachi");
   const tasksObj = asObject(tParams["tasks"], "tasks");
   const tasks = {} as Record<CombatTaskKey, CombatTaskSpec>;
-  for (const key of TASK_KEYS) {
+  for (const key of CORE_TASK_KEYS) {
     tasks[key] = deriveTask(asObject(tasksObj[key], `tasks.${key}`), key);
   }
+
+  // Solo overlay: the Advance task lives in its own verified card (kept separate
+  // from the core card per the overlay principle); merge it into the task map.
+  const soloParams = paramsOf(soloTasksRaw, "solo.prodvinutsya");
+  const soloTasksObj = asObject(soloParams["tasks"], "solo.prodvinutsya.tasks");
+  tasks["prodvinutsya"] = deriveTask(
+    asObject(soloTasksObj["prodvinutsya"], "tasks.prodvinutsya"),
+    "prodvinutsya",
+  );
 
   const cParams = paramsOf(complRaw, "combat.oslozhneniya");
   const manipulate = asObject(cParams["manipulate_action"], "manipulate_action");

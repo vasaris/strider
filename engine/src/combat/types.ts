@@ -15,7 +15,7 @@ import type { HeroState, WoundSeverity } from "../hero/state.js";
 export type StanceKey = "forward" | "open" | "defensive" | "ranged";
 
 /** The four canonical combat tasks, each bound to a stance (combat.boevye_zadachi). */
-export type CombatTaskKey = "cow" | "rally" | "protect" | "prepare_shot";
+export type CombatTaskKey = "cow" | "rally" | "protect" | "prepare_shot" | "prodvinutsya";
 
 /** The four weapon-skill groups plus brawling (traits.spisok_boevyh_umeniy). */
 export type WeaponGroup = "swords" | "spears" | "axes" | "bows" | "brawling";
@@ -65,7 +65,9 @@ export interface CombatTaskSpec {
   readonly key: CombatTaskKey;
   readonly nameRu: string; // opaque
   readonly stance: StanceKey;
-  readonly skill: string; // engine skill key (awe/inspire/athletics/search)
+  readonly skill: string; // engine skill key (awe/inspire/athletics/search); default check
+  /** Alternative checks when the task offers a choice (solo Advance: athletics OR search). */
+  readonly skillAny?: readonly string[];
   readonly maxPerRound?: number; // rally is once per round
   readonly effect: TaskEffect;
 }
@@ -217,6 +219,14 @@ export interface HeroCombatFrame {
    * across the round boundary; cleared only by a restore_stance main action.
    */
   readonly outOfPosition: boolean;
+  /**
+   * Bonus success dice granted by a successful combat task whose effect feeds
+   * the next ranged attack (Prepare Shot / solo Advance: +1d on success, +1d per
+   * sign). Woven into the next ranged-stance hero attack via extraSuccessDice and
+   * cleared on use. Persists across the round boundary until consumed ("next
+   * ranged attack"), so startRound does NOT reset it.
+   */
+  readonly pendingRangedBonusDice: number;
 }
 
 /** The container a fight mutates: persistent hero + combat frame + enemies. */

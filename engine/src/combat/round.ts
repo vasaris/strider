@@ -41,7 +41,7 @@ import type { CombatState, CombatTaskKey, EnemyState, StanceKey } from "./types.
 
 export type HeroMainAction =
   | { readonly kind: "attack"; readonly targetEnemyIndex: number }
-  | { readonly kind: "task"; readonly task: CombatTaskKey }
+  | { readonly kind: "task"; readonly task: CombatTaskKey; readonly checkSkill?: string }
   | { readonly kind: "exit"; readonly method: ExitMethodKey; readonly targetEnemyIndex?: number }
   | { readonly kind: "restore_stance" }
   | { readonly kind: "other" }; // move, pick up a dropped weapon, carry an ally, etc.
@@ -87,9 +87,12 @@ export type RoundEvent =
       readonly task: CombatTaskKey;
       readonly outcome: CheckResult["outcome"];
       readonly successIcons: number;
-      /** Opaque effect string from the pack; the buff is NOT applied in Tact 5 (deferred to solo backfill). */
+      /** Opaque effect string from the pack. */
       readonly effectOpaque: string;
-      readonly buffApplied: false;
+      /** True when the task fed bonus dice to the next ranged attack. */
+      readonly buffApplied: boolean;
+      /** Bonus success dice granted to the next ranged attack (0 when none). */
+      readonly grantedDice: number;
     }
   | { readonly kind: "hero_exit"; readonly method: ExitMethodKey; readonly left: boolean }
   | { readonly kind: "hero_restore_stance" }
@@ -138,6 +141,37 @@ export function startRound(combat: CombatState): CombatState {
 
 // --- helpers ---
 
+/**
+ * Parse a "plus_Nd" descriptor into its die count ("plus_1d" -> 1). The number
+ * lives in the pack effect descriptor, not in code; an unrecognised form is 0.
+ */
+function plusDice(descriptor: string): number {
+  const m = /plus_(\d+)d/.exec(descriptor);
+  return m && m[1] !== undefined ? Number(m[1]) : 0;
+}
+
+/** A task whose success feeds the NEXT ranged attack (Prepare Shot / Advance). */
+function isRangedAttackBuff(effect: { readonly onSuccess: string }): boolean {
+  return effect.onSuccess.includes("next_ranged_attack");
+}
+
+/**
+ * Which skill a task check uses. A task offering a choice (skillAny: solo Advance
+ * = athletics OR search) takes the player's pick, validated against the list; a
+ * single-check task ignores any pick and uses its one skill.
+ */
+function resolveTaskSkill(
+  spec: { readonly skill: string; readonly skillAny?: readonly string[] },
+  picked: string | undefined,
+): string {
+  if (spec.skillAny === undefined) return spec.skill;
+  if (picked === undefined) return spec.skill; // default to the first choice
+  if (!spec.skillAny.includes(picked)) {
+    fail(`task check skill "${picked}" not in choices ${spec.skillAny.join("|")}`);
+  }
+  return picked;
+}
+
 /** Resolve a combat-task skill check (used by a task main action). */
 function runTaskCheck(combat: CombatState, skill: string, cfgs: CombatConfigs, rng: Rng): readonly [CheckResult, Rng] {
   const attribute = cfgs.skillAttribute[skill];
@@ -176,13 +210,25 @@ function runHeroMain(
   const main = plan.heroMain;
   switch (main.kind) {
     case "attack": {
-      const [res, next, rng2] = resolveFullAttack(
+      // A ranged-stance attack consumes any pending bonus dice granted by a
+      // ranged-attack-buff task (Prepare Shot / Advance); cleared after use.
+      const bonus =
+        combat.heroFrame.stance === "ranged" ? combat.heroFrame.pendingRangedBonusDice : 0;
+      const [res, attacked, rng2] = resolveFullAttack(
         combat,
-        { attacker: "hero", target: { enemyIndex: main.targetEnemyIndex } },
+        {
+          attacker: "hero",
+          target: { enemyIndex: main.targetEnemyIndex },
+          ...(bonus > 0 ? { extraSuccessDice: bonus } : {}),
+        },
         plan.heroSpecialSpends,
         cfgs,
         rng,
       );
+      const next =
+        bonus > 0
+          ? { ...attacked, heroFrame: { ...attacked.heroFrame, pendingRangedBonusDice: 0 } }
+          : attacked;
       const event: RoundEvent = {
         kind: "hero_attack",
         targetEnemyIndex: main.targetEnemyIndex,
@@ -197,16 +243,36 @@ function runHeroMain(
     }
     case "task": {
       const taskSpec = cfgs.combat.tasks[main.task];
-      const [check, rng2] = runTaskCheck(combat, taskSpec.skill, cfgs, rng);
+      const skill = resolveTaskSkill(taskSpec, main.checkSkill);
+      const [check, rng2] = runTaskCheck(combat, skill, cfgs, rng);
+      // A successful ranged-attack-buff task grants bonus dice to the next ranged
+      // attack: +1d on success, +1d per success sign. All numbers come from the
+      // pack effect descriptors (plus_Nd), nothing baked.
+      const granted =
+        check.outcome === "success" && isRangedAttackBuff(taskSpec.effect)
+          ? plusDice(taskSpec.effect.onSuccess) +
+            check.successIcons * (taskSpec.effect.perSign !== undefined ? plusDice(taskSpec.effect.perSign) : 0)
+          : 0;
+      const next =
+        granted > 0
+          ? {
+              ...combat,
+              heroFrame: {
+                ...combat.heroFrame,
+                pendingRangedBonusDice: combat.heroFrame.pendingRangedBonusDice + granted,
+              },
+            }
+          : combat;
       const event: RoundEvent = {
         kind: "hero_task",
         task: main.task,
         outcome: check.outcome,
         successIcons: check.successIcons,
         effectOpaque: taskSpec.effect.onSuccess,
-        buffApplied: false,
+        buffApplied: granted > 0,
+        grantedDice: granted,
       };
-      return [event, combat, rng2, false] as const;
+      return [event, next, rng2, false] as const;
     }
     case "exit": {
       const [exit, next, rng2] = resolveExit(combat, main.method, cfgs, rng, main.targetEnemyIndex);

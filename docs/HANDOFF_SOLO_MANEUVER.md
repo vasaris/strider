@@ -29,31 +29,36 @@ numbers -- the "+1d/-1d" live as descriptors, like core tasks). The three cards
 keep `verified: true` (text_fidelity untouched); a reviewer re-confirm (vision
 sweep p.17 + check_param_numbers on these ids) formally closes the new params.
 
-## Engine follow-on (NOT done -- separate combat patch, re-opens Stage-1 combat)
+## Engine follow-on (DONE -- ranged-attack-buff task wired)
 
-The buff hook already exists: `combat/round.ts` carries `buffApplied: false` and
-the `extraSuccessDice` injection seam; `combat/config.ts` reads tasks from
-`combat.boevye_zadachi`. The patch:
+The buff hook was wired into the combat round. A successful task whose effect
+feeds the next ranged attack now grants bonus dice, consumed by the next
+ranged-stance hero attack via the existing `extraSuccessDice` seam:
 
-1. Config: also read `kv.mechanics.solo.prodvinutsya` `tasks` and merge/register
-   it alongside the core tasks (it is a ranged-stance task like `prepare_shot`).
-   Teach the task reader the `check_any` field (fall back to `check` when absent),
-   so a task may offer a choice of skills. Keep solo and core cards separate
-   (overlay principle) -- read both, do not move the task into the core card.
-2. Round: when the chosen task is `prodvinutsya`, on a successful check inject
-   `extraSuccessDice = 1 + signs` into the NEXT ranged attack (or the leave-combat
-   check), and flip `buffApplied: true`. The "+1 per sign" is already the
-   `per_sign: plus_1d` descriptor.
-3. (Optional, larger) the maneuver MODE (`manevrennaya_poziciya_dalniy_boy`):
-   ranged-only attacks, enemy-melee `-1d`, hero-ranged `-1d`, leave-combat via a
-   no-penalty ranged check. This is a combat-frame mode, wider than the current
-   melee-round loop -- scope as its own beat if/when solo ranged combat is wired.
+1. Config (`combat/config.ts`, `fromPack.ts`): `deriveCombatConfig` takes the
+   solo `prodvinutsya` card and merges its task into the task map alongside the
+   four core tasks (core/solo cards stay separate). `deriveTask` learns
+   `check_any` (a choice of skills; falls back to `check`). `CombatTaskKey` gains
+   `prodvinutsya`.
+2. Round (`combat/round.ts`): on a successful task whose `effect.onSuccess`
+   contains `next_ranged_attack`, grant `plusDice(onSuccess) + signs *
+   plusDice(perSign)` (numbers parsed from the `plus_Nd` descriptors, nothing
+   baked) into `heroFrame.pendingRangedBonusDice`. The next ranged-stance hero
+   attack injects it as `extraSuccessDice` and clears it. The `hero_task` event
+   now reports `buffApplied: boolean` + `grantedDice`. The trigger is the EFFECT
+   descriptor, not the task key, so the core `prepare_shot` twin lights up too.
+3. State: `HeroCombatFrame.pendingRangedBonusDice` persists across the round
+   boundary until consumed (startRound does not reset it).
 
-Tests for the follow-on: anti-hardcode on a stub `prodvinutsya` task with
-different dice; `+1 per sign` distribution on seeded RNG; a parse test that the
-same reader handles both `check` (core) and `check_any` (solo).
+Tests: `combat/config.test.ts` (anti-hardcode stub with `plus_2d` + `check_any`);
+`combat/round.test.ts` (grant = 1 + signs, per-sign scaling, prepare_shot
+effect-driven, invalid check rejected, ranged consumes/non-ranged preserves, and
+a hit-rate property test proving the dice feed the attack). Golden `ork-2`
+unchanged (it uses no tasks).
 
-## Still deferred (unchanged)
+## Still deferred
 
-None from Sec 3.7 on the content side. The engine consumption above is the only
-open item for this feature.
+The manoeuvre MODE (`manevrennaya_poziciya_dalniy_boy`): ranged-only attacks,
+enemy-melee `-1d`, hero-ranged `-1d`, the no-penalty ranged leave-combat, and the
+"bonus dice to leave combat" use of the buff. This is a combat-frame mode wider
+than the melee-round loop -- its own beat if/when solo ranged combat is wired.

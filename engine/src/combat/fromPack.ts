@@ -19,6 +19,7 @@ export function combatConfigFromPack(pack: Pack): CombatConfig {
     pack.requireById("kv.mechanics.combat.boevye_zadachi").raw,
     pack.requireById("kv.mechanics.combat.oslozhneniya_i_preimuschestva").raw,
     pack.requireById("kv.mechanics.combat.vyhod_iz_boya").raw,
+    pack.requireById("kv.mechanics.solo.prodvinutsya").raw,
   );
 }
 

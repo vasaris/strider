@@ -140,7 +140,20 @@ describe("anti-hardcode: deriveCombatConfig reflects card numbers, bakes none", 
     },
   });
 
-  const cfg = deriveCombatConfig(stancesStub, tasksStub, complStub, exitStub);
+  // Solo overlay: the Advance task lives in its own card; stub numbers differ
+  // from the book (plus_2d) so the merge is proven to follow the stub.
+  const soloStub = card({
+    tasks: {
+      prodvinutsya: {
+        name_ru: "adv",
+        stance: "ranged",
+        check_any: ["athletics", "search"],
+        effect: { on_success: "plus_2d_next_ranged_attack", per_sign: "plus_1d" },
+      },
+    },
+  });
+
+  const cfg = deriveCombatConfig(stancesStub, tasksStub, complStub, exitStub, soloStub);
 
   it("uses the stub's numbers, not the book's", () => {
     expect(cfg.stances.forward.heroAttackMod).toEqual({ kind: "flat", dice: 2 });
@@ -151,6 +164,10 @@ describe("anti-hardcode: deriveCombatConfig reflects card numbers, bakes none", 
     expect(cfg.grapple.rangedHeroesCannotBeGrappled).toBe(false);
     expect(cfg.grapple.maxEnemiesPerHero).toEqual({ humanSize: 9, large: 8 });
     expect(cfg.tasks.rally.maxPerRound).toBe(4);
+    // The merged solo Advance task: a check_any choice, defaulting to the first.
+    expect(cfg.tasks.prodvinutsya.skillAny).toEqual(["athletics", "search"]);
+    expect(cfg.tasks.prodvinutsya.skill).toBe("athletics");
+    expect(cfg.tasks.prodvinutsya.stance).toBe("ranged");
     expect(cfg.complicationTiers.complication).toEqual({ moderate: -7, serious: -8 });
     expect(cfg.manipulateSkill).toBe("lore");
     expect(cfg.exit.defensiveExit.requiresRoll).toBe(true);
@@ -163,6 +180,6 @@ describe("anti-hardcode: deriveCombatConfig reflects card numbers, bakes none", 
         defensive_exit: { name_ru: "de", requires_stance: "defensive", roll: 42 },
       },
     });
-    expect(() => deriveCombatConfig(stancesStub, tasksStub, complStub, bad)).toThrow(/roll/);
+    expect(() => deriveCombatConfig(stancesStub, tasksStub, complStub, bad, soloStub)).toThrow(/roll/);
   });
 });

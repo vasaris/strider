@@ -137,6 +137,7 @@ function makeFrame(over: Partial<HeroCombatFrame> = {}): HeroCombatFrame {
     equippedWeapon: { group: "swords", damage: 5, injury: 16 },
     drivenBackUsedThisRound: false,
     parryBonusThisRound: 0,
+    pendingRangedBonusDice: 0,
     outOfPosition: false,
     ...over,
   };

@@ -39,6 +39,7 @@ export function makeCombatFrame(): HeroCombatFrame {
     equippedWeapon: { group: "swords", damage: 5, injury: 16, nameRu: "mech strannika" },
     drivenBackUsedThisRound: false,
     parryBonusThisRound: 0,
+    pendingRangedBonusDice: 0,
     outOfPosition: false,
   };
 }
