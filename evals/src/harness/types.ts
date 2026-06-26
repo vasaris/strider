@@ -14,8 +14,10 @@ import type { StopEntry, Violation } from '../antislop.js';
 //   3. lengthTarget: lives in JudgeContext here -> at 2.4 it is PACKAGE-sourced
 //      (orchestrator sets it by scene type, arch sec 2.3.4); the judge reads it
 //      from the package.
-//   4. packageProvider: fixtureProvider() -> orchestratorPackageProvider (the real
-//      engine -> package builder; the harness CALLS it, does not duplicate it).
+//   4. packageProvider: fixtureProvider() -> orchestrator buildNarrativePackage (the real
+//      engine-turn -> package mapper; lives + is tested in orchestrator/, not duplicated
+//      here). The harness already runs a structural engine-derived provider; the workspace
+//      wires the real one (evals imports orchestrator) -- Option 2 avoids that import now.
 //   5. Keeper: StubKeeper -> AnthropicKeeper (same interface; real path is
 //      judge-scored, not byte-golden).
 //   6. Judge anti_slop axis: the LLM judge REPLACES this deterministic axis with a

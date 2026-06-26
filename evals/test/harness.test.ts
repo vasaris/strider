@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DeterministicJudge } from '../src/harness/judge.js';
 import { StubKeeper } from '../src/harness/keeper.js';
 import { fixtureProvider, runScenario } from '../src/harness/run.js';
-import type { ScenarioPackage, Seed } from '../src/harness/types.js';
+import type { PackageProvider, ScenarioPackage, Seed } from '../src/harness/types.js';
 
 const SEED: Seed = {
   id: 'golden.journey.clean',
@@ -61,6 +61,29 @@ describe('eval harness: cycle plumbing', () => {
       judge: new DeterministicJudge(),
     });
     expect(t.package).toEqual(other); // at 2.4 this provider becomes orchestrator's real builder
+  });
+
+  it('runs a structural engine-derived provider at the seam (RECONCILE 1/4)', async () => {
+    // The injection point where orchestrator's buildNarrativePackage plugs in. At the
+    // Stage-3 workspace this closure becomes `() => buildNarrativePackage(turn)` returning
+    // the full NarrativePackage; here it is a minimal structural adapter, so the harness
+    // already runs an engine-DERIVED provider rather than a hand-fixed fixture. No
+    // cross-package import (Option 2): the real mapper lives + is tested in orchestrator/.
+    const turn = { intent: 'journey' as const, scene: 'journey' as const, sceneType: 'mishap' };
+    const engineDerived: PackageProvider = () => ({
+      intent: turn.intent,
+      scene: turn.scene,
+      summary: `engine turn: ${turn.sceneType}`,
+    });
+    const t = await runScenario({
+      seed: SEED,
+      packageProvider: engineDerived,
+      keeper: new StubKeeper(CLEAN_PROSE),
+      judge: new DeterministicJudge(),
+    });
+    expect(t.package.summary).toBe('engine turn: mishap');
+    expect(t.package.scene).toBe('journey');
+    expect(t.verdict.pass).toBe(true);
   });
 
   it('golden: stub-keeper path is byte-stable (prompt/runner change caught by diff)', async () => {

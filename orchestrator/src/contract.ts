@@ -72,16 +72,40 @@ export type CheckOutcome = 'failure' | 'weak' | 'strong' | 'extraordinary';
 /**
  * An oracle result already rolled by the engine's oracle adapter.
  *
- * `detail` is the SECOND-LEVEL sub-table (scene_details.*) -- DEFERRED SD1, rolled by
- * the engine in chat 2.2.a. The slot exists NOW so the contract does not change when
- * SD1 lands. Per "oracles are engine mechanics", these sub-tables MUST be rolled by
- * the engine, not improvised by the Keeper. When absent the Keeper renders only the
- * top-level result; it never substitutes its own roll for a missing detail.
+ * `detail` is the SECOND-LEVEL sub-table (scene_details.*). The engine rolls it in the
+ * journey loop (SD1 done since Stage 1); the orchestrator SURFACES the already-rolled row
+ * here at chat 2.4, never re-rolling. Per "oracles are engine mechanics", these sub-tables
+ * are rolled by the engine, not improvised by the Keeper. When absent the Keeper renders
+ * only the top-level result; it never substitutes its own roll for a missing detail.
+ *
+ * `row` carries the full rolled SD1 scene-detail row so the Keeper weaves the concrete
+ * detail without a second pack lookup. See OracleDetailRow: structural fields are typed (so
+ * consumers can safely branch -- notably on significantEncounter), while scene/prompt stay
+ * opaque content.
  */
 export interface OracleResult {
   readonly table: string; // pack table id, e.g. 'answer' | 'lore' | 'luck' | 'misfortune'
   readonly result_ref: string; // opaque pack ref to the rolled entry
-  readonly detail?: OracleResult | null; // SD1 sub-table slot (chat 2.2.a)
+  readonly detail?: OracleResult | null; // SD1 second level, surfaced by the orchestrator (2.4)
+  readonly row?: OracleDetailRow | null; // full rolled SD1 row (typed structurally)
+}
+
+/**
+ * The second-level oracle row (SD1 scene_details). Structural fields are typed so consumers
+ * branch safely -- notably `significantEncounter`, on which the narrative layer and judge
+ * branch (escalation to a meaningful encounter). `scene`/`prompt` are opaque pack content
+ * carried through verbatim; their VALUES may be Cyrillic, but the field NAMES keep this
+ * type ASCII/content-clean.
+ *
+ * Scoped to scene_details on purpose: the only second-level oracle today is SD1. A future
+ * sub-table (it would NOT be patron_tasks -- those are not oracle.detail) extends this then.
+ */
+export interface OracleDetailRow {
+  readonly face: number;
+  readonly scene: string; // opaque pack content
+  readonly prompt: string; // opaque pack content
+  readonly skill: string | null;
+  readonly significantEncounter: boolean;
 }
 
 /**

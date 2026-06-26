@@ -70,18 +70,32 @@ deferred-вердикт исправлен); открытый остаток —
   - 2.3.b Голоса культур (хоббит ≠ гном ≠ дунэдайн; одна речевая привычка на персонажа)
   - 2.3.c Калибровать токен-прокси (`CHARS_PER_TOKEN`) против токенайзера **нарративной
     модели** (Anthropic/Claude), не генерик; бюджет lore-RAG из block-warn → точный
-- ⬜ **Чат 2.4 — Судья + цикл хода + закрытие**
-  - 2.4.a Рубрика судьи (механика/специфичность/анти-слоп/голос) + привязка к
-    сидированным выходам; базовый прогон/golden, калибровка к ≥ 80
-  - 2.4.b Цикл: результат движка → проза → действие; **SD1-сюрфейсинг** детали в
-    `oracle.detail` (orchestrator, без перекатывания)
-  - 2.4.c End-to-end CLI-сцена; критерий выхода + handoff + проверка гейта
+- ▶ **Чат 2.4 — расщеплён на plumbing (контент-независимо) + live (после tone.md)**
+  - **plumbing (сделано):**
+    - ◑ 2.4.p1 **SD1 Fork A** (engine): полная detail-строка в scene-`JourneyEvent`
+      (аддитивно; 389 зелёные + golden `dark-1` byte-identical без `-u`)
+    - ◑ 2.4.p2 Структурный `orchestratorPackageProvider` (`orchestrator/provider.ts`):
+      `EngineTurnResult → NarrativePackage`, SD1-строка → `oracle.detail.row`; фикстурные
+      тесты; **Опция 2 — без кросс-пакетного импорта**
+    - ◑ 2.4.p3 Инъекция в harness-шов (структурный engine-derived провайдер) + RECONCILE-чек-лист
+  - **live (после `tone.md` + workspace):**
+    - 2.4.L1 Реальные engine-типы (RECONCILE на workspace) + `AnthropicKeeper`
+    - 2.4.L2 LLM-судья (5 осей + замена `anti_slop`), калибровка к ≥ 80
+    - 2.4.L3 Suite-раннер (5–10 golden-сценариев, агрегат pass-rate ≥ 80) + цикл хода
+    - 2.4.L4 End-to-end CLI-сцена; критерий выхода + handoff + проверка гейта
 
 ---
 
 ## ⬜ STAGE 3 — PWA
 Стек зафиксирован (Next.js App Router PWA, Tailwind, Postgres/Supabase, Anthropic
 API). Выход: играбельная сцена в браузере. ~4 сессии.
+
+**Открыватель Stage 3 (конкретный драйвер, не гипотеза):** root **workspace**
+(`@brodyazhnik/engine`/`orchestrator`/`evals` + `app/`). Триггер пришёл в 2.4-plumbing —
+первая реальная кросс-пакетная зависимость (orchestrator маппит engine-вывод;
+evals-harness зовёт orchestrator). До workspace они связаны структурными seam'ами
+(`EngineTurnResult`, harness-alias); workspace заменяет их реальными типами и снимает
+RECONCILE-долг. В Stage 2 workspace не тянем (поздне-этапная работа).
 
 - ⬜ **Чат 3.1 — Каркас + API-контур**
   - 3.1.a Scaffold + PWA manifest/service worker

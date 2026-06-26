@@ -2,6 +2,7 @@ import type { CheckResult } from "../checks/types.js";
 import type { HeroState } from "../hero/state.js";
 import type { Effect } from "../oracles/types.js";
 import type { Rng } from "../rng/rng.js";
+import type { SceneDetailRow } from "./config.js";
 import type { Route } from "./route.js";
 
 export type { Attribute, HeroState } from "../hero/state.js";
@@ -36,6 +37,14 @@ export type JourneyEvent =
       readonly kind: "scene";
       readonly sceneType: string;
       readonly detailScene: string;
+      /**
+       * Full opaque scene-detail row already rolled this scene (SD1). Additive: surfaced
+       * so the orchestrator can place it in oracle.detail at 2.4 WITHOUT re-rolling
+       * (which would desync the RNG). detailScene/skill/significantEncounter below are the
+       * journey-mechanics view (skill/significant are DERIVED and lossy); `detail` is the
+       * raw row [face, scene, prompt, skill, significantEncounter].
+       */
+      readonly detail: SceneDetailRow;
       readonly skill: string | null;
       readonly significantEncounter: boolean;
       readonly checkOutcome: CheckResult["outcome"] | null;

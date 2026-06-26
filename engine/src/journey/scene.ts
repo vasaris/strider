@@ -72,6 +72,7 @@ export function resolveScene(state: JourneyState, cfg: JourneyConfigs): JourneyS
     kind: "scene",
     sceneType: sceneRow.sceneType,
     detailScene: detailRow.scene,
+    detail: detailRow, // SD1 (Fork A): surface the full rolled row; numbers/RNG unchanged
     skill: significant ? null : detailRow.skill,
     significantEncounter: significant,
     checkOutcome,
