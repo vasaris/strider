@@ -78,16 +78,25 @@
 - **Где живёт:** `content-packs/kv/tables/solo/patron_tasks.*`; потребителя нет.
 - **Блокирует:** рамку «покровитель даёт задание» в приключении (этап 4).
 
-### SD1 — Под-таблицы деталей сцен (оракул)
-- **Статус:** open (выявлено coverage-аудитом)
-- **DUE:** Этап 2 (нарративный цикл сцен) — когда движок катит элаборацию сцены.
-- **Что:** `kv.solo.scene_details.*` (despair, terrible_misfortune, bad_choice,
-  mishap, chance_meeting, short_cut) — второй уровень оракульного броска,
-  движком не катится. По принципу «оракулы — механика движка» эти под-таблицы
-  должны бросаться движком при раскрытии родительской сцены.
-- **Где живёт:** `content-packs/kv/tables/solo/scene_details.*`; оракульный
-  адаптер катит верхний уровень, под-таблицы — нет.
-- **Блокирует:** полноту оракульной элаборации сцен в нарративном цикле (этап 2).
+### SD1 — Сюрфейсинг детали сцены в пакет хода
+- **Статус:** open (переразмечен 2026-06-26; исходный «не катится» — ложный
+  deferred-вердикт, опровергнут по коду)
+- **DUE:** Этап 2 → конкретно **2.4 (orchestrator)**.
+- **Механика — СДЕЛАНА (Stage 1).** Движок катит `scene_details.*` в journey с
+  Stage 1: `journey/config.ts:221` грузит все `scene_detail_table` через
+  `listByType`; `journey/scene.ts:42-47` катит `rollSuccessDie` и читает строку
+  (`face/scene/prompt/skill/significantEncounter`); покрыто golden `dark-1`.
+  Кость pack-sourced (`cfg.dice.success`), не литерал.
+- **7 таблиц** (реестр-аудит недосчитал `inspiring_sight`): bad_choice,
+  chance_meeting, despair, **inspiring_sight**, mishap, short_cut, terrible_misfortune.
+- **Открытый остаток (DUE 2.4):** сюрфейсинг **выкаченной** детали целиком —
+  opaque row `[face, scene, prompt, skill, significantEncounter]` — в
+  `oracle.detail` пакета хода. Сейчас `resolveScene` сворачивает её в подмножество
+  `JourneyEvent`-лога; orchestrator при сборке пакета (2.4) должен отдать строку
+  целиком, **не перекатывая** (двойной бросок рассинхронит RNG).
+- **Не трогать:** journey-движок и golden `dark-1` (frozen Stage 1).
+- **Где живёт:** потребитель остатка — `orchestrator/` (сборка пакета, 2.4); слот
+  `OracleResult.detail` уже готов (`orchestrator/src/contract.ts`).
 
 ### LT1 — lore-чанки + tone.md (нарративный контент-долг)
 - **Статус:** open (вынесен ADR-003 из Stage 0)
