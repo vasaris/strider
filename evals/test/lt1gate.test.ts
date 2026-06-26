@@ -1,3 +1,5 @@
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   CHARS_PER_TOKEN,
@@ -7,8 +9,11 @@ import {
   gateLoreChunkText,
   gateToneExamples,
   loadVkAddendum,
+  loadVkAddendumFromPack,
 } from '../src/lt1gate.js';
 import { scanProse, type StopEntry } from '../src/antislop.js';
+
+const packRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..', 'content-packs/kv');
 
 // Fixture VK addendum standing in for the loaded tone.stoplist.json. Tests stay
 // decoupled from the (verified:false) draft content on purpose.
@@ -70,6 +75,18 @@ describe('LT1 gate: VK addendum loader', () => {
   it('throws on an invalid severity value', () => {
     const doc = { ...VK_FIXTURE_DOC, payload: { entries: [{ term: 'x', reason: 'y', severity: 'fatal' }] } };
     expect(() => loadVkAddendum(doc)).toThrow();
+  });
+
+  it('reads the activated VK addendum from the LIVE pack sidecar (LT1 tone activated)', () => {
+    const vk = loadVkAddendumFromPack(packRoot);
+    expect(vk.length).toBeGreaterThanOrEqual(10);
+    // Ivan sign-off severities, honored end-to-end from the live sidecar (not kv-pending):
+    expect(vk.find((e) => e.term === 'избранный')?.severity).toBe('warn');
+    expect(vk.find((e) => e.term === 'века и века')?.severity).toBe('block'); // raised warn->block
+    expect(vk.find((e) => e.term === 'воистину')?.severity).toBe('block');
+    // and it actually gates prose at the right severity:
+    const v = scanProse('И вот древнее зло пробуждается.', vk);
+    expect(v.some((x) => x.list === 'vk_addendum' && x.severity === 'block')).toBe(true);
   });
 });
 

@@ -15,6 +15,8 @@
 //
 // Cyrillic is allowed in this file (evals/ is outside engine/); identifiers stay English.
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { scanProse, type StopEntry, type Violation } from './antislop.js';
 
 // ---- tone stop-list -> VK addendum loader ----
@@ -43,6 +45,16 @@ export function loadVkAddendum(doc: unknown): StopEntry[] {
     // Preserve curated per-entry severity (e.g. избранный=warn) -- scanProse honors it.
     return severity === undefined ? { term, reason } : { term, reason, severity };
   });
+}
+
+/**
+ * Load the VK addendum from the LIVE pack sidecar (`<packRoot>/tone.stoplist.json`),
+ * activated in LT1. Path-based on purpose: the sidecar is NOT in manifest.content[], so
+ * loadPack never indexes or gates it -- evals reads it directly. This is the activated
+ * source (the kv-pending draft is superseded once Ivan signs off and it moves to kv/).
+ */
+export function loadVkAddendumFromPack(packRoot: string): StopEntry[] {
+  return loadVkAddendum(JSON.parse(readFileSync(join(packRoot, 'tone.stoplist.json'), 'utf8')));
 }
 
 // ---- length budget via a deterministic char proxy ----
