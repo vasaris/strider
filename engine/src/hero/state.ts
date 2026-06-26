@@ -45,4 +45,33 @@ export interface HeroState {
   readonly dead: boolean;
   /** Permanent marks left by survived Injuries (scar/limp/...); flavour, no mechanics. */
   readonly permanentInjuryMarks: number;
+
+  // ---- Progression (growth between adventures) ----
+  // All fields below are optional and additive: heroes built before the
+  // Progression subsystem (journey/combat/council scenarios) omit them and are
+  // unaffected. None is read by those subsystems; they are written by
+  // progression/ and read by it (and, later, the Fellowship Phase).
+
+  /** The two experience pools (hero_creation.experience). */
+  readonly experience?: { readonly adventurePoints: number; readonly skillPoints: number };
+  /** VALOUR rating; raised with adventure points (valour_wisdom.doblest). */
+  readonly valour?: number;
+  /** WISDOM rating; raised with adventure points (valour_wisdom.mudrost). */
+  readonly wisdom?: number;
+  /** Weapon-skill ratings, parallel to `skills` (traits.spisok_boevyh_umeniy). */
+  readonly weaponSkills?: Readonly<Record<string, number>>;
+  /** Acquired Virtue (Osobennost) keys; opaque, effects applied at point of use. */
+  readonly virtues?: readonly string[];
+  /** Acquired Reward (Nagrada) keys; opaque, equipment-bound (applied in Stage 4). */
+  readonly rewards?: readonly string[];
+  /** Calling id; derives the hero's Shadow Path (hero_creation.calling_*). */
+  readonly calling?: string;
+  /** Culture id; gates which cultural Virtues are available (osobennosti_<culture>). */
+  readonly culture?: string;
+  /** Shadow-Path progress: which path and how many Flaws gained so far. */
+  readonly shadowPath?: { readonly key: string; readonly flawsGained: number };
+  /** Acquired Flaw labels (negative Distinctive Features); opaque display values. */
+  readonly flaws?: readonly string[];
+  /** Journal of reached milestones (opaque display labels from the solo table). */
+  readonly milestonesReached?: readonly string[];
 }

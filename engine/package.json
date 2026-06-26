@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "journey": "tsx src/cli/journey.ts ../content-packs/kv dark-1",
     "combat": "tsx src/cli/combat.ts ../content-packs/kv ork-2",
-    "council": "tsx src/cli/council.ts ../content-packs/kv council-m10"
+    "council": "tsx src/cli/council.ts ../content-packs/kv council-m10",
+    "progression": "tsx src/cli/progression.ts ../content-packs/kv progression-1"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",
