@@ -2,3 +2,7 @@ node_modules/
 dist/
 *.tsbuildinfo
 coverage/
+
+# Calibration: raw report output + any local env. The key is never written here, but guard anyway.
+calibration-report.*
+.env

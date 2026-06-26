@@ -90,14 +90,19 @@ completeness, eval-харнесс скаффолд, **2.4 plumbing** (SD1 Fork A
 инъекция), LT1 скаффолд+гейт+драфты.
 **LT1-tone активирован** (`tone.md` + `tone.stoplist.json` в живом паке, сайдкары, 0.1.0;
 `evals` читает `VK_ADDENDUM` из живого сайдкара). Тон-сторона live-2.4 **разблокирована**.
-**Порядок дальше:**
-- **Первый live-шаг = тон-судья (AnthropicJudge)** — плумбинг сейчас (сборка/парсинг/
-  ошибки на МОК-ответах, без ключа/сети) ‖ **few-shot-черновики** (`prompts/few-shot-drafts/`,
-  draft→review Ивана: ухо + догфуд).
-- **Калибровка** (реальная дискриминация хорошее/плохое) — после few-shot; гоняет Иван
-  (ключ Anthropic у владельца).
-- **Всё ещё gated:** полный цикл + suite-раннер + `AnthropicKeeper` — на **workspace**
-  (открыватель Stage 3) + **lore-активацию** (LT1 lore → 0.2.0).
+**Сделано:** тон-судья **плумбинг** (`76421b8`, LlmJudge/error-verdict/short-circuit/pluggable-aggregate),
+**few-shot v1** (`013dce0`, G1–G6+B1–B7, догфуд PASS), **LT1-tone активирован** (`f6beb0f`).
+**▶ Калибровка тон-судьи — РАННЕР СДАН, ждёт прогона Ивана:**
+- Раннер: `evals/calibrate.mts` + `cases.ts` + `anthropicLlmClient.ts` (env-гард, model-config,
+  Zod-гейт, prompt-caching, raw→`calibration-report.json` gitignored). Оффлайн-тесты не задеты.
+- **Ключ-путь (а):** ключ ТОЛЬКО в keyed-вкладке Ивана, никогда в процесс агента. Команда:
+  `cd evals && npx tsx calibrate.mts`.
+- **Первый прогон = ДИАГНОСТИКА.** Иван гоняет сам, несёт сырой `calibration-report.json` +
+  таблицу на разбор (разбор — во внешнем арх-чате, не здесь).
+- 🔴 **До разбора НЕ трогать:** `judge.system.v0.md` (рубрика), `cases.ts`, floor агрегата, порог.
+  Если B5–B7 проходят высоко → чинить рубрику, не порог/regex.
+**Всё ещё gated:** полный цикл хода + suite-раннер (5–10 golden, агрегат ≥80) + `AnthropicKeeper` —
+на **workspace** (открыватель Stage 3) + **lore-активацию** (LT1 lore → 0.2.0).
 
 ---
 
