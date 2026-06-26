@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.lore.patron.gandalf",
+  "type": "lore_chunk",
+  "title": "Покровитель: Гэндальф (обзор для RAG)",
+  "source": { "book": "igra_dlya_odnogo", "edition": "TBD-by-Ivan", "pages": [1] },
+  "verified": false,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "DRAFT-ШАБЛОН (LT1). Патрон из patron_tasks (kv.solo.patron_tasks.gandalf). Текст — ПЛЕЙСХОЛДЕР: пересказ оригинальной прозой из книги TOR2e (раздел покровителя), 300-600 ток., сверка против книги Ивана; НЕ дословно, НЕ из легендариума. Проставить source.edition + pages (igra_dlya_odnogo: КОНКРЕТНЫЕ страницы покровителя, которые пересказываешь).",
+  "payload": {
+    "chunk_id": "patron.gandalf",
+    "region": "eriador",
+    "kind": "patron",
+    "text": "[DRAFT — пересказать из книги TOR2e (покровитель Гэндальф для соло): как даёт поручения, чем мотивирует героя, тон обращения. Оригинальная проза 300-600 ток. под гейт. Сверить набор задач с kv.solo.patron_tasks.gandalf.]"
+  }
+}

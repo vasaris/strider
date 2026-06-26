@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.lore.patron.cirdan",
+  "type": "lore_chunk",
+  "title": "Покровитель: Кирдан (обзор для RAG)",
+  "source": { "book": "igra_dlya_odnogo", "edition": "TBD-by-Ivan", "pages": [1] },
+  "verified": false,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "DRAFT-ШАБЛОН (LT1). Патрон из patron_tasks (kv.solo.patron_tasks.cirdan). Текст — ПЛЕЙСХОЛДЕР: пересказ оригинальной прозой из книги TOR2e (раздел покровителя), 300-600 ток., сверка против книги Ивана; НЕ дословно, НЕ из легендариума. Проставить source.edition + pages (igra_dlya_odnogo: КОНКРЕТНЫЕ страницы покровителя, которые пересказываешь).",
+  "payload": {
+    "chunk_id": "patron.cirdan",
+    "region": "eriador",
+    "kind": "patron",
+    "text": "[DRAFT — пересказать из книги TOR2e (покровитель Кирдан для соло): как даёт поручения, чем мотивирует, тон обращения. Оригинальная проза 300-600 ток. под гейт. Сверить набор задач с kv.solo.patron_tasks.cirdan.]"
+  }
+}

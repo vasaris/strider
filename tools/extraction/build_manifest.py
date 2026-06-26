@@ -26,7 +26,20 @@ MANIFEST = KV / "manifest.json"
 
 # Pack-level constants (book facts + release identity; not derivable from cells).
 PACK_ID = "kv"
-PACK_VERSION = "0.1.0"  # first verified content release (Stage-0 exit).
+LORE_DIR = KV / "lore"
+
+
+def _pack_version() -> str:
+    """Mechanical version (deterministic, no hand-edit). RULE: 0.1.0 is the base
+    (Stage-0 exit); a MINOR bump when a new VERIFIED content class is present in the
+    pack. 0.2.0 = the release that adds the lore content class (LT1). While lore/ holds
+    no verified content (drafts live in content-packs/kv-pending/), the build stays
+    0.1.0 byte-identical; the moment verified lore chunks land in kv/lore/, a rebuild
+    stamps 0.2.0. The load interface is not broken by the addition -> minor bump.
+    tone.stoplist.json / tone.md are sidecars (not content[]), so they do not affect
+    this."""
+    has_lore = LORE_DIR.exists() and any(LORE_DIR.glob("*.json"))
+    return "0.2.0" if has_lore else "0.1.0"
 SYSTEM = {
     "id": "tor2e",
     "title": "Кольцо Всевластья",
@@ -44,6 +57,7 @@ CONTENT_DIRS = [
     ("mechanics/", KV / "mechanics"),
     ("tables/solo/", KV / "tables" / "solo"),
     ("lifepaths/", KV / "lifepaths"),
+    ("lore/", LORE_DIR),
 ]
 
 
@@ -56,6 +70,8 @@ def build() -> dict:
 
     for rel, path in CONTENT_DIRS:
         files = sorted(path.glob("*.json"))
+        if not files:
+            continue  # absent/empty content dir (e.g. lore/ before LT1 verification) -> no entry
         d_total = d_verified = 0
         d_types: set[str] = set()
         for p in files:
@@ -95,7 +111,7 @@ def build() -> dict:
     return {
         "schema_version": "1.0",
         "pack_id": PACK_ID,
-        "pack_version": PACK_VERSION,
+        "pack_version": _pack_version(),
         "system": SYSTEM,
         "sources": SOURCES,
         "schemas": schemas,

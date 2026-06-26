@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.lore.region.wild_lands",
+  "type": "lore_chunk",
+  "title": "Дикие земли (обзор для RAG)",
+  "source": { "book": "kv_core", "edition": "TBD-by-Ivan", "pages": [1] },
+  "verified": false,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "DRAFT-ШАБЛОН (LT1). Текст — ПЛЕЙСХОЛДЕР: пересказ оригинальной прозой из книги TOR2e (Дикие земли / тип местности wild), 300-600 ток., сверка против книги Ивана; НЕ дословно, НЕ из легендариума. Проставить source.edition + pages (kv_core: КОНКРЕТНЫЕ страницы региона, которые пересказываешь).",
+  "payload": {
+    "chunk_id": "region.wild_lands",
+    "region": "wild_lands",
+    "kind": "region",
+    "text": "[DRAFT — пересказать из книги TOR2e (Дикие земли / тип местности wild): глушь, чем опасна, чем дышит; сенсорная конкретика для Хранителя. Оригинальная проза 300-600 ток. под гейт.]"
+  }
+}

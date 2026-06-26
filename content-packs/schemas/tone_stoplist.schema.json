@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brodyazhnik.local/schemas/tone_stoplist.schema.json",
+  "title": "Pack tone stop-list (VK-pastiche addendum). Sidecar, not a content[] table.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "type",
+    "verified",
+    "locale",
+    "terminology",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "const": "kv.tone.stoplist" },
+    "type": { "const": "tone_stoplist" },
+    "verified": { "type": "boolean" },
+    "locale": { "const": "ru" },
+    "terminology": { "const": "pandora_box" },
+    "notes": { "type": "string" },
+    "payload": {
+      "type": "object",
+      "required": ["entries"],
+      "properties": {
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["term", "reason"],
+            "properties": {
+              "term": { "type": "string", "minLength": 1 },
+              "reason": { "type": "string", "minLength": 1 },
+              "severity": { "enum": ["block", "warn"] }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
