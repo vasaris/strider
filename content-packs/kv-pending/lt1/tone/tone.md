@@ -2,9 +2,9 @@
 id: kv.tone
 title: Тоновый контракт пака КВ
 status: draft
-verified: false
-reviewed_by: pending
-reviewed_date: pending
+verified: true
+reviewed_by: Ivan
+reviewed_date: 2026-06-26
 review_record: docs/LT1_TONE_REVIEW.md
 machine_stoplist: tone.stoplist.json
 note: >

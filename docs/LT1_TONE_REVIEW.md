@@ -45,3 +45,16 @@
 - Решение: — (accept → выставить `verified:true` во frontmatter `tone.md` и перенести
   в `content-packs/kv/tone.md`; changes-requested → правки в драфте)
 - Заметки: —
+
+## Sign-off (LT1 tone activation)
+
+- reviewer: Ivan
+- date: 2026-06-26
+- verdict: ACCEPTED
+- register (sec 1): accepted
+- voices (sec 2): hobbit / dwarf / dunedain / elf(Lindon) accepted;
+  bardings / bree-men / others deferred (same one-habit discipline at later verification)
+- speech examples: pass tone.stoplist dogfood
+- stoplist terms 1-9: confirmed at prepared severity (term 8 = warn, term 9 = block)
+- stoplist term 10 (time-inflation): raised warn -> block
+- seed note: high-frequency copula parasite dropped (noisy as warn) -> handled in evals seed by CCD

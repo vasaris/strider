@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "id": "kv.tone.stoplist",
   "type": "tone_stoplist",
-  "verified": false,
+  "verified": true,
   "locale": "ru",
   "terminology": "pandora_box",
   "notes": "DRAFT (chat 2.2, LT1). verified:false -> held in kv-pending, NOT in the live pack (loadPack would refuse). Ivan reviews/edits, flips verified:true, then this moves to content-packs/kv/tone.stoplist.json (sidecar, loaded by evals/orchestrator by path, not via content[]). Machine gate: tone_stoplist.schema.json + the evals lt1gate test. SEVERITY discipline (arch sec 2.3 targets phrase-cliches, not single words): unambiguous pastiche phrases + explicit canon markers (e.g. воистину) -> block; ambiguous normal single words (e.g. избранный) -> warn or remove. Final severity per term is Ivan's call (docs/LT1_TONE_REVIEW.md); the severity field below is a prepared default.",
@@ -17,7 +17,7 @@
       { "term": "пророчество гласит", "reason": "prophecy framing; not the TOR register", "severity": "block" },
       { "term": "избранный", "reason": "chosen-one trope; AMBIGUOUS single word -> warn (Ivan finalizes or removes in review)", "severity": "warn" },
       { "term": "воистину", "reason": "mock-archaic tic; pastiche of an archaic voice", "severity": "block" },
-      { "term": "века и века", "reason": "vague time-inflation filler", "severity": "warn" }
+      { "term": "века и века", "reason": "vague time-inflation filler", "severity": "block" }
     ]
   }
 }
