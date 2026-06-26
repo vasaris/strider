@@ -11,7 +11,7 @@
 //                Concrete and system-position-specific -> safe to seed here.
 //  - `slop_ru` / `slop_en` : generic LLM prose cliches in both languages
 //                (arch sec 0.2.1 "both languages"). System-agnostic. Phrase-cliches.
-//  - `register_parasite` : high-frequency officialese filler words (данный, является, ...).
+//  - `register_parasite` : officialese filler words (данный, поистине, ...).
 //                A SEPARATE bucket from phrase-cliches so chat 2.3 can tune or suppress this
 //                noisy, context-dependent class independently (e.g. a frequency threshold).
 //  - VK-ADDENDUM stop-list (Middle-earth pastiche, e.g. genre cliches of the setting)
@@ -89,10 +89,12 @@ export const SLOP_RU: readonly StopEntry[] = [
  * is a candidate for a per-text frequency threshold / suppression in the judge calibration,
  * tuned INDEPENDENTLY of the phrase-cliche tiers. The bucket separation exists for exactly
  * this -- do not merge it back into slop_ru.
+ *
+ * NB: the copula `является` was deliberately EXCLUDED -- too high-frequency, noisy even as a
+ * warn; the LLM judge (2.3) contextualizes it instead. Do not re-add it here.
  */
 export const REGISTER_PARASITE: readonly StopEntry[] = [
   { term: 'данный', reason: 'officialese filler; prefer этот or the concrete noun' },
-  { term: 'является', reason: 'bureaucratic copula; flatten to a verb' },
   { term: 'поистине', reason: 'empty intensifier (distinct from VK addendum воистину)' },
   { term: 'безусловно', reason: 'empty intensifier' },
   { term: 'стоит отметить', reason: 'essayistic filler; breaks the scene' },

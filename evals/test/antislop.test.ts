@@ -63,9 +63,8 @@ describe('anti-slop seed', () => {
   it('flags register parasites as WARN in their own bucket (never block)', () => {
     const bad = 'Данный путник, безусловно, является вестником.';
     const parasites = scanProse(bad).filter((x) => x.list === 'register_parasite');
-    expect(parasites.map((x) => x.term)).toEqual(
-      expect.arrayContaining(['данный', 'безусловно', 'является']),
-    );
+    expect(parasites.map((x) => x.term)).toEqual(expect.arrayContaining(['данный', 'безусловно']));
+    expect(parasites.some((x) => x.term === 'является')).toBe(false); // copula dropped: too frequent as warn
     expect(parasites.every((x) => x.severity === 'warn')).toBe(true);
     expect(hasBlockingSlop(bad)).toBe(false); // parasites are noisy/contextual -> never block
   });
