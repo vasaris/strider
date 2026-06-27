@@ -15,3 +15,7 @@ __pycache__/
 *.pyc
 .venv/
 brodyazhnik-*.zip
+
+# Root workspace: hoisted dependencies (npm workspaces). Member node_modules/ stay
+# ignored by their own .gitignore.
+/node_modules
