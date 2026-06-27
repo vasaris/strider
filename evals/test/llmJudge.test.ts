@@ -122,3 +122,80 @@ describe('LlmJudge plumbing (mock client; no key/network)', () => {
     ).toBe(87);
   });
 });
+
+describe('tolerant JSON extraction (the parse fix; mock client, offline)', () => {
+  const judgeFor = (reply: string) =>
+    new LlmJudge({ llm: new MockLlm(() => reply), model: 'm', systemPrompt: 's' });
+
+  it('extracts JSON from a ```json-fenced reply -> scored, not error', async () => {
+    const v = await judgeFor('```json\n' + OK_JSON + '\n```').score(CLEAN, ctx);
+    expect(v.error ?? null).toBeNull();
+    expect(Object.values(v.axes).every((a) => a.status === 'scored')).toBe(true);
+    expect(v.aggregate?.score).toBe(87);
+  });
+
+  it('extracts JSON despite prose preamble/postamble -> scored', async () => {
+    const v = await judgeFor(`Вот моя оценка прозы:\n${OK_JSON}\nГотово.`).score(CLEAN, ctx);
+    expect(v.error ?? null).toBeNull();
+    expect(v.aggregate?.score).toBe(87);
+  });
+
+  it('does NOT confuse braces inside string values (string-aware scan)', async () => {
+    const tricky = JSON.stringify({
+      specificity: { score: 85, notes: 'видна вязь рун {ᚷ} на камне' },
+      accuracy: { score: 90, notes: 'ok' },
+      playability: { score: 80, notes: 'ok' },
+      agency: { score: 88, notes: 'ok' },
+      tone: { score: 84, notes: 'ok' },
+      anti_slop: { score: 92, notes: 'ok' },
+    });
+    const v = await judgeFor(`текст… ${tricky} …хвост`).score(CLEAN, ctx);
+    expect(v.error ?? null).toBeNull();
+    expect(v.axes.specificity.score).toBe(85);
+  });
+
+  it('truncated object -> error-verdict tagged "truncated" + rawSample populated (<=500)', async () => {
+    const truncated = OK_JSON.slice(0, 40); // '{' opened, never closed
+    const v = await judgeFor(truncated).score(CLEAN, ctx);
+    expect(v.error).toContain('truncated');
+    expect(v.aggregate ?? null).toBeNull();
+    expect(Object.values(v.axes).every((a) => a.status === 'error')).toBe(true);
+    expect(v.rawSample).toBeTruthy();
+    expect((v.rawSample ?? '').length).toBeLessThanOrEqual(500);
+    expect(v.rawSample).toContain('specificity');
+  });
+
+  it('rawSample is capped at 500 chars on a long truncated reply', async () => {
+    const longTrunc = '{' + 'a'.repeat(600); // unbalanced, > 500 chars
+    const v = await judgeFor(longTrunc).score(CLEAN, ctx);
+    expect(v.error).toContain('truncated');
+    expect(v.rawSample?.length).toBe(500);
+  });
+
+  it('non-JSON prose (no brace) -> error-verdict tagged "no JSON object" + rawSample', async () => {
+    const v = await judgeFor('Извините, я не могу оценить эту прозу.').score(CLEAN, ctx);
+    expect(v.error).toContain('no JSON object');
+    expect(v.error).not.toContain('truncated');
+    expect(v.rawSample).toContain('Извините');
+  });
+
+  it('schema-invalid JSON inside a fence still -> error-verdict (Zod stays source of truth)', async () => {
+    const bad = JSON.stringify({ ...JSON.parse(OK_JSON), tone: { score: 150, notes: 'x' } });
+    const v = await judgeFor('```json\n' + bad + '\n```').score(CLEAN, ctx);
+    expect(v.error).toContain('schema');
+    expect(v.aggregate ?? null).toBeNull();
+  });
+
+  it('rawSample is null on the call-throw path (no reply to sample)', async () => {
+    const judge = new LlmJudge({
+      llm: new MockLlm(() => {
+        throw new Error('boom');
+      }),
+      model: 'm',
+      systemPrompt: 's',
+    });
+    const v = await judge.score(CLEAN, ctx);
+    expect(v.error).toContain('llm call failed');
+    expect(v.rawSample ?? null).toBeNull();
+  });
+});

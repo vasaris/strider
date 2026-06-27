@@ -24,6 +24,7 @@ export interface CalibrationRow {
   readonly aggregate: { readonly score: number; readonly pass: boolean } | null;
   readonly antiSlopBlocking: boolean; // deterministic gate (informational)
   readonly error: string | null;
+  readonly rawSample: string | null; // raw LLM reply on a parse error (self-diagnosis); null otherwise
   /** Per-kind PROVISIONAL expectation (diagnostic only): good->agg pass; coarse->agg fail;
    *  subtle->target axis below the provisional cutoff AND deterministic anti_slop clean. */
   readonly provisionalOk: boolean | null;
@@ -40,6 +41,7 @@ function rowFromVerdict(c: CalibrationCase, v: Verdict): CalibrationRow {
   const aggregate = v.aggregate ? { score: v.aggregate.score, pass: v.aggregate.pass } : null;
   const antiSlopBlocking = v.antiSlop.blocking;
   const error = v.error ?? null;
+  const rawSample = v.rawSample ?? null;
   const target = c.targetAxis ?? null;
 
   let provisionalOk: boolean | null;
@@ -55,7 +57,7 @@ function rowFromVerdict(c: CalibrationCase, v: Verdict): CalibrationRow {
     provisionalOk = ts !== null && ts < PROVISIONAL_DROP_BELOW && !antiSlopBlocking;
   }
 
-  return { id: c.id, kind: c.kind, targetAxis: target, scores, aggregate, antiSlopBlocking, error, provisionalOk };
+  return { id: c.id, kind: c.kind, targetAxis: target, scores, aggregate, antiSlopBlocking, error, rawSample, provisionalOk };
 }
 
 /**
@@ -108,8 +110,11 @@ export function formatReport(r: CalibrationReport): string {
     const agg = row.aggregate ? `${pad(String(row.aggregate.score), 3)}(${row.aggregate.pass ? 'Y' : 'N'})` : ' — (—)';
     const prov = row.provisionalOk === null ? '—' : row.provisionalOk ? 'OK' : 'XX';
     const tgt = pad(row.targetAxis ?? '—', 11);
-    const err = row.error ? `  ERROR: ${row.error}` : '';
-    lines.push(`${pad(row.id, 3)} ${pad(row.kind, 7)} ${axisCells} | ${agg} |   ${row.antiSlopBlocking ? 'BLOCK' : 'clean'} | ${tgt} | ${prov}${err}`);
+    const errMsg = row.error ? `  ERROR: ${row.error}` : '';
+    // Echo a one-line rawSample slice so a parse failure reads off the table without opening the
+    // JSON. Collapse whitespace first (a multi-line reply would otherwise break the table layout).
+    const sample = row.rawSample ? `  raw: ${row.rawSample.replace(/\s+/g, ' ').trim().slice(0, 120)}` : '';
+    lines.push(`${pad(row.id, 3)} ${pad(row.kind, 7)} ${axisCells} | ${agg} |   ${row.antiSlopBlocking ? 'BLOCK' : 'clean'} | ${tgt} | ${prov}${errMsg}${sample}`);
   }
   const goods = r.rows.filter((x) => x.kind === 'good');
   const subtles = r.rows.filter((x) => x.kind === 'subtle');

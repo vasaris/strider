@@ -1,6 +1,12 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { LlmClient, LlmRequest } from './types.js';
 
+/** Calibration parameter (named, NOT a literal): the judge returns 6 axes each with a Russian
+ *  `notes` string; 1024 truncated the richest replies mid-JSON. If rawSample on an error-verdict
+ *  still shows truncation on the most verbose cases, raise this one knob -- cleaner than hunting a
+ *  literal. Billed only for tokens actually generated. */
+const JUDGE_MAX_TOKENS = 4096;
+
 /**
  * Real LlmClient for the live calibration step. Reads ANTHROPIC_API_KEY from process.env
  * (the runner guards its presence first and errors with an instruction if missing -- the key
@@ -17,7 +23,7 @@ export class AnthropicLlmClient implements LlmClient {
   async complete(req: LlmRequest): Promise<string> {
     const m = await this.client.messages.create({
       model: req.model, // config (default claude-opus-4-8), passed through from the judge
-      max_tokens: 1024,
+      max_tokens: JUDGE_MAX_TOKENS,
       // Cache the stable system prefix (rubric + tone.md) -- shared across all 13 cases.
       system: [{ type: 'text', text: req.system, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: req.user }],

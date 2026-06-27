@@ -85,7 +85,7 @@ export class LlmJudge implements Judge {
 
     const parsed = parseLlmOutput(raw);
     if (!parsed.ok) {
-      return errorVerdict(parsed.error, antiSlop, budgetWarn);
+      return errorVerdict(parsed.error, antiSlop, budgetWarn, raw);
     }
 
     const o = parsed.value;
@@ -101,10 +101,57 @@ export class LlmJudge implements Judge {
   }
 }
 
+type ExtractResult =
+  | { readonly ok: true; readonly json: string }
+  | { readonly ok: false; readonly reason: 'no-object' | 'truncated' };
+
+// Tolerant pre-parse: locate the rubric JSON in a possibly-decorated reply (```json fences,
+// prose preamble/postamble). Returns the first BALANCED top-level {...} object. Brace-counting
+// is string-aware so braces inside JSON string values do not unbalance the scan. We NEVER repair
+// a broken object (that would fabricate scoring structure) -- JSON.parse + Zod downstream stay the
+// source of truth. The two failure reasons are kept distinct so the error message separates
+// truncation (-> raise JUDGE_MAX_TOKENS) from non-JSON prose (-> a different conversation).
+function extractJsonObject(raw: string): ExtractResult {
+  const text = stripCodeFence(raw);
+  const start = text.indexOf('{');
+  if (start < 0) return { ok: false, reason: 'no-object' };
+  let depth = 0;
+  let inStr = false;
+  let esc = false;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (ch === '\\') esc = true;
+      else if (ch === '"') inStr = false;
+      continue;
+    }
+    if (ch === '"') inStr = true;
+    else if (ch === '{') depth++;
+    else if (ch === '}' && --depth === 0) return { ok: true, json: text.slice(start, i + 1) };
+  }
+  return { ok: false, reason: 'truncated' }; // found '{' but never balanced -> likely a max_tokens cutoff
+}
+
+function stripCodeFence(raw: string): string {
+  const m = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  return m?.[1] ?? raw;
+}
+
 function parseLlmOutput(raw: string): { ok: true; value: LlmOutput } | { ok: false; error: string } {
+  const extracted = extractJsonObject(raw);
+  if (!extracted.ok) {
+    return {
+      ok: false,
+      error:
+        extracted.reason === 'truncated'
+          ? 'llm output truncated (unbalanced JSON — likely max_tokens)'
+          : 'no JSON object found in llm output',
+    };
+  }
   let json: unknown;
   try {
-    json = JSON.parse(raw);
+    json = JSON.parse(extracted.json);
   } catch {
     return { ok: false, error: 'llm output is not valid JSON' };
   }
@@ -139,7 +186,12 @@ function blockedAxes(): Record<RubricAxis, AxisScore> {
   };
 }
 
-function errorVerdict(message: string, antiSlop: Verdict['antiSlop'], budgetWarn: boolean): Verdict {
+function errorVerdict(
+  message: string,
+  antiSlop: Verdict['antiSlop'],
+  budgetWarn: boolean,
+  rawText?: string,
+): Verdict {
   const err = (): AxisScore => ({ status: 'error', score: null, notes: message });
   return {
     axes: {
@@ -155,6 +207,9 @@ function errorVerdict(message: string, antiSlop: Verdict['antiSlop'], budgetWarn
     pass: false,
     aggregate: null,
     error: message,
+    // First ~500 chars of the raw reply on a PARSE error (so the failure self-diagnoses); null on
+    // the call-throw path, where there is no reply to sample.
+    rawSample: rawText === undefined ? null : rawText.slice(0, 500),
   };
 }
 

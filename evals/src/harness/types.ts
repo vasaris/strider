@@ -98,6 +98,10 @@ export interface Verdict {
   /** Set when the LLM evaluation itself failed (unparseable/refused). The judge returns
    *  this verdict instead of throwing or silently passing; aggregate is null when set. */
   readonly error?: string | null;
+  /** First ~500 chars of the raw LLM reply, populated on a PARSE/schema error so the failure
+   *  self-diagnoses (no manual dump). Null when there is no reply (the llm call threw) or on
+   *  success. Flows into calibration-report.json via CalibrationReport.raw[i].verdict. */
+  readonly rawSample?: string | null;
 }
 
 /** Pluggable aggregate (RECONCILE: swap mean -> mean+floor -> weighted at calibration
