@@ -6,6 +6,7 @@ export type {
   JourneyProgress,
   JourneyState,
   Season,
+  StepRecord,
 } from "./state.js";
 export type {
   JourneyConfigs,
@@ -24,5 +25,8 @@ export { removeFatigueAtJourneyEnd } from "./fatigue.js";
 export { runDangerZone } from "./danger.js";
 export { applyEffect, applyEffects, fatigueWaived } from "./effects.js";
 export { runSkillCheck } from "./check.js";
+// resolveScene -> [JourneyState, CheckResult|null]; stepJourney -> [JourneyState, StepRecord]
+// (channel B: the per-step CheckResults travel in a side record, NOT in the serialised log).
+// runJourney still returns JourneyState (threads [0], discards the record).
 export { resolveScene } from "./scene.js";
 export { runJourney, stepJourney } from "./run.js";

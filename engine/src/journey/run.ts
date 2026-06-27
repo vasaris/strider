@@ -1,3 +1,4 @@
+import type { CheckResult } from "../checks/types.js";
 import { applyEyeAwarenessDelta, growthFromFeatDie } from "../eye/growth.js";
 import { isDetected, pursuitThreshold, resetEye } from "../eye/pursuit.js";
 import { rollFeatDieEvent } from "../oracles/featEvent.js";
@@ -6,7 +7,7 @@ import type { JourneyConfigs } from "./config.js";
 import { runDangerZone } from "./danger.js";
 import { applyEffects } from "./effects.js";
 import { resolveScene } from "./scene.js";
-import type { JourneyEvent, JourneyState } from "./state.js";
+import type { JourneyEvent, JourneyState, StepRecord } from "./state.js";
 
 const TRAVEL_SKILL = "travel";
 
@@ -36,8 +37,11 @@ function maybeDetection(state: JourneyState, cfg: JourneyConfigs): JourneyState 
  * a pursuit/detection check. Days come from the route duration (set at start)
  * and from scene effects, not from per-hex accrual here.
  */
-export function stepJourney(state: JourneyState, cfg: JourneyConfigs): JourneyState {
-  if (state.journey.arrived) return state;
+export function stepJourney(state: JourneyState, cfg: JourneyConfigs): readonly [JourneyState, StepRecord] {
+  if (state.journey.arrived) {
+    return [state, { events: [], travelCheck: null, sceneCheck: null }] as const; // degenerate no-op
+  }
+  const beforeLen = state.log.length;
 
   const [travel, rng] = runSkillCheck(state.hero, TRAVEL_SKILL, cfg, state.rng);
   const eyeDelta = travel.isEyeOnFeat ? growthFromFeatDie(true, false, cfg.eye) : 0;
@@ -48,20 +52,20 @@ export function stepJourney(state: JourneyState, cfg: JourneyConfigs): JourneySt
   if (advance >= s.journey.remainingHexes) {
     const travelEvent: JourneyEvent = { kind: "travel_check", outcome: travel.outcome, advance, remainingAfter: 0, eyeDelta };
     const arrival: JourneyEvent = { kind: "arrival", durationDays: s.journey.durationDays };
-    return {
-      ...s,
-      journey: { ...s.journey, remainingHexes: 0, arrived: true },
-      log: [...s.log, travelEvent, arrival],
-    };
+    s = { ...s, journey: { ...s.journey, remainingHexes: 0, arrived: true }, log: [...s.log, travelEvent, arrival] };
+    return [s, { events: s.log.slice(beforeLen), travelCheck: travel, sceneCheck: null }] as const;
   }
 
   const remainingAfter = s.journey.remainingHexes - advance;
   const travelEvent: JourneyEvent = { kind: "travel_check", outcome: travel.outcome, advance, remainingAfter, eyeDelta };
   s = { ...s, journey: { ...s.journey, remainingHexes: remainingAfter }, log: [...s.log, travelEvent] };
 
-  s = resolveScene(s, cfg);
+  let sceneCheck: CheckResult | null;
+  [s, sceneCheck] = resolveScene(s, cfg);
   s = maybeDetection(s, cfg);
-  return s;
+  // events: the exact slice appended this step (single source of truth -- sliced from the log,
+  // not recomputed), so a consumer reading sceneDetail from record.events matches the log.
+  return [s, { events: s.log.slice(beforeLen), travelCheck: travel, sceneCheck }] as const;
 }
 
 /**
@@ -77,7 +81,7 @@ export function runJourney(state0: JourneyState, cfg: JourneyConfigs): JourneySt
   const cap = state0.journey.route.totalHexes + 50;
   for (let i = 0; i < cap; i++) {
     if (s.journey.arrived) return s;
-    s = stepJourney(s, cfg);
+    [s] = stepJourney(s, cfg); // runJourney threads state only; the per-step record is for the turn loop
   }
   throw new Error("runJourney: exceeded step cap without arriving (possible bug)");
 }

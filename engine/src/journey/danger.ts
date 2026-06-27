@@ -11,7 +11,7 @@ import type { JourneyState } from "./state.js";
 export function runDangerZone(state: JourneyState, perilRating: number, cfg: JourneyConfigs): JourneyState {
   let s = state;
   for (let i = 0; i < Math.max(0, perilRating); i++) {
-    s = resolveScene(s, cfg);
+    [s] = resolveScene(s, cfg); // danger zone ignores the per-scene check record
   }
   return s;
 }

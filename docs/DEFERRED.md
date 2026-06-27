@@ -134,33 +134,43 @@
 - **Блокирует:** строго — доверие к `verified:true` этих карт; не блокирует
   движок.
 
-### R-WS1-RESIDUE — остаток R-workspace-1 после ws-b (producer-residue)
-- **Статус:** open (заведён ws-b; реестр > память)
-- **DUE:** full-cycle / `AnthropicKeeper` (когда появится реальный продьюсер хода).
-- **Что:** на ws-b закрыта только структурная часть `R-workspace-1` —
-  `SceneDetailRow` стал реальным engine-типом (импорт `@brodyazhnik/engine`, дубль
-  `EngineSceneDetail` удалён, поле-в-поле, ноль рейнеймов). **Остаток:**
-  - `dice` — engine camelCase (`featDie`/`successDie`/`CheckResult`) → контрактный
-    snake_case `DiceResult` (`feat_die`/`feat_symbol`/`success_dice`/`success_icons`/
-    `target_number`/`outcome`);
-  - `patch` — движок возвращает **целый** `JourneyState`; контрактный
-    `StatePatchSummary` (дельты) надо **выводить диффом** prev/next (`eyeDelta`/
-    `fatigueGained` уже на `JourneyEvent`; endurance/hope/shadow — диффом);
-  - `journalFacts` — движок их **не производит** (arch §2.4 context-compression,
-    Stage 3+);
-  - остаток `EngineTurnResult` — это орк-**проекция**, не engine-тип (у движка нет
-    turn-result-типа: `resolveScene`/`runJourney` → `JourneyState`+`JourneyEvent[]`).
-- **Почему отложено:** реального продьюсера `buildNarrativePackage` пока нет — его
-  кормят фикстуры/тесты; рейнейму dice/patch не к чему прикусить до прокидки реального
-  хода движка (это deliverable full-cycle/AnthropicKeeper). Строить `extractTurn`
-  сейчас = преждевременная адаптер-логика без потребителя.
-- **Где живёт:** дизайн-маппинг — комментарий в `orchestrator/src/provider.ts`
-  (RECONCILE-блок); потребитель остатка — full-cycle провайдер.
-- **Блокирует:** реальный engine→пакет в полном цикле (судья на живом выводе
-  Хранителя); не блокирует ws-b/типовую границу (она закрыта).
+### DD-DICE-FACES — сырые грани костей для UI-панели
+- **Статус:** open (заведён A1; ре-хоумлен из R-WS1-RESIDUE)
+- **DUE:** Stage 3.2.b («панель костей» — roadmap), потребитель — **PWA**, не Хранитель.
+- **Что:** контрактный `DiceResult` несёт опциональные `feat_die` (грань d12) и
+  `success_dice` (грани d6). Turn-producer (`extractTurn`/`mapDice`) их **намеренно
+  оставляет `undefined`** — Хранитель рендерит исход/символ/ЦЧ, а сырые грани
+  разворачиваются в UI-анимации (arch §5/§6, панель костей). Источник граней —
+  `DiceRoll` (`engine/src/dice/types.ts`: `feat.physicalFace`, `successDice[].face`),
+  который **отбрасывается** в `runSkillCheck` (возвращается только `CheckResult`).
+- **Что сделать:** аддитивно вынести `DiceRoll`-проекцию (или нужные грани) на канал
+  turn-record (как `CheckResult` в `StepRecord`, канал B), затем `mapDice` заполняет
+  `feat_die`/`success_dice`. Гейт — empty-diff (как A1.a) + reproducibility.
+- **Где живёт:** `engine` (surfacing `DiceRoll` рядом с `CheckResult`), `orchestrator`
+  `mapDice`; потребитель — Stage 3 PWA dice-panel (3.2.b).
+- **Блокирует:** только UI-анимацию граней; **не** Хранителя и не критерий выхода Stage 2
+  (исход/символ/ЦЧ уже в пакете).
 
 ---
 
 ## Закрыто
 
-(пусто)
+### R-WS1-RESIDUE — остаток R-workspace-1 (закрыт A1, track A)
+- **Закрыт:** A1 (turn-producer). Был заведён на ws-b как producer-residue; критерий
+  закрытия — реализованный реальный продьюсер `EngineTurnResult`.
+- **Как закрыт (полностью, остаток ре-хоумлен/реализован):**
+  - **`dice`** — реализован: `mapDice` (`orchestrator/src/provider.ts`) маппит engine
+    `CheckResult` → контрактный `DiceResult` (исход через `mapOutcome` degree→4-значный,
+    `feat_symbol`/`success_icons`/`target_number`/`total`); анти-хардкод-тест доказывает
+    чтение pack-derived `degree`, не `successIcons`.
+  - **`patch`** — реализован: `diffHeroState` (diff prev/next.hero → `StatePatchSummary`,
+    только ненулевые дельты + переходы состояний).
+  - **`EngineTurnResult`-проекция** — реальный продьюсер `extractTurn(prev,next,record)`
+    подключён и протестирован (engine `StepRecord`, канал B; журнал-лог чист от
+    check-математики; empty-diff golden держится).
+  - **сырые грани** (`feat_die`/`success_dice`) — ре-хоумлены в **`DD-DICE-FACES`**
+    (open, DUE Stage 3.2.b, UI).
+  - **`journalFacts`** — ре-хоумлен под **arch §2.4** (context-compression, Stage 3+);
+    `extractTurn` отдаёт `journal_facts:[]` до построения той подсистемы.
+- **Остаётся (отдельные пункты, не часть этого):** живая **прокидка** `extractTurn` в
+  цикл хода полного цикла (track A, A3/L4 — roadmap, не DEFERRED); `DD-DICE-FACES`.

@@ -66,3 +66,22 @@ export interface Consequence {
   readonly trigger: "on_success" | "on_failure";
   readonly effects: readonly Effect[];
 }
+
+/**
+ * Side-channel record of ONE journey step, returned by stepJourney alongside the next
+ * state (channel B, ws-b/track-A). It carries the raw CheckResults the step rolled --
+ * which the player-facing `log` deliberately does NOT, to keep the journal free of check
+ * math -- so the orchestrator can build a NarrativePackage (dice/patch) WITHOUT re-rolling.
+ *
+ * `events` is the exact slice appended to `state.log` this step (single source of truth:
+ * sliced from the log, not recomputed), so a consumer reading sceneDetail from an event
+ * here can never diverge from the log.
+ *
+ * NOT serialised by the CLI (the journey report renders `log` only), so surfacing it keeps
+ * the golden transcript byte-identical (empty-diff gate).
+ */
+export interface StepRecord {
+  readonly events: readonly JourneyEvent[]; // exactly the events appended this step
+  readonly travelCheck: CheckResult | null; // the travel check; null ONLY on the degenerate already-arrived no-op
+  readonly sceneCheck: CheckResult | null; // the scene's skill check, or null (significant/none/arrival)
+}

@@ -116,13 +116,15 @@ anti-slop, eval-харнесс, плумбинг 2.4, LT1-скаффолд+ге�
   workspace заведён; кросс-пакет идёт реальными импортами (`@brodyazhnik/engine` /
   `@brodyazhnik/orchestrator` → `main:./src/index.ts`, резолюция в TS-исходник через symlink).
   Статус RECONCILE-инвентаря в `orchestrator/src/provider.ts`:
-  - **`R-workspace-1` — ЧАСТИЧНО.** `SceneDetailRow` → реальный engine-тип: **закрыт**
-    (поле-в-поле, ноль рейнеймов; `EngineSceneDetail`-дубль удалён). **Остаток (producer-residue)
-    → full-cycle/AnthropicKeeper:** dice/patch (camelCase→snake_case) + `journalFacts` + остаток
-    `EngineTurnResult`-проекции — у движка нет turn-result-типа (`resolveScene`/`runJourney` →
-    `JourneyState`+`JourneyEvent[]`), реального продьюсера `buildNarrativePackage` пока нет
-    (кормят фикстуры/тесты). Дизайн-маппинг — комментарием в `provider.ts`; реестр —
-    `docs/DEFERRED.md#R-WS1-RESIDUE`. **`R-workspace-1` НЕ помечен полностью закрытым.**
+  - **`R-workspace-1` — ЗАКРЫТ (A1, track A).** `SceneDetailRow` → реальный engine-тип (ws-b);
+    producer-residue реализован A1: `extractTurn(prev,next,record)` — реальный продьюсер
+    `EngineTurnResult` (`orchestrator/src/provider.ts`); `mapDice` (engine `CheckResult` →
+    контрактный `DiceResult`, degree→4-значный исход, анти-хардкод-тест), `diffHeroState`
+    (patch диффом prev/next). Канал B: engine `StepRecord` (`stepJourney → [JourneyState, StepRecord]`),
+    журнал-лог чист от check-математики, golden empty-diff держится. Сырые грани
+    (`feat_die`/`success_dice`) ре-хоумлены в `DEFERRED#DD-DICE-FACES` (UI, DUE 3.2.b);
+    `journalFacts:[]` под arch §2.4. **`R-WS1-RESIDUE` → DEFERRED «Закрыто».** Остаётся (отдельно)
+    живая прокидка `extractTurn` в цикл хода (track A, A3/L4).
   - **`R-workspace-2` — ЗАКРЫТ (ws-b).** evals импортит реальный `buildNarrativePackage` +
     `NarrativePackage`; `ScenarioPackage`-alias удалён; `fixtureProvider` под `NarrativePackage`;
     `summary` переселён в `Seed`/`Transcript`.
