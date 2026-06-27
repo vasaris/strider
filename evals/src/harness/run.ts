@@ -1,12 +1,13 @@
-import type { PackageProvider, RunConfig, ScenarioPackage, Transcript } from './types.js';
+import type { NarrativePackage } from '@brodyazhnik/orchestrator';
+import type { PackageProvider, RunConfig, Transcript } from './types.js';
 
 /**
- * A package provider that returns a fixed fixture. The scaffold's stand-in for the real
- * source. SEAM (RECONCILE 4): at chat 2.4 this is replaced by an orchestratorPackageProvider
- * that calls orchestrator's real builder (engine -> NarrativePackage) -- by INJECTION, not
- * by editing runScenario.
+ * A package provider that returns a fixed fixture NarrativePackage. The real source
+ * (RECONCILE 4, closed at ws-b) is orchestrator's buildNarrativePackage(turn) -- plugged in
+ * by INJECTION, not by editing runScenario. fixtureProvider stays for tests that pin a
+ * hand-built package.
  */
-export function fixtureProvider(pkg: ScenarioPackage): PackageProvider {
+export function fixtureProvider(pkg: NarrativePackage): PackageProvider {
   return () => pkg;
 }
 
@@ -20,5 +21,5 @@ export async function runScenario(config: RunConfig): Promise<Transcript> {
   const pkg = await packageProvider(seed);
   const output = await keeper.run({ systemPrompt: seed.systemPrompt, package: pkg });
   const verdict = await judge.score(output.prose, ctx);
-  return { scenarioId: seed.id, package: pkg, output, verdict };
+  return { scenarioId: seed.id, summary: seed.summary, package: pkg, output, verdict };
 }

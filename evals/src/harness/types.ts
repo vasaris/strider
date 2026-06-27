@@ -1,38 +1,32 @@
 // Eval-harness types. Plumbing for the scoring cycle: seed -> package -> Keeper ->
-// judge. Self-contained in evals/; no cross-package imports (orchestrator/engine are
-// separate packages without a workspace -- that is a Stage-3 decision).
+// judge. Cross-package import enabled by the root workspace (ws-b): the real
+// orchestrator contract (NarrativePackage) resolves via @brodyazhnik/orchestrator.
 
+import type { NarrativePackage } from '@brodyazhnik/orchestrator';
 import type { StopEntry, Violation } from '../antislop.js';
 
 // ============================================================================
-// RECONCILE AT 2.4 -- mechanical checklist, not a drift hunt. Every provisional
-// divergence from the orchestrator contract is listed here so 2.4 is a swap, not
-// a search:
-//   1. ScenarioPackage: minimal alias (intent/scene/summary) -> orchestrator
-//      NarrativePackage. StubKeeper does not read it, so drift risk is ~zero now.
-//   2. KeeperOutput.questions: string[] -> orchestrator ClarifyingQuestion[].
-//   3. lengthTarget: lives in JudgeContext here -> at 2.4 it is PACKAGE-sourced
-//      (orchestrator sets it by scene type, arch sec 2.3.4); the judge reads it
-//      from the package.
-//   4. packageProvider: fixtureProvider() -> orchestrator buildNarrativePackage (the real
-//      engine-turn -> package mapper; lives + is tested in orchestrator/, not duplicated
-//      here). The harness already runs a structural engine-derived provider; the workspace
-//      wires the real one (evals imports orchestrator) -- Option 2 avoids that import now.
+// RECONCILE -- mechanical checklist, not a drift hunt. Cross-package items 1/4
+// are CLOSED at ws-b (the workspace wires the real types); the rest stay, each
+// gated on a later deliverable:
+//   1. CLOSED (ws-b): ScenarioPackage alias -> orchestrator NarrativePackage. The
+//      package the Keeper receives is now the real contract type.
+//   2. KeeperOutput.questions: string[] -> orchestrator ClarifyingQuestion[]. OPEN --
+//      adjacent to the real KeeperOutput (full-cycle/AnthropicKeeper), not ws-b.
+//   3. lengthTarget: lives in JudgeContext here -> PACKAGE-sourced once tone.md owns the
+//      bounds. OPEN -- blocked on 2.3.c (length relocation into tone.md) + a real package.
+//   4. CLOSED (ws-b): packageProvider fixture -> orchestrator buildNarrativePackage (the
+//      real engine-turn -> package mapper; lives + is tested in orchestrator/, imported
+//      here via the workspace, not duplicated).
 //   5. Keeper: StubKeeper -> AnthropicKeeper (same interface; real path is
-//      judge-scored, not byte-golden).
+//      judge-scored, not byte-golden). OPEN -- full-cycle.
 //   6. Judge anti_slop axis: the LLM judge REPLACES this deterministic axis with a
-//      nuanced score -- do NOT sum deterministic + LLM on the same axis.
+//      nuanced score -- do NOT sum deterministic + LLM on the same axis. OPEN -- judge.
 //   7. Aggregation guard: the >=80 pass-rate verdict is assembled ONLY when all six
-//      axes are 'scored'. No aggregate while any axis is 'pending' (none now).
+//      axes are 'scored'. OPEN -- stays until the full-cycle floor.
 // ============================================================================
 
-// PROVISIONAL (RECONCILE 1). Minimal fields only; the StubKeeper does NOT read package
-// internals, so this is a SEAM, not a copy of the contract.
-export interface ScenarioPackage {
-  readonly intent: string;
-  readonly scene: string;
-  readonly summary: string; // compact human-facing seed label for the transcript
-}
+// RECONCILE 1 CLOSED (ws-b): the Keeper now receives the real orchestrator NarrativePackage.
 
 // PROVISIONAL (RECONCILE 2).
 export interface KeeperOutput {
@@ -42,7 +36,7 @@ export interface KeeperOutput {
 
 export interface KeeperInput {
   readonly systemPrompt: string;
-  readonly package: ScenarioPackage;
+  readonly package: NarrativePackage;
 }
 
 /** The narrative model behind one seam. StubKeeper now; AnthropicKeeper at 2.4. */
@@ -50,17 +44,21 @@ export interface Keeper {
   run(input: KeeperInput): Promise<KeeperOutput>;
 }
 
-/** Scenario seed: identity + system prompt. At 2.4 it also carries whatever the real
- *  orchestrator builder needs (engine state/action) to produce the package. */
+/** Scenario seed: identity + system prompt + a human-facing transcript label. At full-cycle
+ *  it also carries whatever the real orchestrator builder needs (engine state/action) to
+ *  produce the package. `summary` was relocated here from the old ScenarioPackage (RECONCILE 1
+ *  closed): NarrativePackage is pure mechanics, so the human label lives on the seed and is
+ *  surfaced on the Transcript. */
 export interface Seed {
   readonly id: string;
   readonly systemPrompt: string;
+  readonly summary: string; // compact human-facing label, surfaced on the Transcript
 }
 
-/** Injected package source -- symmetric with Keeper/Judge (RECONCILE 4). fixtureProvider
- *  now; orchestratorPackageProvider at 2.4. May be sync or async (the real builder is
- *  async). Making this an injection point keeps the seam a swap, not a runner edit. */
-export type PackageProvider = (seed: Seed) => ScenarioPackage | Promise<ScenarioPackage>;
+/** Injected package source -- symmetric with Keeper/Judge (RECONCILE 4 CLOSED at ws-b: the
+ *  real orchestrator buildNarrativePackage plugs in here). May be sync or async (the real
+ *  builder is async). Making this an injection point keeps the seam a swap, not a runner edit. */
+export type PackageProvider = (seed: Seed) => NarrativePackage | Promise<NarrativePackage>;
 
 // --- Judge: the Verdict carries ALL SIX rubric axes from the start (arch sec 2.5 /
 // sec 0.7 line 123, threshold 80+) so chat 2.4 fills slots rather than reshaping it. ---
@@ -137,7 +135,8 @@ export interface Judge {
 
 export interface Transcript {
   readonly scenarioId: string;
-  readonly package: ScenarioPackage;
+  readonly summary: string; // human-facing label, copied from the seed
+  readonly package: NarrativePackage;
   readonly output: KeeperOutput;
   readonly verdict: Verdict;
 }

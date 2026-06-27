@@ -1,21 +1,37 @@
 // Orchestrator package provider: engine turn result -> NarrativePackage (arch sec 8 --
 // the orchestrator assembles the package the Keeper consumes).
 //
-// CROSS-PACKAGE SEAM (Option 2, structural -- NOT a relative import of engine/). This file
-// defines a STRUCTURAL EngineTurnResult shape and maps it to the contract. Engine-side
-// correctness (the engine really emits the SD1 detail row -- Fork A) is proven in the
-// engine suite; the mapper's correctness is proven by fixture here.
+// CROSS-PACKAGE LINK (ws-b): SceneDetailRow is now the REAL engine type, imported via the
+// root workspace (@brodyazhnik/engine resolves to engine main:./src/index.ts). The
+// structural EngineSceneDetail duplicate is gone. The mapper's correctness is proven by
+// fixture here; engine-side SD1 correctness (Fork A) by the engine suite.
 //
-// RECONCILE -- explicit Option-2 debt, so it does not dissolve:
-//   R-workspace-1: structural EngineTurnResult -> real engine types. Includes reconciling
-//     the dice/patch SHAPE (engine camelCase -> contract snake_case), abstracted by the
-//     fixture now; the relative-import debt of Option 1 is avoided until the workspace.
-//   R-workspace-2: the harness's 3-field structural adapter -> this real buildNarrativePackage
-//     (evals imports orchestrator once the root workspace exists). Mirrors harness
-//     types.ts RECONCILE 1/4.
+// RECONCILE status:
+//   R-workspace-1: PARTIAL. SceneDetailRow -> real engine type: CLOSED (field-identical,
+//     zero rename). RESIDUE -> full-cycle/AnthropicKeeper (see docs/DEFERRED.md R-WS1-RESIDUE):
+//     there is no real engine-turn PRODUCER yet -- buildNarrativePackage is fed only by
+//     fixtures/tests. EngineTurnResult stays an orchestrator PROJECTION (engine has no
+//     turn-result type; resolveScene/runJourney return JourneyState + JourneyEvent[]).
+//     When a real producer is wired, it must build EngineTurnResult by:
+//       * dice (engine camelCase -> contract snake_case DiceResult):
+//           feat_die      <- feat.face
+//           feat_symbol   <- feat.isEye ? 'eye' : feat.isGandalf ? 'gandalf' : null
+//           success_dice  <- successDice.map(d => d.face)
+//           success_icons <- count of success-icon faces
+//           target_number <- check TN (18 - attribute, solo)
+//           outcome       <- CheckResult.outcome
+//       * patch (contract StatePatchSummary deltas): engine returns a WHOLE JourneyState;
+//           deltas must be DERIVED by diffing prev/next (eyeDelta/fatigueGained are already
+//           on the JourneyEvent; endurance/hope/shadow need a diff).
+//       * journalFacts: engine does NOT produce these (arch sec 2.4 context-compression,
+//           Stage 3+); empty until that subsystem exists.
+//   R-workspace-2: CLOSED at ws-b -- evals imports this real buildNarrativePackage (mirrors
+//     harness types.ts RECONCILE 1/4).
 //   R-activation(tone.md): provisionalLengthFor -> read length bounds from tone.md (the
 //     arch sec 2.3.4 numbers are provisional in code now; tone.md owns them at activation).
+//     Still OPEN: blocked on 2.3.c (length relocation into tone.md).
 
+import type { SceneDetailRow } from '@brodyazhnik/engine';
 import type {
   DiceResult,
   IntentKind,
@@ -27,21 +43,13 @@ import type {
   StatePatchSummary,
 } from './contract.js';
 
-/** SD1 Fork A row, mirrored structurally (engine journey SceneDetailRow). At the workspace
- *  this becomes engine's real SceneDetailRow type. */
-export interface EngineSceneDetail {
-  readonly face: number;
-  readonly scene: string;
-  readonly prompt: string;
-  readonly skill: string | null;
-  readonly significantEncounter: boolean;
-}
-
 /**
- * Structural engine-turn result the orchestrator maps to a package. dice/patch are carried
- * in contract shape here (the engine -> contract field rename is upstream/workspace); the
- * value this mapper adds is package ASSEMBLY -- chiefly surfacing the already-rolled SD1
- * detail into oracle.detail WITHOUT re-rolling (RNG-safe), plus the lore slot and length.
+ * Structural engine-turn result the orchestrator maps to a package. This is an orchestrator
+ * PROJECTION, not an engine type (engine has no turn-result type -- see RECONCILE R-workspace-1
+ * above). dice/patch are carried in contract shape here (the engine -> contract rename belongs
+ * to the future real producer); the value this mapper adds is package ASSEMBLY -- chiefly
+ * surfacing the already-rolled SD1 detail into oracle.detail WITHOUT re-rolling (RNG-safe),
+ * plus the lore slot and length. sceneDetail is now the REAL engine SceneDetailRow.
  */
 export interface EngineTurnResult {
   readonly intent: IntentKind; // orchestrator classifier output (the engine does not classify)
@@ -50,7 +58,7 @@ export interface EngineTurnResult {
   readonly oracleTable?: string; // top-level oracle table id (e.g. 'journey_scenes')
   readonly oracleResultRef?: string; // top-level rolled entry ref (e.g. the scene type)
   readonly detailTable?: string; // scene_details.* sub-table id (SD1)
-  readonly sceneDetail?: EngineSceneDetail | null; // SD1 Fork A raw row, already rolled
+  readonly sceneDetail?: SceneDetailRow | null; // SD1 Fork A raw row, already rolled (real engine type)
   readonly patch?: StatePatchSummary | null;
   readonly journalFacts?: readonly JournalFact[];
 }

@@ -2,8 +2,8 @@ import type { Keeper, KeeperInput, KeeperOutput } from './types.js';
 
 /**
  * Deterministic stand-in for the narrative model. Returns canned prose and does NOT read
- * the package internals -- which is exactly why the PROVISIONAL ScenarioPackage alias is
- * safe to keep minimal, and why the stub path is byte-deterministic (golden-able).
+ * the package internals -- which is why swapping the package to the real NarrativePackage
+ * (ws-b) is safe, and why the stub path is byte-deterministic (golden-able).
  *
  * The real AnthropicKeeper (chat 2.4) implements this SAME interface -- an Anthropic API
  * call behind `run()` -- so wiring it in does not touch the runner or the judge. No

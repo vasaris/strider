@@ -1,14 +1,21 @@
+import { buildNarrativePackage, type EngineTurnResult, type NarrativePackage } from '@brodyazhnik/orchestrator';
 import { describe, expect, it } from 'vitest';
 import { DeterministicJudge } from '../src/harness/judge.js';
 import { StubKeeper } from '../src/harness/keeper.js';
 import { fixtureProvider, runScenario } from '../src/harness/run.js';
-import type { PackageProvider, ScenarioPackage, Seed } from '../src/harness/types.js';
+import type { PackageProvider, Seed } from '../src/harness/types.js';
 
 const SEED: Seed = {
   id: 'golden.journey.clean',
-  systemPrompt: 'STUB-PROMPT', // the real prompt (prompts/keeper.system.v0.md) is wired at 2.4
+  systemPrompt: 'STUB-PROMPT', // the real prompt (prompts/keeper.system.v0.md) is wired at full-cycle
+  summary: 'a quiet stretch of road at dusk',
 };
-const PKG: ScenarioPackage = { intent: 'journey', scene: 'journey', summary: 'a quiet stretch of road at dusk' };
+// Real orchestrator NarrativePackage (ws-b: RECONCILE 1 closed). length_target is required.
+const PKG: NarrativePackage = {
+  intent: 'journey',
+  scene: 'journey',
+  length_target: { min_chars: 400, max_chars: 800 },
+};
 
 // Clean, sensory, in-register prose (leads with touch/sound/smell; no calque/cliche/VK).
 const CLEAN_PROSE =
@@ -25,7 +32,7 @@ describe('eval harness: cycle plumbing', () => {
     expect(t.output.prose).toBe(CLEAN_PROSE);
     expect(t.verdict.pass).toBe(true);
     expect(t.verdict.axes.anti_slop.status).toBe('scored');
-    expect(t.verdict.axes.tone.status).toBe('pending'); // awaits LLM judge + tone.md (2.4)
+    expect(t.verdict.axes.tone.status).toBe('pending'); // awaits LLM judge + tone.md (full-cycle)
   });
 
   it('blocks prose with a wrong-system calque', async () => {
@@ -53,42 +60,58 @@ describe('eval harness: cycle plumbing', () => {
   });
 
   it('package source is injected (seam): swapping the provider does not touch the runner', async () => {
-    const other: ScenarioPackage = { intent: 'council', scene: 'council', summary: 'a tense parley' };
+    const other: NarrativePackage = {
+      intent: 'council',
+      scene: 'council',
+      length_target: { min_chars: 800, max_chars: 1500 },
+    };
     const t = await runScenario({
       seed: SEED,
       packageProvider: fixtureProvider(other),
       keeper: new StubKeeper(CLEAN_PROSE),
       judge: new DeterministicJudge(),
     });
-    expect(t.package).toEqual(other); // at 2.4 this provider becomes orchestrator's real builder
+    expect(t.package).toEqual(other);
   });
 
-  it('runs a structural engine-derived provider at the seam (RECONCILE 1/4)', async () => {
-    // The injection point where orchestrator's buildNarrativePackage plugs in. At the
-    // Stage-3 workspace this closure becomes `() => buildNarrativePackage(turn)` returning
-    // the full NarrativePackage; here it is a minimal structural adapter, so the harness
-    // already runs an engine-DERIVED provider rather than a hand-fixed fixture. No
-    // cross-package import (Option 2): the real mapper lives + is tested in orchestrator/.
-    const turn = { intent: 'journey' as const, scene: 'journey' as const, sceneType: 'mishap' };
-    const engineDerived: PackageProvider = () => ({
-      intent: turn.intent,
-      scene: turn.scene,
-      summary: `engine turn: ${turn.sceneType}`,
-    });
+  it('runs the REAL orchestrator buildNarrativePackage at the seam (RECONCILE 1/4 closed, ws-b)', async () => {
+    // Cross-package proof (gate B): evals imports orchestrator's buildNarrativePackage, which
+    // in turn imports engine's SceneDetailRow -- both resolved to TS source via the workspace
+    // symlink (@brodyazhnik/* -> main:./src/index.ts). If resolution failed, this test would
+    // not even load. The fixture EngineTurnResult stands in for a real engine turn (no real
+    // producer yet -- see orchestrator RECONCILE R-workspace-1 residue). SD1 row is surfaced
+    // opaquely into oracle.detail WITHOUT re-rolling.
+    const turn: EngineTurnResult = {
+      intent: 'journey',
+      scene: 'journey',
+      oracleTable: 'journey_scenes',
+      oracleResultRef: 'mishap',
+      detailTable: 'scene_details.mishap',
+      sceneDetail: {
+        face: 3,
+        scene: 'a turned ankle on scree',
+        prompt: 'the descent goes wrong',
+        skill: 'travel',
+        significantEncounter: false,
+      },
+    };
+    const engineDerived: PackageProvider = () => buildNarrativePackage(turn);
     const t = await runScenario({
       seed: SEED,
       packageProvider: engineDerived,
       keeper: new StubKeeper(CLEAN_PROSE),
       judge: new DeterministicJudge(),
     });
-    expect(t.package.summary).toBe('engine turn: mishap');
     expect(t.package.scene).toBe('journey');
+    expect(t.package.oracle?.result_ref).toBe('mishap');
+    expect(t.package.oracle?.detail?.row?.face).toBe(3); // SD1 surfaced, not re-rolled
+    expect(t.package.length_target).toEqual({ min_chars: 400, max_chars: 800 });
     expect(t.verdict.pass).toBe(true);
   });
 
   it('golden: stub-keeper path is byte-stable (prompt/runner change caught by diff)', async () => {
     // Byte-golden is valid ONLY on the stub path. The real LLM keeper is not
-    // byte-deterministic, so its transcript-diff is judge-scored at 2.4, not byte.
+    // byte-deterministic, so its transcript-diff is judge-scored at full-cycle, not byte.
     const t = await runScenario({
       seed: SEED,
       packageProvider: fixtureProvider(PKG),
@@ -102,10 +125,14 @@ describe('eval harness: cycle plumbing', () => {
         },
         "package": {
           "intent": "journey",
+          "length_target": {
+            "max_chars": 800,
+            "min_chars": 400,
+          },
           "scene": "journey",
-          "summary": "a quiet stretch of road at dusk",
         },
         "scenarioId": "golden.journey.clean",
+        "summary": "a quiet stretch of road at dusk",
         "verdict": {
           "antiSlop": {
             "blocking": false,

@@ -134,6 +134,31 @@
 - **Блокирует:** строго — доверие к `verified:true` этих карт; не блокирует
   движок.
 
+### R-WS1-RESIDUE — остаток R-workspace-1 после ws-b (producer-residue)
+- **Статус:** open (заведён ws-b; реестр > память)
+- **DUE:** full-cycle / `AnthropicKeeper` (когда появится реальный продьюсер хода).
+- **Что:** на ws-b закрыта только структурная часть `R-workspace-1` —
+  `SceneDetailRow` стал реальным engine-типом (импорт `@brodyazhnik/engine`, дубль
+  `EngineSceneDetail` удалён, поле-в-поле, ноль рейнеймов). **Остаток:**
+  - `dice` — engine camelCase (`featDie`/`successDie`/`CheckResult`) → контрактный
+    snake_case `DiceResult` (`feat_die`/`feat_symbol`/`success_dice`/`success_icons`/
+    `target_number`/`outcome`);
+  - `patch` — движок возвращает **целый** `JourneyState`; контрактный
+    `StatePatchSummary` (дельты) надо **выводить диффом** prev/next (`eyeDelta`/
+    `fatigueGained` уже на `JourneyEvent`; endurance/hope/shadow — диффом);
+  - `journalFacts` — движок их **не производит** (arch §2.4 context-compression,
+    Stage 3+);
+  - остаток `EngineTurnResult` — это орк-**проекция**, не engine-тип (у движка нет
+    turn-result-типа: `resolveScene`/`runJourney` → `JourneyState`+`JourneyEvent[]`).
+- **Почему отложено:** реального продьюсера `buildNarrativePackage` пока нет — его
+  кормят фикстуры/тесты; рейнейму dice/patch не к чему прикусить до прокидки реального
+  хода движка (это deliverable full-cycle/AnthropicKeeper). Строить `extractTurn`
+  сейчас = преждевременная адаптер-логика без потребителя.
+- **Где живёт:** дизайн-маппинг — комментарий в `orchestrator/src/provider.ts`
+  (RECONCILE-блок); потребитель остатка — full-cycle провайдер.
+- **Блокирует:** реальный engine→пакет в полном цикле (судья на живом выводе
+  Хранителя); не блокирует ws-b/типовую границу (она закрыта).
+
 ---
 
 ## Закрыто

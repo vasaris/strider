@@ -100,12 +100,23 @@ anti-slop, eval-харнесс, плумбинг 2.4, LT1-скаффолд+ге�
 
 - **SD1 Fork A** — деталь сцены экспонируется **аддитивно**; golden `dark-1` **byte-identical**.
   Не перекатывать строку (двойной бросок рассинхронит RNG).
-- **Опция 2 (структурный seam)** — кросс-пакет через структурные типы сейчас; **реальные типы —
-  на workspace**. Долг явно зафиксирован, чтобы не растворялся: **RECONCILE-инвентарь в
-  `orchestrator/src/provider.ts`** — `R-workspace-1` (структурный `EngineTurnResult` → реальные
-  engine-типы, camelCase→snake_case), `R-workspace-2` (3-полевой harness-адаптер → реальный
-  `buildNarrativePackage`), `R-activation(tone.md)` (`provisionalLengthFor` → длины из tone.md).
-  Зеркало — `evals/src/harness/types.ts` RECONCILE 1–7.
+- **Опция 2 (структурный seam) — СНЯТА на workspace (ws-a+ws-b, коммиты ниже).** Root npm
+  workspace заведён; кросс-пакет идёт реальными импортами (`@brodyazhnik/engine` /
+  `@brodyazhnik/orchestrator` → `main:./src/index.ts`, резолюция в TS-исходник через symlink).
+  Статус RECONCILE-инвентаря в `orchestrator/src/provider.ts`:
+  - **`R-workspace-1` — ЧАСТИЧНО.** `SceneDetailRow` → реальный engine-тип: **закрыт**
+    (поле-в-поле, ноль рейнеймов; `EngineSceneDetail`-дубль удалён). **Остаток (producer-residue)
+    → full-cycle/AnthropicKeeper:** dice/patch (camelCase→snake_case) + `journalFacts` + остаток
+    `EngineTurnResult`-проекции — у движка нет turn-result-типа (`resolveScene`/`runJourney` →
+    `JourneyState`+`JourneyEvent[]`), реального продьюсера `buildNarrativePackage` пока нет
+    (кормят фикстуры/тесты). Дизайн-маппинг — комментарием в `provider.ts`; реестр —
+    `docs/DEFERRED.md#R-WS1-RESIDUE`. **`R-workspace-1` НЕ помечен полностью закрытым.**
+  - **`R-workspace-2` — ЗАКРЫТ (ws-b).** evals импортит реальный `buildNarrativePackage` +
+    `NarrativePackage`; `ScenarioPackage`-alias удалён; `fixtureProvider` под `NarrativePackage`;
+    `summary` переселён в `Seed`/`Transcript`.
+  - **`R-activation(tone.md)` — ОТКРЫТ.** `provisionalLengthFor` остаётся provisional;
+    blocked on 2.3.c (перенос длин в tone.md).
+  Зеркало — `evals/src/harness/types.ts` RECONCILE: **1 и 4 сняты (ws-b)**; **2/3/5/6/7 на месте**.
 - **Per-entry severity** в стоп-листах (block/warn пер-запись; фразы=block, неоднозначные
   одиночные слова=warn) — решено, не пересматривать.
 - **`mean(6)` provisional; floor отложен до full-cycle калибровки.** `accuracy` не измерима на

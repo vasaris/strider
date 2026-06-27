@@ -11,6 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
+  "dependencies": {
+    "@brodyazhnik/engine": "*"
+  },
   "devDependencies": {
     "@types/node": "^20.19.43",
     "tsx": "^4.22.4",
