@@ -91,18 +91,25 @@ completeness, eval-харнесс скаффолд, **2.4 plumbing** (SD1 Fork A
 **LT1-tone активирован** (`tone.md` + `tone.stoplist.json` в живом паке, сайдкары, 0.1.0;
 `evals` читает `VK_ADDENDUM` из живого сайдкара). Тон-сторона live-2.4 **разблокирована**.
 **Сделано:** тон-судья **плумбинг** (`76421b8`, LlmJudge/error-verdict/short-circuit/pluggable-aggregate),
-**few-shot v1** (`013dce0`, G1–G6+B1–B7, догфуд PASS), **LT1-tone активирован** (`f6beb0f`).
-**▶ Калибровка тон-судьи — РАННЕР СДАН, ждёт прогона Ивана:**
-- Раннер: `evals/calibrate.mts` + `cases.ts` + `anthropicLlmClient.ts` (env-гард, model-config,
-  Zod-гейт, prompt-caching, raw→`calibration-report.json` gitignored). Оффлайн-тесты не задеты.
-- **Ключ-путь (а):** ключ ТОЛЬКО в keyed-вкладке Ивана, никогда в процесс агента. Команда:
-  `cd evals && npx tsx calibrate.mts`.
-- **Первый прогон = ДИАГНОСТИКА.** Иван гоняет сам, несёт сырой `calibration-report.json` +
-  таблицу на разбор (разбор — во внешнем арх-чате, не здесь).
-- 🔴 **До разбора НЕ трогать:** `judge.system.v0.md` (рубрика), `cases.ts`, floor агрегата, порог.
-  Если B5–B7 проходят высоко → чинить рубрику, не порог/regex.
-**Всё ещё gated:** полный цикл хода + suite-раннер (5–10 golden, агрегат ≥80) + `AnthropicKeeper` —
-на **workspace** (открыватель Stage 3) + **lore-активацию** (LT1 lore → 0.2.0).
+**few-shot v1** (`013dce0`, G1–G6+B1–B7, догфуд PASS), **LT1-tone активирован** (`f6beb0f`),
+**калибровка тон-судьи выполнена** (parse-fix `84125ac`; диагностика — судья валиден,
+`docs/CALIBRATION_TONE_JUDGE.md`).
+**✅ Калибровка тон-судьи — ВЫПОЛНЕНА (диагностика, судья валиден):**
+- Раннер `evals/calibrate.mts` (`469da26`); парсинг ответа починен до прогона (`84125ac` —
+  терпимое извлечение JSON + `max_tokens` 4096 + `rawSample` на parse-ошибке). Иван прогнал 13
+  в keyed-вкладке; ревью-рекорд (цифры из реального gitignored `calibration-report.json`) —
+  **`docs/CALIBRATION_TONE_JUDGE.md`**.
+- **Результат:** good 6/6 ≥80 (agg 82–85); bad 7/7 <80 (coarse 8–28, subtle 40/48/53); зазор
+  худший-хороший(82)/лучший-плохой(53) ≈29; шкала 0–100 корректна. `mean(6)≥80` разводит набор.
+  «LLM ловит сверх regex» доказано (B1/B4/B5 — чистый детерм. anti_slop, валит судья).
+- 🔴 **Floor отложен до full-cycle калибровки:** accuracy у хороших 75–85, т.к. few-shot = проза
+  без пакета движка («входной пакет не дан»); floor 80 завалил бы 3/6 хороших. accuracy измерима
+  только на реальном пакете. `aggregateMean` остаётся provisional; рубрику/cases/порог НЕ тронуты
+  (правка под 13 примеров = overfit).
+**Всё ещё gated (остаток Stage 2 → инфраструктура Stage 3, ожидаемо):** критерий выхода Stage 2
+(«CLI-сцена, судья ≥80») требует **полного цикла** = `AnthropicKeeper` + реальный пакет
+(orchestrator provider) + **workspace** (открыватель Stage 3) + **активация lore** (LT1, DUE
+Stage 2; lore → 0.2.0). Суда же — suite-раннер (5–10 golden, агрегат ≥80) и full-cycle floor.
 
 ---
 
