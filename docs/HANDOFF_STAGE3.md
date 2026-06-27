@@ -1,7 +1,12 @@
 # HANDOFF_STAGE3 — самодостаточный вход в Stage 3
 
-Точка входа для пересозданных чатов. HEAD = **`ead78d2`** (== `origin/main`, запушено).
-Все факты ниже сверены по репо на этом коммите, не по памяти.
+Точка входа для пересозданных чатов. HEAD = **`050fe18`** (Stage 3 opener закрыт: ws-a+ws-b
+поверх `ead78d2`). **Локальный** HEAD опережает `origin/main` на опенер-коммиты до пуша (пуш —
+только по явной отмашке Ивана). Все факты ниже сверены по репо, не по памяти.
+
+**Опенер Stage 3 (ВЫПОЛНЕН, см. §4):**
+- `a4fb135` feat(stage3): ws-a root npm workspace (topology only, zero behavior change)
+- `050fe18` feat(stage3): ws-b real cross-package imports (close R-workspace-2, partial R-workspace-1)
 
 ---
 
@@ -54,12 +59,13 @@ anti-slop, eval-харнесс, плумбинг 2.4, LT1-скаффолд+ге�
 **чистом детерм. anti_slop** (B5 эпик-инфляция мимо regex поймана судьёй); зазор худший-хороший(82)
 / лучший-плохой(53) **≈ 29**; шкала 0–100 корректна.
 
-**Инварианты (сверены прогоном на `ead78d2`):**
-- `engine/` — **389 тестов** зелёные; **Cyrillic CLEAN** (perl-скан `src/**/*.ts`).
+**Инварианты (сверены прогоном на `050fe18`, из корня workspace И по-пакетно):**
+- `engine/` — **389 тестов** зелёные; **Cyrillic CLEAN** (perl-скан `src/**/*.ts`); `dependencies: null`.
 - `evals/` — **44 теста** зелёные (офлайн, мок-клиент, без ключа/сети).
 - `orchestrator/` — **9 тестов** зелёные.
 - Пак `content-packs/kv/` — **`pack_version` 0.1.0**, детерминированная загрузка; 5 golden
-  стабильны (Stage 1).
+  стабильны (Stage 1; byte-identical через опенер).
+- Запуск: `npm run test:all` / `npm run typecheck:all` из корня (порядок engine→orchestrator→evals).
 
 ---
 
@@ -74,25 +80,31 @@ anti-slop, eval-харнесс, плумбинг 2.4, LT1-скаффолд+ге�
 
 ---
 
-## 4. Первый шаг Stage 3 = workspace (решение Ивана)
+## 4. Первый шаг Stage 3 = workspace — ✅ ВЫПОЛНЕН (опенер закрыт на `050fe18`)
 
-**Открыватель Stage 3 — root workspace** (`@brodyazhnik/engine` / `orchestrator` / `evals` + `app/`).
+**Открыватель Stage 3 — root npm workspace** (`@brodyazhnik/engine` / `orchestrator` / `evals`;
+`app/` — зарезервированный слот, скаффолдит чат 3.1.a). Сделан в два под-такта:
 
-- **Зачем именно сейчас (конкретный driver, не гипотеза):** первая реальная кросс-пакетная
-  зависимость уже пришла в 2.4-plumbing — `orchestrator/provider.ts` маппит вывод движка, а
-  eval-харнесс зовёт orchestrator. Сейчас они связаны **структурными seam'ами** (Option 2:
-  структурный `EngineTurnResult`, harness-alias) — без относительных импортов. Workspace
-  разблокирует кросс-пакетные импорты (`@brodyazhnik/engine`) и снимает эти seam'ы реальными
-  типами (закрывает `R-workspace-1/2`).
-- **За workspace (параллельно/после):**
-  - **lore-активация (LT1)** — контент Ивана, фоновый трек: lore-чанки в пак → `pack_version`
-    0.2.0; разблокирует RAG-вход и закрывает тон-сторону полного цикла.
-  - **полный цикл** — `AnthropicKeeper` (реальный Хранитель за тем же `Keeper`-швом, что StubKeeper)
-    + реальный orchestrator-пакет (`buildNarrativePackage`) → судья на живом выводе → **критерий
-    выхода Stage 2**. Сюда же suite-раннер (5–10 golden, агрегат ≥ 80) и full-cycle floor.
+- **ws-a (`a4fb135`)** — топология, ноль изменения поведения: root `package.json` (workspaces),
+  единый root-lock, root `.gitignore` += `/node_modules`, удаление 3 member-lock. Member
+  tsconfig/package.json не тронуты. Project references **отвергнуты** (composite ⊥ noEmit);
+  кросс-пакет — workspace-symlink + `main:./src/index.ts`; порядок — root-скрипт, не `tsc -b`.
+- **ws-b (`050fe18`)** — реальные кросс-пакетные импорты:
+  - **`R-workspace-2` ЗАКРЫТ** — evals импортит реальный `buildNarrativePackage`+`NarrativePackage`;
+    `ScenarioPackage`-alias удалён; `summary` → `Seed`/`Transcript`. Зеркало RECONCILE 1/4 снято.
+  - **`R-workspace-1` ЧАСТИЧНО** — `SceneDetailRow` стал реальным engine-типом (дубль
+    `EngineSceneDetail` удалён). **Остаток `R-WS1-RESIDUE` (open)** — dice/patch (camelCase→snake_case)
+    + journalFacts + проекция `EngineTurnResult` → full-cycle; см. `docs/DEFERRED.md#R-WS1-RESIDUE` и §5.
+  - Гейт B доказан: `@brodyazhnik/*` резолвятся в TS-исходник под tsc И vitest.
 
-**НЕ начинать** workspace / Keeper / Stage 3 без явной отмашки Ивана — это его решение об
-открытии этапа.
+**Следующее — трек A (критерий выхода Stage 2, full-cycle):**
+- **lore-активация (LT1, контент Ивана)** — lore-чанки в пак → `pack_version` 0.2.0; RAG-вход +
+  тон-сторона полного цикла. Гейтит выход Stage 2.
+- **полный цикл** — turn-producer (закрытие `R-WS1-RESIDUE`) → `AnthropicKeeper` (за тем же
+  `Keeper`-швом, что StubKeeper) + реальный пакет → судья на живом выводе → **критерий выхода
+  Stage 2**. Сюда же suite-раннер (5–10 golden, агрегат ≥ 80) и full-cycle floor.
+
+**НЕ начинать** трек A / Keeper без явной отмашки Ивана — это его решение об открытии деливерабла.
 
 ---
 
