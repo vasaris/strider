@@ -1,4 +1,6 @@
 // Public surface of the orchestrator package.
-// Stage-2 thin slice: only the engine->Keeper contract. Grows in Stage 3.
+// Engine->Keeper contract, the package provider (turn -> package) and the package
+// renderer (package -> Keeper user-message text). Grows in Stage 3.
 export * from './contract.js';
 export * from './provider.js';
+export * from './render.js';

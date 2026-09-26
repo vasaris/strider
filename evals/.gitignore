@@ -6,3 +6,7 @@ coverage/
 # Calibration: raw report output + any local env. The key is never written here, but guard anyway.
 calibration-report.*
 .env
+
+# Keeper smoke (A2): raw output. The script itself shares the stem, so re-include it.
+keeper-smoke.*
+!keeper-smoke.mts

@@ -19,7 +19,8 @@ import type { StopEntry, Violation } from '../antislop.js';
 //      real engine-turn -> package mapper; lives + is tested in orchestrator/, imported
 //      here via the workspace, not duplicated).
 //   5. Keeper: StubKeeper -> AnthropicKeeper (same interface; real path is
-//      judge-scored, not byte-golden). OPEN -- full-cycle.
+//      judge-scored, not byte-golden). OPEN -- full-cycle. A2 landed AnthropicKeeper behind
+//      this seam (offline, mock LlmClient); the live swap in a real run is the full cycle (A3).
 //   6. Judge anti_slop axis: the LLM judge REPLACES this deterministic axis with a
 //      nuanced score -- do NOT sum deterministic + LLM on the same axis. OPEN -- judge.
 //   7. Aggregation guard: the >=80 pass-rate verdict is assembled ONLY when all six
@@ -39,7 +40,8 @@ export interface KeeperInput {
   readonly package: NarrativePackage;
 }
 
-/** The narrative model behind one seam. StubKeeper now; AnthropicKeeper at 2.4. */
+/** The narrative model behind one seam. Both implementations exist: StubKeeper (canned,
+ *  byte-deterministic) and AnthropicKeeper (injected LlmClient; judge-scored). */
 export interface Keeper {
   run(input: KeeperInput): Promise<KeeperOutput>;
 }
@@ -107,13 +109,18 @@ export interface Verdict {
  *  axis (e.g. tone=10) is masked by the average; calibration will likely add a per-axis floor. */
 export type AggregateFn = (axisScores: Readonly<Record<RubricAxis, number>>) => AggregateVerdict;
 
-/** The narrative-model call behind one seam, injectable (mock now / Anthropic at
- *  calibration) -- symmetric with the Keeper seam. Returns the model's raw text output
- *  (expected to be the rubric JSON); the judge does the JSON.parse + Zod validation. */
+/** The model call behind one seam, injectable (mock offline / AnthropicLlmClient in keyed
+ *  scripts). Two callers share it:
+ *   - judge (LlmJudge): system = rubric sec 0.7 + activated tone.md; user = the prose to
+ *     score; the raw reply is the rubric JSON, parsed + Zod-validated by LlmJudge.
+ *   - keeper (AnthropicKeeper): system = keeper prompt + activated tone.md (buildKeeperSystem);
+ *     user = the rendered package (buildKeeperUser); the raw reply is the prose, trimmed by
+ *     AnthropicKeeper.
+ *  complete() returns the model's raw text output; interpretation belongs to the caller. */
 export interface LlmRequest {
-  readonly model: string; // RECONCILE: model is config, not hardcoded in judge logic
-  readonly system: string; // rubric sec 0.7 + activated tone.md, assembled by the caller
-  readonly user: string; // the prose to score
+  readonly model: string; // RECONCILE: model is config, not hardcoded in caller logic
+  readonly system: string; // assembled by the caller (judge: rubric+tone; keeper: prompt+tone)
+  readonly user: string; // judge: the prose to score; keeper: the rendered package
 }
 export interface LlmClient {
   complete(req: LlmRequest): Promise<string>;
