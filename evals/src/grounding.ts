@@ -30,7 +30,10 @@
 //    месяцы> назад" -- fired ONLY when the package carries no journal facts. Cardinal durations
 //    ("восемь дней", "пять суток") are EXCLUDED BY CONSTRUCTION: an arrival total is legitimate
 //    package-sourced prose, and every ordinal stem requires an explicit ordinal ending
-//    (-ый/-ой/-ая/..., третий/третьи/...), so 'пять/шесть/девять/десять' never match.
+//    (-ый/-ой/-ая/..., третий/третьи/...), so 'пять/шесть/девять/десять' never match. On an
+//    arrival step (`journey.days_total` a number, TP1 3.1-C3) an ordinal DAY phrase (never a week)
+//    is exempted ONLY when its number equals days_total exactly -- an 8-day arrival exempts
+//    "восьмой день" but still warns on "третий день" or "вторую неделю".
 //
 // DIVISION OF LABOUR: this is the exact, high-confidence floor. The LLM judge keeps the nuance
 // (accuracy axis): whether a grounded name is used correctly, whether a phrase is backstory at
@@ -164,10 +167,12 @@ export function scanUngroundedNames(prose: string, renderedPackage: string): Vio
 }
 
 // Explicit ordinal endings (never \p{L}*): cardinals пять/шесть/девять/десять cannot match.
+const ORDINAL_STEM = '(?:перв|втор|четв[её]рт|пят|шест|седьм|восьм|девят|десят|трет)';
 const ORDINAL =
   '(?:(?:перв|втор|четв[её]рт|пят|шест|седьм|восьм|девят|десят)(?:ый|ой|ая|ое|ые|ого|ому|ым|ом|ую|ых|ыми)' +
   '|трет(?:ий|ья|ье|ьи|ьего|ьему|ьим|ьем|ью|ьих|ьими))';
 const DAY_UNIT = '(?:день|дня|дню|днём|днем|сутки|суток|недел\\p{L}*)';
+const ORDINAL_DAY = `${ORDINAL}\\s+${DAY_UNIT}`;
 const BACKSTORY = new RegExp(
   '(^|[^\\p{L}])(' +
     [
@@ -175,19 +180,56 @@ const BACKSTORY = new RegExp(
       'вчерашн\\p{L}*',
       'позавчера',
       'накануне',
-      `${ORDINAL}\\s+${DAY_UNIT}`,
+      ORDINAL_DAY,
       '(?:дн\\p{L}*|недел\\p{L}*|месяц\\p{L}*)\\s+назад',
     ].join('|') +
     ')(?=$|[^\\p{L}])',
   'giu',
 );
+// Ordinal stem -> its cardinal number (Russian morphology, not rules content). Endings are
+// stripped by ORDINAL_DAY_PARSE below, so only the stem needs mapping; 'четвёрт'/'четверт' both
+// normalize to 'четверт' ('ё' -> 'е') before lookup.
+const ORDINAL_NUMBERS: Readonly<Record<string, number>> = {
+  перв: 1,
+  втор: 2,
+  трет: 3,
+  четверт: 4,
+  пят: 5,
+  шест: 6,
+  седьм: 7,
+  восьм: 8,
+  девят: 9,
+  десят: 10,
+};
+// DAY units only -- excludes недел* (a week is never exempted, whatever days_total is).
+const DAY_ONLY_UNIT = '(?:день|дня|дню|днём|днем|сутки|суток)';
+const ORDINAL_DAY_PARSE = new RegExp(`^(${ORDINAL_STEM})\\p{L}*\\s+(${DAY_ONLY_UNIT})$`, 'iu');
 
-/** NF1 warn: relative-backstory phrases, only when the package has no journal facts. */
+/** True iff `term` is an ordinal DAY phrase (never a week) whose number equals `daysTotal` exactly
+ *  -- e.g. days_total 8 exempts "восьмой день"/"восьмые сутки" but not "третий день" or "вторую
+ *  неделю". Used only on an arrival step, where days_total is the package-sourced day count. */
+function isOrdinalDayMatchingTotal(term: string, daysTotal: number): boolean {
+  const m = ORDINAL_DAY_PARSE.exec(term);
+  if (m === null) return false;
+  const stem = (m[1] as string).toLowerCase().replace(/ё/g, 'е');
+  return ORDINAL_NUMBERS[stem] === daysTotal;
+}
+
+/** NF1 warn: relative-backstory phrases, only when the package has no journal facts. On an
+ *  ARRIVAL step (`journey.days_total` a number -- TP1, 3.1-C3), an ordinal DAY phrase is exempted
+ *  ONLY when its number matches days_total exactly ("восьмой день" on an 8-day arrival has a
+ *  package source; "третий день" on the same arrival does not and still warns). Week phrases
+ *  ("вторую неделю") always warn -- days_total counts days, not weeks. Every other phrase, and
+ *  ordinal-day phrases on a non-arrival step (days_delta alone does not say which day it is),
+ *  also still warn. */
 export function scanRelativeBackstory(prose: string, pkg: NarrativePackage): Violation[] {
   if ((pkg.journal_facts ?? []).length > 0) return [];
+  const daysTotal = pkg.journey?.days_total;
+  const arrived = typeof daysTotal === 'number';
   const out: Violation[] = [];
   for (const m of prose.matchAll(BACKSTORY)) {
     const term = m[2] as string;
+    if (arrived && isOrdinalDayMatchingTotal(term, daysTotal)) continue;
     out.push({
       list: 'nf1_backstory',
       term,

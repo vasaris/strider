@@ -10,7 +10,7 @@
 // (gitignored; RP1: a new file per run, created exclusively -- never overwrites an earlier
 // report). Bring that file's contents here for analysis -- the first run is DIAGNOSTIC; do not
 // tune the rubric off it without review.
-// A4.3: judge prompt v0.3; the deterministic gate runs with the live VK addendum (pack sidecar).
+// 3.1-C3: judge prompt v0.4; the deterministic gate runs with the live VK addendum (pack sidecar).
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,7 +33,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
 const here = dirname(fileURLToPath(import.meta.url)); // evals/
 const repoRoot = resolve(here, '..');
 
-const JUDGE_PROMPT = 'prompts/judge.system.v0.3.md';
+const JUDGE_PROMPT = 'prompts/judge.system.v0.4.md';
 const judgePrompt = readFileSync(resolve(repoRoot, JUDGE_PROMPT), 'utf8');
 const toneMd = readFileSync(resolve(repoRoot, 'content-packs/kv/tone.md'), 'utf8');
 const systemPrompt = `${judgePrompt}\n\n---\n\n# Активированный tone.md (живой сайдкар)\n\n${toneMd}`;

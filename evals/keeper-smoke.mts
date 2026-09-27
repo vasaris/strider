@@ -36,14 +36,14 @@ if (!process.env.ANTHROPIC_API_KEY) {
 const here = dirname(fileURLToPath(import.meta.url)); // evals/
 const repoRoot = resolve(here, '..');
 
-const KEEPER_PROMPT = 'prompts/keeper.system.v0.2.md';
+const KEEPER_PROMPT = 'prompts/keeper.system.v0.3.md';
 const keeperPrompt = readFileSync(resolve(repoRoot, KEEPER_PROMPT), 'utf8');
 const toneMd = readFileSync(resolve(repoRoot, 'content-packs/kv/tone.md'), 'utf8');
 const systemPrompt = buildKeeperSystem(keeperPrompt, toneMd);
 
-// Fixture turn shaped exactly like orchestrator extractTurn() output for an SD1 journey step, so
-// the package is what the real producer would hand the Keeper. Dice follow mapDice: no raw faces
-// (DEFERRED DD-DICE-FACES).
+// Hand-built projection of an SD1 journey step (extractTurn is internal now; the public producer
+// is orchestrator's extractJourneyTurn). This fixture carries no journey/detection sections -- it
+// is a Keeper smoke, not a live step. Dice follow mapDice: no raw faces (DEFERRED DD-DICE-FACES).
 const turn: EngineTurnResult = {
   intent: 'journey',
   scene: 'journey',

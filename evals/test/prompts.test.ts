@@ -182,3 +182,62 @@ describe('judge prompt v0.2 -> v0.3 diff pin (A4.3; v0.2 frozen)', () => {
     expect(playabilityItem(read('judge.system.v0.3.md'))).toBe(playabilityItem(read('judge.system.v0.1.md')));
   });
 });
+
+// v0.2 -> v0.3 keeper, v0.3 -> v0.4 judge (3.1-C3): TP1 (days, arrival, travel roll and detection)
+// now reaches the Keeper package as `## detection` and `## journey`. Keeper §2 p.6 and §3 add
+// those sections as legitimate name/backstory sources; keeper §3 carries the reviewer's D1 clause
+// (a hidden detection shows only what the hero perceives, rule 3) and the P2 wording ("бросок
+// Путешествия этого перехода"). The judge accuracy item gets the matching source addition; no new
+// penalty axis.
+const KEEPER_V02_SHA256 = '9fe6101b4b645408a3e38f675afddd2f82102fef965b3f3ea0d9389002319cb3';
+const JUDGE_V03_SHA256 = '68afa316ba81ec20484ea4b3f9ea921937d678754cb55ae715c90e545b42cf0e';
+
+const KEEPER_V03_EDITS: readonly Edit[] = [
+  ['— v0.2 (СКЕЛЕТ)', '— v0.3 (СКЕЛЕТ)'],
+  [
+    '   (сколько дней в пути, что было вчера) — только из `lore_chunks`, `journal_facts` и строки\n' +
+      '   оракула. Если их нет — место безымянно, прошлое не упоминается.\n',
+    '   (сколько дней в пути, что было вчера) — только из `lore_chunks`, `journal_facts`, строки\n' +
+      '   оракула, сцены обнаружения (`detection`) и раздела пути (`journey`). Если их нет — место\n' +
+      '   безымянно, прошлое не упоминается.\n',
+  ],
+  [
+    '- `oracle` — результат оракула (+ `detail` второго уровня, если есть). См. правило 2.\n',
+    '- `oracle` — результат оракула (+ `detail` второго уровня, если есть). См. правило 2.\n' +
+      '- `detection` — сцена обнаружения (строка пака). Если герой сталкивается с ней сам — вплетается\n' +
+      '  как оракул (правило 2). Если по смыслу строки событие происходит без его ведома (кто-то\n' +
+      '  узнаёт, что-то захвачено вдали) — само событие в прозе не раскрывается: только то, что герой\n' +
+      '  воспринимает здесь (правило 3).\n',
+  ],
+  [
+    '- `patch` — что изменилось в состоянии (Изнурение/Надежда/Тень/Око/состояния). Вплетай\n' +
+      '  последствие как ощутимое в мире, не как строку трекера.\n',
+    '- `patch` — что изменилось в состоянии (Изнурение/Надежда/Тень/Око/состояния). Вплетай\n' +
+      '  последствие как ощутимое в мире, не как строку трекера.\n' +
+      '- `journey` — путь этого шага: `days_delta` — на сколько дней шаг сдвинул путь (0 — не сдвинул);\n' +
+      '  на прибытии — `arrived` и `days_total` (итог дней пути); `travel_check` — бросок Путешествия\n' +
+      '  этого перехода. Это не исход сцены: исход сцены — только `dice`.\n',
+  ],
+];
+
+const JUDGE_V04_EDITS: readonly Edit[] = [
+  ['— v0.3 (СКЕЛЕТ)', '— v0.4 (СКЕЛЕТ)'],
+  [
+    '   `lore_chunks`, `journal_facts` и строки оракула — тоже выдумка, низко. Если пакета нет —\n' +
+      '   оценивай внутреннюю согласованность.\n',
+    '   `lore_chunks`, `journal_facts`, строки оракула, сцены обнаружения (`detection`) и раздела\n' +
+      '   пути (`journey`) — тоже выдумка, низко. Если пакета нет — оценивай внутреннюю согласованность.\n',
+  ],
+];
+
+describe('prompt diff pin 3.1-C3 (keeper v0.2 -> v0.3, judge v0.3 -> v0.4; bases frozen)', () => {
+  it('keeper.system.v0.3.md = v0.2 + exactly the approved edits, byte-for-byte', () => {
+    expect(sha256('keeper.system.v0.2.md')).toBe(KEEPER_V02_SHA256); // v0.2 frozen
+    expect(applyEdits(read('keeper.system.v0.2.md'), KEEPER_V03_EDITS)).toBe(read('keeper.system.v0.3.md'));
+  });
+
+  it('judge.system.v0.4.md = v0.3 + exactly the approved edits, byte-for-byte', () => {
+    expect(sha256('judge.system.v0.3.md')).toBe(JUDGE_V03_SHA256); // v0.3 frozen
+    expect(applyEdits(read('judge.system.v0.3.md'), JUDGE_V04_EDITS)).toBe(read('judge.system.v0.4.md'));
+  });
+});

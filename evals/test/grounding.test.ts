@@ -267,6 +267,46 @@ describe('NF1 relative backstory (warn)', () => {
       expect(scanRelativeBackstory(`Шли ${phrase} без огня.`, PKG).map((x) => x.term)).toEqual([phrase]);
     },
   );
+
+  const arrivalPkg = (daysTotal: number): NarrativePackage => ({
+    ...PKG,
+    journey: { days_delta: 0, arrived: true, days_total: daysTotal, travel_check: { outcome: 'weak' } },
+  });
+  const PKG_ARRIVAL = arrivalPkg(8);
+  const PKG_MIDJOURNEY: NarrativePackage = { ...PKG, journey: { days_delta: 1, travel_check: { outcome: 'weak' } } };
+
+  it('3.1-C3: an ordinal DAY phrase matching days_total is exempt on arrival (day or "сутки")', () => {
+    expect(scanRelativeBackstory('Восьмой день пути остался позади.', PKG_ARRIVAL)).toEqual([]);
+    expect(scanRelativeBackstory('Восьмые сутки пути остались позади.', PKG_ARRIVAL)).toEqual([]);
+  });
+
+  it('3.1-C3: an ordinal DAY phrase NOT matching days_total still warns on arrival', () => {
+    expect(scanRelativeBackstory('Третий день пути.', PKG_ARRIVAL).map((x) => x.term)).toEqual(['Третий день']);
+    expect(scanRelativeBackstory('Третьи сутки.', PKG_ARRIVAL).map((x) => x.term)).toEqual(['Третьи сутки']);
+  });
+
+  it('3.1-C3: a week phrase always warns on arrival, whatever days_total is', () => {
+    expect(scanRelativeBackstory('Вторую неделю идём.', PKG_ARRIVAL).map((x) => x.term)).toEqual(['Вторую неделю']);
+  });
+
+  it('3.1-C3: the exemption tracks days_total exactly (arrival with days_total 3)', () => {
+    expect(scanRelativeBackstory('Третий день пути.', arrivalPkg(3))).toEqual([]);
+    expect(scanRelativeBackstory('Восьмой день пути.', arrivalPkg(3)).map((x) => x.term)).toEqual(['Восьмой день']);
+  });
+
+  it('3.1-C3: the same ordinal day phrase still warns without journey.days_total', () => {
+    expect(scanRelativeBackstory('Восьмой день пути остался позади.', PKG).map((x) => x.term)).toEqual(['Восьмой день']);
+    expect(scanRelativeBackstory('Второй день дорога шла под гору.', PKG_MIDJOURNEY).map((x) => x.term)).toEqual(['Второй день']);
+  });
+
+  it('3.1-C3: arrival exempts ONLY a matching ordinal-day phrase, not other backstory terms', () => {
+    expect(scanRelativeBackstory('Накануне был дождь, а вчера — снег.', PKG_ARRIVAL).map((x) => x.term)).toEqual(['Накануне', 'вчера']);
+  });
+
+  it('3.1-C3: a cardinal day count never warns, arrival or not', () => {
+    expect(scanRelativeBackstory('Восемь дней пути остались позади.', PKG_ARRIVAL)).toEqual([]);
+    expect(scanRelativeBackstory('Восемь дней пути остались позади.', PKG)).toEqual([]);
+  });
 });
 
 describe('NF1 scanTurnProse', () => {
