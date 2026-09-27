@@ -40,7 +40,7 @@ const here = dirname(fileURLToPath(import.meta.url)); // evals/
 const repoRoot = resolve(here, '..');
 
 const KEEPER_PROMPT = 'prompts/keeper.system.v0.2.md';
-const JUDGE_PROMPT = 'prompts/judge.system.v0.2.md';
+const JUDGE_PROMPT = 'prompts/judge.system.v0.3.md';
 const TONE = 'content-packs/kv/tone.md';
 const read = (rel: string): string => readFileSync(resolve(repoRoot, rel), 'utf8');
 const fileRef = (rel: string): { path: string; sha256: string } => ({

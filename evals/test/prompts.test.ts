@@ -25,6 +25,8 @@ const V01_SHA256 = {
   'keeper.system.v0.1.md': 'baee4191cb312450024637b6a220e68c77e7924da88a600ae237e29cbd5d9cac',
   'judge.system.v0.1.md': '6923b01808a11374326a6cd75f9bbb053684b95d9f8cc74557b98291d33ede02',
 } as const;
+// Frozen v0.2 judge: v0.2 = the judge of the A4 calibration run (A4.3 adds v0.3 on top of it).
+const JUDGE_V02_SHA256 = 'd529b0a01bc569161179fe1b919ca983a38557232e20c5c8a3056e7f6f94ac5f';
 const sha256 = (name: string): string => createHash('sha256').update(readFileSync(resolve(promptsDir, name))).digest('hex');
 
 type Edit = readonly [old: string, next: string];
@@ -147,5 +149,36 @@ describe('prompt v0.1 -> v0.2 diff pin (only approved edits; v0.1 frozen)', () =
   it('judge.system.v0.2.md = v0.1 + exactly the approved edits, byte-for-byte', () => {
     expect(sha256('judge.system.v0.1.md')).toBe(V01_SHA256['judge.system.v0.1.md']); // v0.1 frozen
     expect(applyEdits(read('judge.system.v0.1.md'), JUDGE_V02_EDITS)).toBe(read('judge.system.v0.2.md'));
+  });
+});
+
+// v0.2 -> v0.3 judge (A4.3): the playability item returns to v0.1 byte-for-byte (the v0.2
+// open-position addition leaked into package-less grading); the accuracy addition stays.
+const JUDGE_V03_EDITS: readonly Edit[] = [
+  ['— v0.2 (СКЕЛЕТ)', '— v0.3 (СКЕЛЕТ)'],
+  [
+    '   не тупик. Если пакет дан — сцена должна заканчиваться открытым положением для хода игрока;\n' +
+      '   самозавершённая сцена — низко; вопрос не обязателен.\n',
+    '   не тупик.\n',
+  ],
+];
+
+/** The playability rubric item: from '3. **playability**' up to the start of '4. **agency**'. */
+function playabilityItem(text: string): string {
+  const start = text.indexOf('3. **playability**');
+  const end = text.indexOf('4. **agency**');
+  expect(start).toBeGreaterThan(-1);
+  expect(end).toBeGreaterThan(start);
+  return text.slice(start, end);
+}
+
+describe('judge prompt v0.2 -> v0.3 diff pin (A4.3; v0.2 frozen)', () => {
+  it('judge.system.v0.3.md = v0.2 + exactly the approved edits, byte-for-byte', () => {
+    expect(sha256('judge.system.v0.2.md')).toBe(JUDGE_V02_SHA256); // v0.2 frozen
+    expect(applyEdits(read('judge.system.v0.2.md'), JUDGE_V03_EDITS)).toBe(read('judge.system.v0.3.md'));
+  });
+
+  it('the playability item in v0.3 is byte-identical to v0.1', () => {
+    expect(playabilityItem(read('judge.system.v0.3.md'))).toBe(playabilityItem(read('judge.system.v0.1.md')));
   });
 });
