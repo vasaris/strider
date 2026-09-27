@@ -1,3 +1,4 @@
+import { renderNarrativePackage, type NarrativePackage } from '@brodyazhnik/orchestrator';
 import { z } from 'zod';
 import { scanProse } from '../antislop.js';
 import { aggregateMean } from './aggregate.js';
@@ -41,8 +42,13 @@ export interface LlmJudgeConfig {
   readonly aggregate?: AggregateFn;
 }
 
-export function buildJudgeUser(prose: string): string {
-  return `Оцени эту прозу Хранителя по рубрике. Верни ТОЛЬКО JSON по схеме (6 осей, score 0..100, notes).\n\nПРОЗА:\n${prose}`;
+/** The judge's user message. Without a package (undefined/null) it is byte-identical to the v0
+ *  form (calibration cases unchanged); with one, the rendered package sits in a `ВХОДНОЙ ПАКЕТ:`
+ *  block between the instruction and the prose (decision 27.09 #1, A3.2). */
+export function buildJudgeUser(prose: string, pkg?: NarrativePackage | null): string {
+  const instruction = 'Оцени эту прозу Хранителя по рубрике. Верни ТОЛЬКО JSON по схеме (6 осей, score 0..100, notes).';
+  const packageBlock = pkg ? `\n\nВХОДНОЙ ПАКЕТ:\n${renderNarrativePackage(pkg)}` : '';
+  return `${instruction}${packageBlock}\n\nПРОЗА:\n${prose}`;
 }
 
 /**
@@ -77,7 +83,7 @@ export class LlmJudge implements Judge {
       raw = await this.cfg.llm.complete({
         model: this.cfg.model,
         system: this.cfg.systemPrompt,
-        user: buildJudgeUser(prose),
+        user: buildJudgeUser(prose, ctx.package),
       });
     } catch (e) {
       return errorVerdict(`llm call failed: ${String(e)}`, antiSlop, budgetWarn);

@@ -1,6 +1,7 @@
+import { renderNarrativePackage, type NarrativePackage } from '@brodyazhnik/orchestrator';
 import { describe, expect, it } from 'vitest';
 import { aggregateMean } from '../src/harness/aggregate.js';
-import { LlmJudge } from '../src/harness/llmJudge.js';
+import { LlmJudge, buildJudgeUser } from '../src/harness/llmJudge.js';
 import type { JudgeContext, LlmClient, LlmRequest } from '../src/harness/types.js';
 
 class MockLlm implements LlmClient {
@@ -197,5 +198,48 @@ describe('tolerant JSON extraction (the parse fix; mock client, offline)', () =>
     const v = await judge.score(CLEAN, ctx);
     expect(v.error).toContain('llm call failed');
     expect(v.rawSample ?? null).toBeNull();
+  });
+});
+
+describe('judge sees the package (A3.2, decision 27.09 #1)', () => {
+  const PKG: NarrativePackage = {
+    intent: 'journey',
+    scene: 'journey',
+    length_target: { min_chars: 400, max_chars: 800 },
+    dice: { feat_symbol: null, success_icons: 1, total: 17, target_number: 14, outcome: 'strong' },
+    oracle: { table: 'journey_scenes', result_ref: 'mishap', row: null, detail: null },
+    patch: { fatigue_delta: 2 },
+  };
+  // The v0 no-package form, spelled out literally: calibration cases must stay byte-identical.
+  const NO_PKG_USER =
+    'Оцени эту прозу Хранителя по рубрике. Верни ТОЛЬКО JSON по схеме (6 осей, score 0..100, notes).\n\nПРОЗА:\n' +
+    CLEAN;
+  const WITH_PKG_USER =
+    'Оцени эту прозу Хранителя по рубрике. Верни ТОЛЬКО JSON по схеме (6 осей, score 0..100, notes).' +
+    '\n\nВХОДНОЙ ПАКЕТ:\n' +
+    renderNarrativePackage(PKG) +
+    '\n\nПРОЗА:\n' +
+    CLEAN;
+
+  it('without a package the user message is byte-identical to the v0 form', () => {
+    expect(buildJudgeUser(CLEAN)).toBe(NO_PKG_USER);
+    expect(buildJudgeUser(CLEAN, null)).toBe(NO_PKG_USER);
+    expect(buildJudgeUser(CLEAN, undefined)).toBe(NO_PKG_USER);
+  });
+
+  it('with a package: instruction, ВХОДНОЙ ПАКЕТ block, then the prose', () => {
+    expect(buildJudgeUser(CLEAN, PKG)).toBe(WITH_PKG_USER);
+  });
+
+  it('LlmJudge.score forwards ctx.package into the user message; system unchanged', async () => {
+    const withPkg = new MockLlm(() => OK_JSON);
+    await new LlmJudge({ llm: withPkg, model: 'm', systemPrompt: 'SYS' }).score(CLEAN, { package: PKG });
+    expect(withPkg.calls[0]?.user).toBe(WITH_PKG_USER);
+    expect(withPkg.calls[0]?.system).toBe('SYS');
+
+    const without = new MockLlm(() => OK_JSON);
+    await new LlmJudge({ llm: without, model: 'm', systemPrompt: 'SYS' }).score(CLEAN, {});
+    expect(without.calls[0]?.user).toBe(NO_PKG_USER);
+    expect(without.calls[0]?.system).toBe('SYS');
   });
 });

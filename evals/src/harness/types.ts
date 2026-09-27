@@ -112,7 +112,8 @@ export type AggregateFn = (axisScores: Readonly<Record<RubricAxis, number>>) => 
 /** The model call behind one seam, injectable (mock offline / AnthropicLlmClient in keyed
  *  scripts). Two callers share it:
  *   - judge (LlmJudge): system = rubric sec 0.7 + activated tone.md; user = the prose to
- *     score; the raw reply is the rubric JSON, parsed + Zod-validated by LlmJudge.
+ *     score, plus the rendered package block when ctx.package is set (buildJudgeUser); the raw
+ *     reply is the rubric JSON, parsed + Zod-validated by LlmJudge.
  *   - keeper (AnthropicKeeper): system = keeper prompt + activated tone.md (buildKeeperSystem);
  *     user = the rendered package (buildKeeperUser); the raw reply is the prose, trimmed by
  *     AnthropicKeeper.
@@ -120,7 +121,7 @@ export type AggregateFn = (axisScores: Readonly<Record<RubricAxis, number>>) => 
 export interface LlmRequest {
   readonly model: string; // RECONCILE: model is config, not hardcoded in caller logic
   readonly system: string; // assembled by the caller (judge: rubric+tone; keeper: prompt+tone)
-  readonly user: string; // judge: the prose to score; keeper: the rendered package
+  readonly user: string; // judge: the prose (+ package block if given); keeper: the rendered package
 }
 export interface LlmClient {
   complete(req: LlmRequest): Promise<string>;
@@ -131,6 +132,10 @@ export interface JudgeContext {
   readonly vkAddendum?: readonly StopEntry[] | null;
   /** Prose length bounds (RECONCILE 3: provisional here; package-sourced at 2.4). */
   readonly lengthTarget?: { readonly minChars: number; readonly maxChars: number } | null;
+  /** The package the Keeper received (decision 27.09 #1, A3.2). When set, LlmJudge renders it
+   *  into the user message as a `ВХОДНОЙ ПАКЕТ:` block before the prose, so `accuracy` is scored
+   *  against it; absent/null -> the judge's user message is byte-identical to the v0 form. */
+  readonly package?: NarrativePackage | null;
 }
 
 /** UNIFIED async interface (no separate AsyncJudge). DeterministicJudge resolves

@@ -33,7 +33,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
 const here = dirname(fileURLToPath(import.meta.url)); // evals/
 const repoRoot = resolve(here, '..');
 
-const keeperPrompt = readFileSync(resolve(repoRoot, 'prompts/keeper.system.v0.md'), 'utf8');
+const keeperPrompt = readFileSync(resolve(repoRoot, 'prompts/keeper.system.v0.1.md'), 'utf8');
 const toneMd = readFileSync(resolve(repoRoot, 'content-packs/kv/tone.md'), 'utf8');
 const systemPrompt = buildKeeperSystem(keeperPrompt, toneMd);
 

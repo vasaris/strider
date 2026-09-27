@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { DeterministicJudge } from '../src/harness/judge.js';
 import { StubKeeper } from '../src/harness/keeper.js';
 import { fixtureProvider, runScenario } from '../src/harness/run.js';
-import type { PackageProvider, Seed } from '../src/harness/types.js';
+import type { Judge, JudgeContext, PackageProvider, Seed, Verdict } from '../src/harness/types.js';
 
 const SEED: Seed = {
   id: 'golden.journey.clean',
@@ -175,5 +175,30 @@ describe('eval harness: cycle plumbing', () => {
         },
       }
     `);
+  });
+
+  it('hands the judge the SAME package object the Keeper got, as ctx.package (A3.2)', async () => {
+    // A caller-supplied ctx.package is a DECOY: the run's package must win over it.
+    const decoy: NarrativePackage = { intent: 'council', scene: 'council', length_target: { min_chars: 1, max_chars: 2 } };
+    const inner = new DeterministicJudge();
+    const seen: JudgeContext[] = [];
+    const recording: Judge = {
+      score(prose: string, ctx: JudgeContext): Promise<Verdict> {
+        seen.push(ctx);
+        return inner.score(prose, ctx);
+      },
+    };
+    const t = await runScenario({
+      seed: SEED,
+      packageProvider: fixtureProvider(PKG),
+      keeper: new StubKeeper(CLEAN_PROSE),
+      judge: recording,
+      ctx: { lengthTarget: { minChars: 400, maxChars: 800 }, package: decoy },
+    });
+    expect(seen).toHaveLength(1);
+    expect(seen[0]?.package).not.toBe(decoy);
+    expect(seen[0]?.package).toBe(t.package); // the very object in the transcript
+    expect(seen[0]?.package).toBe(PKG); // ... which is the provider's object
+    expect(seen[0]?.lengthTarget).toEqual({ minChars: 400, maxChars: 800 }); // caller ctx preserved
   });
 });
