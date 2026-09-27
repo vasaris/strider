@@ -8,12 +8,16 @@
 //   - ABSENT -> OMITTED: a null/undefined field, an empty object (e.g. an unchanged-turn
 //     patch `{}`) or an empty list emits nothing -- no heading, no "none"/"-" placeholder --
 //     so the Keeper is never shown mechanics the package does not carry.
-//   - OPAQUE VALUES VERBATIM, SPOOF-PROOF (A2.1): every string value (scene/prompt/text/notes/
-//     journal text/list elements...) passes through unquoted, unescaped and untrimmed. A
-//     single-line value renders inline (`key: value`, `- value`). A multi-line value renders
-//     as a block scalar: `key: |` / `- |`, then every value line (the first included) indented
-//     by exactly 4 spaces -- so no value line can start at column 0 and pass for package
-//     structure (section-spoof guard). Lossless: strip the 4-space indent, join with '\n'.
+//   - OPAQUE VALUES VERBATIM, SPOOF-PROOF (A2.1, A3.1): every string value (scene/prompt/text/
+//     notes/journal text/list elements...) passes through unquoted, unescaped and untrimmed. A
+//     value with no line terminator renders inline (`key: value`, `- value`). A value containing
+//     ANY of the 8 Unicode line terminators (CRLF, LF, CR, VT, FF, NEL, LS, PS -- see
+//     LINE_TERMINATOR) renders as a block scalar: `key: |` / `- |`, then every value line (the
+//     first included) indented by exactly 4 spaces, each terminator becoming a line boundary --
+//     so no value line can start at column 0 and pass for package structure, for any consumer
+//     (the model included) that breaks lines on any of them (section-spoof guard). Decoding
+//     (strip the 4-space indent, join with '\n') returns the source with its terminators
+//     normalized to '\n': the terminator KIND is the only reversibility loss.
 //   - DETERMINISTIC: sections and fields follow a fixed order declared in code (contract
 //     declaration order), never Object.keys of the input.
 //
@@ -25,11 +29,17 @@ type Scalar = string | number | boolean | null | undefined;
 
 const BLOCK_INDENT = '    ';
 
-/** The ONE path for every rendered value: `<prefix> <value>` when single-line; otherwise a block
- *  scalar `<prefix> |` followed by each value line indented by BLOCK_INDENT. Never trims. */
+/** The 8 Unicode line terminators: CRLF (one terminator -- listed first so the alternation takes
+ *  it whole), LF, CR, VT (U+000B), FF (U+000C), NEL (U+0085), LS (U+2028), PS (U+2029). So
+ *  'a\r\nb' is one boundary and 'a\n\rb' is two. No `g` flag: test() stays stateless. */
+const LINE_TERMINATOR = /\r\n|[\n\r\v\f\u0085\u2028\u2029]/;
+
+/** The ONE path for every rendered value: `<prefix> <value>` when it has no line terminator;
+ *  otherwise a block scalar `<prefix> |` followed by each value line (split on LINE_TERMINATOR)
+ *  indented by BLOCK_INDENT. Never trims. */
 function scalar(prefix: string, value: string): string[] {
-  return value.includes('\n')
-    ? [`${prefix} |`, ...value.split('\n').map((l) => BLOCK_INDENT + l)]
+  return LINE_TERMINATOR.test(value)
+    ? [`${prefix} |`, ...value.split(LINE_TERMINATOR).map((l) => BLOCK_INDENT + l)]
     : [`${prefix} ${value}`];
 }
 

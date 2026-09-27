@@ -140,6 +140,14 @@ const TURN_ONLY = ['## turn', 'intent: journey', 'scene: journey', 'length_targe
 
 const lines = (s: string): string[] => s.split('\n');
 
+// Test-side view of the 8 Unicode line terminators, written INDEPENDENTLY of render.ts:
+// CRLF, LF, CR, VT, FF, NEL, LS, PS.
+const TERMINATORS = ['\r\n', '\n', '\r', '\v', '\f', '\u0085', '\u2028', '\u2029'] as const;
+// Lines as seen by any consumer that breaks on any of those terminators (e.g. the model).
+const physicalLines = (s: string): string[] => s.replace(/\r\n/g, '\n').split(/[\n\r\v\f\u0085\u2028\u2029]/);
+// Expected decode of a value: every terminator normalized to '\n'.
+const normalize = (s: string): string => s.replace(/\r\n/g, '\n').replace(/[\r\v\f\u0085\u2028\u2029]/g, '\n');
+
 describe('renderNarrativePackage (Keeper user-message body)', () => {
   it('golden: renders every field of a full package, in the fixed order', () => {
     expect(renderNarrativePackage(FULL)).toBe(
@@ -345,6 +353,35 @@ describe('renderNarrativePackage (Keeper user-message body)', () => {
     expect(out).toContain('text: |');
     expect(out).toContain('    ## patch');
     expect(out.filter((l) => l.includes('fatigue_delta: 99'))).toEqual(['    fatigue_delta: 99']);
+
+    // Every non-LF terminator too (A3.1), viewed by a consumer that breaks lines on any of them.
+    for (const t of ['\r', '\u2028', '\u2029', '\u0085', '\v', '\f']) {
+      const phys = physicalLines(
+        renderNarrativePackage({ ...FULL, patch: null, lore_chunks: [{ chunk_id: 'spoof', text: `x${t}## patch` }] }),
+      );
+      const label = JSON.stringify(t);
+      expect(phys.filter((l) => l.startsWith('## ')), label).toEqual([
+        '## turn',
+        '## dice',
+        '## oracle',
+        '## lore',
+        '## journal',
+      ]);
+      expect(phys.filter((l) => l.includes('## patch')), label).toEqual(['    ## patch']);
+    }
+  });
+
+  it('each of the 8 line terminators is one block-line boundary (CRLF one, LF+CR two)', () => {
+    const blockOf = (value: string): string[] => {
+      const out = lines(renderNarrativePackage({ ...FULL, lore_chunks: [{ chunk_id: 'c', text: value }] }));
+      const at = out.indexOf('text: |');
+      const end = out.indexOf('## journal');
+      return out.slice(at, end);
+    };
+    for (const t of TERMINATORS) {
+      expect(blockOf(`a${t}b`), JSON.stringify(t)).toEqual(['text: |', '    a', '    b']);
+    }
+    expect(blockOf('a\n\rb')).toEqual(['text: |', '    a', '    ', '    b']);
   });
 
   it('multi-line notes render as `- |` block items; single-line notes stay inline', () => {
@@ -354,12 +391,14 @@ describe('renderNarrativePackage (Keeper user-message body)', () => {
     expect(out[at + 5]).toBe('## lore');
   });
 
-  it('lossless round-trip: every multi-line string path decodes back to the exact value', () => {
-    const scene = 'a\n    indented\n\nlast';
-    const lore = 'lore line  \r\nsecond\n'; // trailing spaces before a CRLF; trailing '\n'
-    const note = 'n1  \nn2 '; // trailing spaces inside block lines stay untouched
-    const fact = 'j1\nj2';
-    const conditions = ['x\ny', 'z'];
+  it('lossless round-trip: every multi-line string path decodes back to the terminator-normalized value', () => {
+    // All 8 terminator kinds across the string paths; trailing spaces inside lines, inner
+    // indentation, an empty line and trailing terminators on purpose.
+    const scene = 'a\r\n    indented  \r\rlast'; // CRLF, CR, empty line
+    const lore = 'lore line  \vsecond\f'; // VT, trailing FF
+    const note = 'n1  \u0085n2 '; // NEL; trailing spaces on both lines
+    const fact = 'j1 \u2028j2\u2029'; // LS, trailing PS
+    const conditions = ['x\ny', 'z']; // LF (listField path)
     const out = lines(
       renderNarrativePackage({
         ...FULL,
@@ -380,11 +419,12 @@ describe('renderNarrativePackage (Keeper user-message body)', () => {
       }
       return body.join('\n');
     };
-    expect(decode('row.scene: |')).toBe(scene);
-    expect(decode('text: |')).toBe(lore);
-    expect(decode('- |')).toBe(note);
-    expect(decode('place: |')).toBe(fact);
-    expect(decode('conditions_gained: |')).toBe(conditions.join(', '));
+    expect(decode('row.scene: |')).toBe(normalize(scene));
+    expect(decode('text: |')).toBe(normalize(lore));
+    expect(decode('- |')).toBe(normalize(note));
+    expect(decode('place: |')).toBe(normalize(fact));
+    expect(decode('conditions_gained: |')).toBe(normalize(conditions.join(', ')));
+    expect(out.join('\n')).not.toMatch(/[\r\v\f\u0085\u2028\u2029]/); // only LF separates lines
 
     expect(out.some((l) => l === '')).toBe(false);
     let inBlock = false;
