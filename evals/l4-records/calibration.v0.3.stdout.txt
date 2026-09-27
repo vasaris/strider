@@ -1,0 +1,21 @@
+# PROVENANCE: verbatim stdout capture of `cd evals && npx tsx calibrate.mts`, pasted by Ivan from
+# his keyed shell into the reviewer chat on 2026-09-27 (after A4.3, HEAD 7d67954). Judge prompt v0.3,
+# tone.md with the sec 1 line (sha256 fe569c02...). The raw calibration-report.json of this run is
+# the one currently on disk in evals/ (gitignored).
+Tone-judge calibration (DIAGNOSTIC, first run) — model: claude-opus-4-8
+axes: spc acc ply agn ton ans   | agg(pass) | detBlock | target | provOK
+G1  good    88  75  82  80  87  90   | 84 (Y) |   clean | —           | OK
+G2  good    84  80  78  82  88  90   | 84 (Y) |   clean | —           | OK
+G3  good    82  70  55  62  68  85   | 70 (N) |   clean | —           | XX
+G4  good    84  80  74  82  88  90   | 83 (Y) |   clean | —           | OK
+G5  good    78  75  62  80  88  90   | 79 (N) |   clean | —           | XX
+G6  good    84  75  62  80  88  90   | 80 (Y) |   clean | —           | OK
+B1  coarse  5   20  8   10  3   0    | 8  (N) |   BLOCK | —           | OK
+B2  coarse  8   30  15  20  5   40   | 20 (N) |   BLOCK | —           | OK
+B3  coarse  18  50  15  40  22  10   | 26 (N) |   BLOCK | —           | OK
+B4  coarse  8   30  5   20  10  5    | 13 (N) |   BLOCK | —           | OK
+B5  subtle  55  40  30  45  25  20   | 36 (N) |   clean | tone        | OK
+B6  subtle  55  60  45  40  35  30   | 44 (N) |   clean | specificity | OK
+B7  subtle  45  60  40  70  30  40   | 48 (N) |   clean | tone        | OK
+
+PROVISIONAL (diagnostic only): good 4/6 >=80; subtle 3/3 dropped on target axis w/ clean det anti_slop.

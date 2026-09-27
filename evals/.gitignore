@@ -14,3 +14,9 @@ keeper-smoke.*
 # Full-cycle suite (A3.3, L4): per-model raw reports. Re-include the entry script itself.
 full-cycle-report*
 !full-cycle.mts
+
+# L4 records (Stage 2 close): the committed audit trail of the L4 numbers -- raw full-cycle
+# reports and calibration stdout captures, versioned by name (see DEFERRED RP1). Re-included on
+# purpose; the working-copy reports above stay ignored. .env stays ignored everywhere.
+!l4-records/**
+l4-records/**/.env

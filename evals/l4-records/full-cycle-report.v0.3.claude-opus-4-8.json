@@ -1,0 +1,889 @@
+{
+  "keeperModel": "claude-opus-4-8",
+  "judgeModel": "claude-opus-4-8",
+  "sameModel": true,
+  "prompts": {
+    "keeper": {
+      "path": "prompts/keeper.system.v0.2.md",
+      "sha256": "9fe6101b4b645408a3e38f675afddd2f82102fef965b3f3ea0d9389002319cb3"
+    },
+    "judge": {
+      "path": "prompts/judge.system.v0.3.md",
+      "sha256": "68afa316ba81ec20484ea4b3f9ea921937d678754cb55ae715c90e545b42cf0e"
+    },
+    "tone": {
+      "path": "content-packs/kv/tone.md",
+      "sha256": "fe569c02d61d841e478bb897e627b4781640274ce370d8b18f5cb43af67ef7cc"
+    }
+  },
+  "packVersion": "0.1.0",
+  "seeds": [
+    "j.border.shortcut",
+    "j.border.inspiring",
+    "j.wild.mishap",
+    "j.wild.meeting",
+    "j.dark.badchoice",
+    "j.dark.despair",
+    "j.dark.misfortune",
+    "j.dark.significant",
+    "j.dark.midjourney"
+  ],
+  "report": {
+    "transcripts": [
+      {
+        "scenarioId": "j.border.shortcut",
+        "summary": "border lands: a short cut found",
+        "package": {
+          "intent": "journey",
+          "scene": "journey",
+          "length_target": {
+            "min_chars": 400,
+            "max_chars": 800
+          },
+          "dice": {
+            "feat_symbol": null,
+            "success_icons": 0,
+            "target_number": 15,
+            "outcome": "weak",
+            "total": 17
+          },
+          "oracle": {
+            "table": "journey_scenes",
+            "result_ref": "short_cut",
+            "detail": {
+              "table": "scene_details.short_cut",
+              "result_ref": "scene_details.short_cut#face=2",
+              "detail": null,
+              "row": {
+                "face": 2,
+                "scene": "Укромный путь",
+                "prompt": "ИССЛЕДОВАНИЕ, чтобы ориентироваться в глуши",
+                "skill": "exploration",
+                "significantEncounter": false
+              }
+            },
+            "row": null
+          },
+          "patch": {
+            "fatigue_delta": 1
+          },
+          "lore_chunks": [],
+          "journal_facts": []
+        },
+        "output": {
+          "prose": "Тропа, которую ты приметил ещё от опушки, поначалу казалась короче: она уходила вбок, туда, где деревья стояли реже, и обещала срезать долгий крюк по открытому склону. Ты пошёл по ней.\n\nМох под сапогами скрадывал шаги, и скоро под ногами не осталось ни колеи, ни прежней утоптанности — только палый лист да корни, вспоровшие землю. Пахло сырой корой и грибной прелью. Где-то в стороне капало с ветвей, ровно и без спешки, будто дождь тут шёл вчера и не думал кончаться.\n\nТы замедлил ход, читая глушь: наклон стволов, куда клонится подлесок, где просвет обещает старую вырубку. Одну развилку ты угадал верно. У другой пришлось вернуться, потому что тропа истаяла в бурелом, и тот шаг назад отнял больше, чем сберёг весь срезанный крюк.\n\nК тому часу, когда деревья снова расступились, плечи тянуло вниз, и ремень котомки саднил там, где уже натёр. Впереди лежала земля, которую ты не узнавал — гряда невысоких холмов и меж ними лощина, куда сползал остаток дня.\n\nКуда теперь — низом, вдоль лощины, или держаться гребня, пока светло?"
+        },
+        "verdict": {
+          "axes": {
+            "specificity": {
+              "status": "scored",
+              "score": 88,
+              "notes": "мох, палый лист, сырая кора, грибная прель, натёртый ремень — плотная конкретика"
+            },
+            "accuracy": {
+              "status": "scored",
+              "score": 92,
+              "notes": "укромный путь как срезка, ориентирование в глуши, weak-исход (крюк не сберёг), усталость от натёртого ремня — пакет отражён"
+            },
+            "playability": {
+              "status": "scored",
+              "score": 85,
+              "notes": "финальная развилка низ/гребень даёт живой выбор, незнакомая земля впереди"
+            },
+            "agency": {
+              "status": "scored",
+              "score": 87,
+              "notes": "герой читает глушь и решает; вопрос оставлен игроку, не решён за него"
+            },
+            "tone": {
+              "status": "scored",
+              "score": 88,
+              "notes": "сдержанно, ведёт звуком/запахом, второе лицо прошедшее, текущее положение в настоящем — по контракту"
+            },
+            "anti_slop": {
+              "status": "scored",
+              "score": 90,
+              "notes": "чисто, без пастиша и клише; чувства через тело (плечи тянет, ремень саднит)"
+            }
+          },
+          "antiSlop": {
+            "violations": [],
+            "blocking": false
+          },
+          "budgetWarn": true,
+          "pass": true,
+          "aggregate": {
+            "score": 88,
+            "threshold": 80,
+            "pass": true,
+            "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+          }
+        }
+      },
+      {
+        "scenarioId": "j.border.inspiring",
+        "summary": "border lands: an inspiring sight",
+        "package": {
+          "intent": "journey",
+          "scene": "journey",
+          "length_target": {
+            "min_chars": 400,
+            "max_chars": 800
+          },
+          "dice": {
+            "feat_symbol": "gandalf",
+            "success_icons": 1,
+            "target_number": 14,
+            "outcome": "strong"
+          },
+          "oracle": {
+            "table": "journey_scenes",
+            "result_ref": "inspiring_sight",
+            "detail": {
+              "table": "scene_details.inspiring_sight",
+              "result_ref": "scene_details.inspiring_sight#face=5",
+              "detail": null,
+              "row": {
+                "face": 5,
+                "scene": "Древнее сооружение",
+                "prompt": "БДИТЕЛЬНОСТЬ, чтобы понять его значение",
+                "skill": "awareness",
+                "significantEncounter": false
+              }
+            },
+            "row": null
+          },
+          "patch": {},
+          "lore_chunks": [],
+          "journal_facts": []
+        },
+        "output": {
+          "prose": "Дорога поднималась третий день, и к полудню ноги сами нащупали перемену под подошвой — не земля, а тёсаный камень, заросший мхом, но лежащий ровно, плита к плите. Ты шёл по нему, не сразу поняв, что идёшь.\n\nВпереди туман сошёл, и склон открылся. Там стояли колонны — серый камень, тронутый лишайником цвета старой меди, выше самого высокого бука. Три ещё держали перекрытие, остальные легли в вереск, и трава проросла сквозь трещины. Ветер прошёл по ним, и они отозвались низким гулом, будто кто-то дунул в горло огромного кувшина.\n\nТы остановился и стал слушать. Гул шёл ровно, с промежутком, как дыхание. По камню бежала резьба — не буквы, что-то старше букв: спирали, свитые в узор, который взгляд не мог распустить до конца. Мох рос гуще с северной стороны, и там, у основания третьей колонны, кладка была стёрта иначе — не дождём, а множеством ладоней, что касались одного и того же места, век за веком.\n\nКто-то ходил сюда. Кто-то знал, зачем.\n\nСолнце легло на перекрытие, и тень колонн вытянулась через дорогу к твоим ногам — длинная, чёткая, указывающая дальше на восток, туда, куда ты и шёл."
+        },
+        "verdict": {
+          "axes": {
+            "specificity": {
+              "status": "scored",
+              "score": 92,
+              "notes": "Тёсаный камень, лишайник цвета меди, гул как в кувшине, стёртая ладонями кладка — плотная конкретика."
+            },
+            "accuracy": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Древнее сооружение, бдительность/awareness через детали, инсайт-вид; успех отражён; значимого столкновения нет — верно."
+            },
+            "playability": {
+              "status": "scored",
+              "score": 85,
+              "notes": "Резьба, стёртое место, тень на восток — несколько зацепок и направление, без рельсов."
+            },
+            "agency": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Герой останавливается и слушает по своей воле; выводы даны как наблюдения, решение за игроком."
+            },
+            "tone": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Сдержанная героика, ведёт звуком и осязанием, зрение позже; личный масштаб выдержан."
+            },
+            "anti_slop": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Загадочность без пастиша 'древнего зла'; 'что-то старше букв' на грани мистификации, но сдержанно."
+            }
+          },
+          "antiSlop": {
+            "violations": [],
+            "blocking": false
+          },
+          "budgetWarn": true,
+          "pass": true,
+          "aggregate": {
+            "score": 89,
+            "threshold": 80,
+            "pass": true,
+            "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+          }
+        }
+      },
+      {
+        "scenarioId": "j.wild.mishap",
+        "summary": "wild lands: a mishap, check failed",
+        "package": {
+          "intent": "journey",
+          "scene": "journey",
+          "length_target": {
+            "min_chars": 400,
+            "max_chars": 800
+          },
+          "dice": {
+            "feat_symbol": null,
+            "success_icons": 0,
+            "target_number": 14,
+            "outcome": "failure",
+            "total": 3
+          },
+          "oracle": {
+            "table": "journey_scenes",
+            "result_ref": "mishap",
+            "detail": {
+              "table": "scene_details.mishap",
+              "result_ref": "scene_details.mishap#face=6",
+              "detail": null,
+              "row": {
+                "face": 6,
+                "scene": "Блуждающие враги",
+                "prompt": "БДИТЕЛЬНОСТЬ, чтобы узнать об их приближении",
+                "skill": "awareness",
+                "significantEncounter": false
+              }
+            },
+            "row": null
+          },
+          "patch": {
+            "fatigue_delta": 3
+          },
+          "lore_chunks": [],
+          "journal_facts": []
+        },
+        "output": {
+          "prose": "Второй день дорога шла под гору, и к полудню тропа истончилась до звериного следа в вереске. Ты держал на север, но север здесь давался тяжело: каждый шаг вниз отдавался в коленях, а сырой мох забирал тепло из сапог быстрее, чем солнце успевало его вернуть. Плечи ныли под лямками, и вода во фляге плескалась всё глуше — ты пил чаще, чем стоило.\n\nВетер переменился, и с ним пришёл запах. Не звериный — жжёного жира и старой кожи, чужой в этих чистых холмах. Где-то ниже, за грядой камней, что-то двигалось. Не одно. Шаги вразнобой по осыпи, короткий гортанный оклик — и тишина, будто кто-то велел замолчать.\n\nТы припал за валун прежде, чем успел подумать. Поздно: голоса уже разошлись веером, обходя гряду с двух сторон. Ты не расслышал их вовремя — усталость притупила слух, и теперь они были ближе, чем должны бы.\n\nВереск не укроет. За спиной — открытый склон, впереди — те, кто идёт на запах твоего костра, прогоревшего два часа назад."
+        },
+        "verdict": {
+          "axes": {
+            "specificity": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Вереск, звериный след, запах жжёного жира и кожи, осыпь — плотная конкретика, ведёт запахом/звуком."
+            },
+            "accuracy": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Провал БДИТЕЛЬНОСТИ отыгран (не расслышал вовремя), блуждающие враги приближаются, усталость=fatigue+3; significant_encounter=false выдержан — стычки нет, только угроза."
+            },
+            "playability": {
+              "status": "scored",
+              "score": 85,
+              "notes": "Чёткая развилка: открытый склон сзади, враги веером спереди — есть за что зацепиться, не тупик."
+            },
+            "agency": {
+              "status": "scored",
+              "score": 82,
+              "notes": "Инстинктивное 'припал прежде чем подумать' слегка решает за игрока, но выбор дальше оставлен ему."
+            },
+            "tone": {
+              "status": "scored",
+              "score": 87,
+              "notes": "Сдержанная героика, тело и погода, второе лицо/прошедшее — в регистр, без пастиша."
+            },
+            "anti_slop": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Чисто: без штампов Средиземья, чувства не названы ярлыком, показаны телом и миром."
+            }
+          },
+          "antiSlop": {
+            "violations": [],
+            "blocking": false
+          },
+          "budgetWarn": true,
+          "pass": true,
+          "aggregate": {
+            "score": 87,
+            "threshold": 80,
+            "pass": true,
+            "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+          }
+        }
+      },
+      {
+        "scenarioId": "j.wild.meeting",
+        "summary": "wild lands: a chance meeting, fatigue waived",
+        "package": {
+          "intent": "journey",
+          "scene": "journey",
+          "length_target": {
+            "min_chars": 400,
+            "max_chars": 800
+          },
+          "dice": {
+            "feat_symbol": null,
+            "success_icons": 0,
+            "target_number": 14,
+            "outcome": "weak",
+            "total": 14
+          },
+          "oracle": {
+            "table": "journey_scenes",
+            "result_ref": "chance_meeting",
+            "detail": {
+              "table": "scene_details.chance_meeting",
+              "result_ref": "scene_details.chance_meeting#face=1",
+              "detail": null,
+              "row": {
+                "face": 1,
+                "scene": "Одинокий охотник",
+                "prompt": "ОХОТА, чтобы обменяться историями",
+                "skill": "hunting",
+                "significantEncounter": false
+              }
+            },
+            "row": null
+          },
+          "patch": {},
+          "lore_chunks": [],
+          "journal_facts": []
+        },
+        "output": {
+          "prose": "Дорога от Пригорья тянулась вторые сутки, и подошвы твоих сапог знали каждый камень этого спуска. Ветер нёс запах хвои и сырой земли; где-то справа, в подлеске, хрустнула ветка — потом ещё, ровным, неспешным шагом.\n\nТы остановился. Из-за ольхи вышел человек в буром плаще, с луком за спиной и связкой битой птицы на поясе. Он тоже встал, оглядел тебя не враждебно, но и не открывая всего сразу.\n\n— Далеко идёшь, — сказал он. Не вопрос, скорее замечание. — Я тут третий день по следу. Дичь ушла к северу, а я всё хожу.\n\nОн сдвинул капюшон. Лицо обветренное, глаза привыкшие искать движение в кустах.\n\n— Присядешь на четверть часа? Огонь у меня остыл, но кремень при мне. Разведу — заодно и услышу, откуда путь держишь.\n\nТетива его лука тронулась под ветром и слабо загудела. Птичья кровь капнула с пояса на палую листву — раз, другой. Он ждал, не торопя.\n\nЧто ты ему ответишь?"
+        },
+        "verdict": {
+          "axes": {
+            "specificity": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Хвоя, сырая земля, битая птица, кремень, капающая кровь — плотная фактура."
+            },
+            "accuracy": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Охотник, обмен историями, охота, journey из Пригорья — всё соответствует пакету; встреча незначительная, без завышения ставок."
+            },
+            "playability": {
+              "status": "scored",
+              "score": 85,
+              "notes": "Чёткое приглашение к костру и историям даёт понятную зацепку; открытый вопрос в конце."
+            },
+            "agency": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Выбор оставлен игроку, охотник ждёт не торопя, не решает за героя."
+            },
+            "tone": {
+              "status": "scored",
+              "score": 84,
+              "notes": "Сдержанно, ведёт звуком и запахом; голос охотника скупой, но не выражена яркая культурная привычка."
+            },
+            "anti_slop": {
+              "status": "scored",
+              "score": 87,
+              "notes": "Пастиша и клише нет; 'глаза привыкшие искать движение' чуть на грани, но в меру."
+            }
+          },
+          "antiSlop": {
+            "violations": [],
+            "blocking": false
+          },
+          "budgetWarn": true,
+          "pass": true,
+          "aggregate": {
+            "score": 87,
+            "threshold": 80,
+            "pass": true,
+            "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+          }
+        }
+      },
+      {
+        "scenarioId": "j.dark.badchoice",
+        "summary": "dark lands: a bad choice, check failed",
+        "package": {
+          "intent": "journey",
+          "scene": "journey",
+          "length_target": {
+            "min_chars": 400,
+            "max_chars": 800
+          },
+          "dice": {
+            "feat_symbol": null,
+            "success_icons": 0,
+            "target_number": 15,
+            "outcome": "failure",
+            "total": 9
+          },
+          "oracle": {
+            "table": "journey_scenes",
+            "result_ref": "bad_choice",
+            "detail": {
+              "table": "scene_details.bad_choice",
+              "result_ref": "scene_details.bad_choice#face=2",
+              "detail": null,
+              "row": {
+                "face": 2,
+                "scene": "Потерянный путь",
+                "prompt": "ИССЛЕДОВАНИЕ, чтобы вернуться по следам",
+                "skill": "exploration",
+                "significantEncounter": false
+              }
+            },
+            "row": null
+          },
+          "patch": {
+            "fatigue_delta": 2,
+            "shadow_delta": 1,
+            "eye_delta": 1
+          },
+          "lore_chunks": [],
+          "journal_facts": []
+        },
+        "output": {
+          "prose": "К полудню тропа истончилась до звериного лаза, а потом и вовсе растворилась в буреломе. Ты помнил её иначе — шире, набитее, — но брусничник под сапогами один и тот же во все стороны, и мох на стволах растёт как ему вздумается, а не по правилу, что затвердили в детстве.\n\nЗаросли смыкались. Сучья цепляли за ремень котомки, пружинили в лицо, оставляли на ладонях смолистые полосы. Ноги вязли во влажном перегное, и каждый шаг просился обратно. Дышать стало жарко и тяжело; рубаха липла к спине, а край неба над кронами уже подтягивал к себе долгий свет.\n\nГде-то в глубине треснула ветка — не под ногой, чужой. Треснула и смолкла. Ты стоял, и лес стоял, и брусничник кругом был одинаков во все стороны.\n\nПозади остался примятый след — твой собственный, ещё читаемый в мокрой земле, пока его не размыло и не затянуло."
+        },
+        "verdict": {
+          "axes": {
+            "specificity": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Брусничник, смолистые полосы, перегной, звериный лаз — плотная конкретика."
+            },
+            "accuracy": {
+              "status": "scored",
+              "score": 92,
+              "notes": "Потерянный путь, усталость и жар, читаемый след как зацепка для возврата; провал передан без чисел."
+            },
+            "playability": {
+              "status": "scored",
+              "score": 82,
+              "notes": "Читаемый след = ясная зацепка вернуться по следам, но прямой выбор не оформлен."
+            },
+            "agency": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Мир давит, но решение оставлено игроку; за него ничего не выбрано."
+            },
+            "tone": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Сдержанно, звук/осязание ведут, второе лицо и прошедшее выдержаны."
+            },
+            "anti_slop": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Чужая ветка вместо штампа угрозы; клише и пастиша нет."
+            }
+          },
+          "antiSlop": {
+            "violations": [],
+            "blocking": false
+          },
+          "budgetWarn": true,
+          "pass": true,
+          "aggregate": {
+            "score": 88,
+            "threshold": 80,
+            "pass": true,
+            "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+          }
+        }
+      },
+      {
+        "scenarioId": "j.dark.despair",
+        "summary": "dark lands: despair, check failed",
+        "package": {
+          "intent": "journey",
+          "scene": "journey",
+          "length_target": {
+            "min_chars": 400,
+            "max_chars": 800
+          },
+          "dice": {
+            "feat_symbol": null,
+            "success_icons": 0,
+            "target_number": 15,
+            "outcome": "failure",
+            "total": 12
+          },
+          "oracle": {
+            "table": "journey_scenes",
+            "result_ref": "despair",
+            "detail": {
+              "table": "scene_details.despair",
+              "result_ref": "scene_details.despair#face=5",
+              "detail": null,
+              "row": {
+                "face": 5,
+                "scene": "Осквернённое место",
+                "prompt": "ИССЛЕДОВАНИЕ, чтобы найти способ выбраться",
+                "skill": "exploration",
+                "significantEncounter": false
+              }
+            },
+            "row": null
+          },
+          "patch": {
+            "fatigue_delta": 2,
+            "shadow_delta": 2,
+            "eye_delta": 2
+          },
+          "lore_chunks": [],
+          "journal_facts": []
+        },
+        "output": {
+          "prose": "К полудню тропа сошла на нет, и ты бредёшь там, где земля отказалась держать порядок вещей.\n\nПервым приходит запах — гарь без огня, будто здесь давно что-то жгли, а сажа так и осталась в почве. Под сапогами не хрустит палый лист, а проседает что-то мягкое, вязкое; каждый шаг вытягиваешь с усилием, и в ляжках копится тяжёлая ломота. Деревья стоят голые не по осени: кора сошла лоскутами, а стволы искривлены так, будто их сгибали, пока они были мягкими. Ни птицы, ни жука. Только твоё дыхание, ставшее коротким и частым.\n\nТы ищешь, где тропа могла выйти обратно к чистой земле, — заломленную ветку, просвет, ручей. Взгляд цепляется за каждый прогал, но прогалы лгут: за ними такая же гарь и та же кривизна. Круг за кругом ты приходишь к своему же следу в мягкой земле. Затылок сводит, будто на него легла чужая ладонь и не спешит убираться.\n\nСолнце где-то за серой пеленой, и по нему сторону не выбрать. Ты стоишь посреди места, которое не хочет тебя отпускать, и надо решать, в какую сторону ломиться дальше."
+        },
+        "verdict": {
+          "axes": {
+            "specificity": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Гарь без огня, кора лоскутами, вязкая почва, ломота в ляжках — плотная конкретика."
+            },
+            "accuracy": {
+              "status": "scored",
+              "score": 92,
+              "notes": "Осквернённое место, провал поиска выхода, усталость/тень переданы через тело и затылок; без выдуманной механики."
+            },
+            "playability": {
+              "status": "scored",
+              "score": 82,
+              "notes": "Есть выбор направления, но зацепок для действия чуть мало — только 'ломиться дальше'."
+            },
+            "agency": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Решение оставлено игроку, мир давит, но не выбирает за него."
+            },
+            "tone": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Ведёт запахом и осязанием, сдержанно, личные ставки; без пастиша."
+            },
+            "anti_slop": {
+              "status": "scored",
+              "score": 85,
+              "notes": "'место, которое не хочет тебя отпускать' и 'чужая ладонь' на грани мистического клише, но держится образно."
+            }
+          },
+          "antiSlop": {
+            "violations": [],
+            "blocking": false
+          },
+          "budgetWarn": true,
+          "pass": true,
+          "aggregate": {
+            "score": 88,
+            "threshold": 80,
+            "pass": true,
+            "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+          }
+        }
+      },
+      {
+        "scenarioId": "j.dark.misfortune",
+        "summary": "dark lands: terrible misfortune, hero wounded",
+        "package": {
+          "intent": "journey",
+          "scene": "journey",
+          "length_target": {
+            "min_chars": 400,
+            "max_chars": 800
+          },
+          "dice": {
+            "feat_symbol": null,
+            "success_icons": 1,
+            "target_number": 15,
+            "outcome": "failure",
+            "total": 10
+          },
+          "oracle": {
+            "table": "journey_scenes",
+            "result_ref": "terrible_misfortune",
+            "detail": {
+              "table": "scene_details.terrible_misfortune",
+              "result_ref": "scene_details.terrible_misfortune#face=3",
+              "detail": null,
+              "row": {
+                "face": 3,
+                "scene": "Ужасная погода",
+                "prompt": "ИССЛЕДОВАНИЕ, чтобы найти приют",
+                "skill": "exploration",
+                "significantEncounter": false
+              }
+            },
+            "row": null
+          },
+          "patch": {
+            "fatigue_delta": 3,
+            "eye_delta": 1,
+            "conditions_gained": [
+              "wounded"
+            ]
+          },
+          "lore_chunks": [],
+          "journal_facts": []
+        },
+        "output": {
+          "prose": "Дождь пришёл с полудня и уже не отпускал.\n\nСперва ты слышал его в кронах — ровный, наглый шелест, который не стихал. Потом вода нашла ворот, потекла по спине холодной ниткой. Тропа расквасилась в бурую жижу; каждый шаг вытягивал ногу с чмоканьем, и сапоги набрали воды по щиколотку.\n\nНебо провисло низко, серое без просвета. Ветер бил в лицо мокрыми пригоршнями, и капли секли так, что приходилось щуриться и опускать голову. Где-то в стороне глухо шумела река, вспухшая от ливня.\n\nНа спуске к оврагу нога поехала. Земля ушла, и ты повалился боком на выступ камня — острая вспышка в рёбрах, дыхание перехватило. Ты поднялся не сразу; каждый вдох теперь отзывался тупой болью в боку, и на левой ладони кровь мешалась с грязью.\n\nИдти дальше так — значит идти в темноту под дождём, а тепла в тебе всё меньше. Впереди склон уходит к чёрной стене леса; правее, за пеленой, что-то темнеет — то ли гряда валунов, то ли начало скального навеса.\n\nКуда пойдёшь искать укрытие, пока не стемнело?"
+        },
+        "verdict": {
+          "axes": {
+            "specificity": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Вода по вороту, чмоканье жижи, кровь с грязью, вспухшая река — плотная конкретика."
+            },
+            "accuracy": {
+              "status": "scored",
+              "score": 92,
+              "notes": "Провал, усталость, рана в рёбра/ладонь, поиск приюта в непогоду — всё по пакету; eye_delta не проза, ок."
+            },
+            "playability": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Два конкретных варианта укрытия и прямой вопрос дают за что зацепиться."
+            },
+            "agency": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Падение — следствие провала, но выбор пути оставлен игроку."
+            },
+            "tone": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Ведёт звуком/осязанием, сдержанная героика, чувства через тело, без пастиша."
+            },
+            "anti_slop": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Чисто, без клише Средиземья и калек; ярлыков эмоций нет."
+            }
+          },
+          "antiSlop": {
+            "violations": [],
+            "blocking": false
+          },
+          "budgetWarn": true,
+          "pass": true,
+          "aggregate": {
+            "score": 90,
+            "threshold": 80,
+            "pass": true,
+            "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+          }
+        }
+      },
+      {
+        "scenarioId": "j.dark.significant",
+        "summary": "dark lands: despair escalates to a significant encounter",
+        "package": {
+          "intent": "journey",
+          "scene": "journey",
+          "length_target": {
+            "min_chars": 400,
+            "max_chars": 800
+          },
+          "dice": null,
+          "oracle": {
+            "table": "journey_scenes",
+            "result_ref": "despair",
+            "detail": {
+              "table": "scene_details.despair",
+              "result_ref": "scene_details.despair#face=1",
+              "detail": null,
+              "row": {
+                "face": 1,
+                "scene": "Слуги Врага",
+                "prompt": "Значимая встреча",
+                "skill": null,
+                "significantEncounter": true
+              }
+            },
+            "row": null
+          },
+          "patch": {
+            "fatigue_delta": 2
+          },
+          "lore_chunks": [],
+          "journal_facts": []
+        },
+        "output": {
+          "prose": "Ветер сменился к полудню и понёс с севера запах, какого здесь быть не должно, — палёного рога и мокрой псины. Ты сошёл с торной тропы в ольшаник, где ноги вязли по щиколотку, и каждый шаг отдавался в спине глухой тяжестью. Дорога вымотала больше, чем показывала верста.\n\nОттуда, где тропа огибала болотце, донёсся голос. Не крик — говор, низкий и гортанный, из тех языков, что ложатся на ухо ржавчиной. Второй ответил ему. Между стволов мелькнула широкая спина, обтянутая чёрной кожей и клёпаным железом, и над ней — навершие копья с чем-то насаженным, что раньше носило рога.\n\nИх было двое, а может, больше за поворотом. Они не шли по твоему следу — они шли своей дорогой, поперёк твоей, и до места, где тропа сходилась в одну, оставалось шагов сорок.\n\nОльха стояла редкая, укрыться в ней некуда. Позади — вязкая топь, впереди — тот, кто нюхает ветер не хуже собаки."
+        },
+        "verdict": {
+          "axes": {
+            "specificity": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Палёный рог, мокрая псина, ольшаник по щиколотку, клёпаное железо, сорок шагов — плотная конкретика."
+            },
+            "accuracy": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Слуги Врага и значимая встреча переданы косвенно (орки без называния), усталость=fatigue+2 показана спиной и верстой; никакой выдуманной механики."
+            },
+            "playability": {
+              "status": "scored",
+              "score": 87,
+              "notes": "Чёткая дилемма: топь позади, редкая ольха, сорок шагов до схода троп — есть за что зацепиться и что решать."
+            },
+            "agency": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Сцена ставит выбор, не решает за игрока; враги идут своей дорогой, не по следу — пространство для действия открыто."
+            },
+            "tone": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Сдержанная героика, ведёт запахом и звуком, зрение последним; враг не назван ярлыком — регистр выдержан."
+            },
+            "anti_slop": {
+              "status": "scored",
+              "score": 89,
+              "notes": "Ни пастиша, ни 'древнего зла'; 'языки, что ложатся ржавчиной' — свежий образ, чувства не названы ярлыком."
+            }
+          },
+          "antiSlop": {
+            "violations": [],
+            "blocking": false
+          },
+          "budgetWarn": true,
+          "pass": true,
+          "aggregate": {
+            "score": 89,
+            "threshold": 80,
+            "pass": true,
+            "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+          }
+        }
+      },
+      {
+        "scenarioId": "j.dark.midjourney",
+        "summary": "dark lands: third step, a mishap",
+        "package": {
+          "intent": "journey",
+          "scene": "journey",
+          "length_target": {
+            "min_chars": 400,
+            "max_chars": 800
+          },
+          "dice": {
+            "feat_symbol": null,
+            "success_icons": 1,
+            "target_number": 14,
+            "outcome": "failure",
+            "total": 12
+          },
+          "oracle": {
+            "table": "journey_scenes",
+            "result_ref": "mishap",
+            "detail": {
+              "table": "scene_details.mishap",
+              "result_ref": "scene_details.mishap#face=4",
+              "detail": null,
+              "row": {
+                "face": 4,
+                "scene": "Неуловимая добыча",
+                "prompt": "ОХОТА, чтобы выследить добычу",
+                "skill": "hunting",
+                "significantEncounter": false
+              }
+            },
+            "row": null
+          },
+          "patch": {
+            "fatigue_delta": 3
+          },
+          "lore_chunks": [],
+          "journal_facts": []
+        },
+        "output": {
+          "prose": "Дорога отвернула к болотистой низине, где под ногами сходила твёрдость. Ты шёл по следу с рассвета — раздвоенный отпечаток в мокрой земле, порванная паутина между кустами, тёплый ещё помёт под папоротником. Олень был близко. Он был близко весь день.\n\nТростник шуршал впереди, там, где только что мелькнула бурая спина, — и умолкал, стоило подойти. Комарьё вилось у лица, лезло в глаза, и рука сама поднималась их отгонять, снова и снова. Сапоги набирали воду. Каждый шаг вытягивался из грязи с чмоканьем, слышным на пол-луга; ни один зверь с таким шумом близко не подпустит.\n\nК полудню след потерялся в осоке — там, где топь съедала любой отпечаток. Ты стоял по колено в бурой воде, тростник смыкался стеной со всех сторон, и было тихо. Ни шелеста, ни всплеска. Только гуд насекомых да собственное дыхание, тяжёлое от долгого пустого хода. Ноги гудели до бёдер, поясница не разгибалась.\n\nСолнце перевалило за середину. Впереди — топь без края, за спиной — размытая дорога."
+        },
+        "verdict": {
+          "axes": {
+            "specificity": {
+              "status": "scored",
+              "score": 92,
+              "notes": "Раздвоенный след, помёт под папоротником, чмоканье грязи, осока — плотная конкретика через звук и осязание."
+            },
+            "accuracy": {
+              "status": "scored",
+              "score": 95,
+              "notes": "Провал охоты, потерянный след, усталость (fatigue+3) через гудящие ноги — всё по пакету; ничего лишнего не выдумано."
+            },
+            "playability": {
+              "status": "scored",
+              "score": 80,
+              "notes": "Развилка в конце (топь vs размытая дорога) даёт выбор, но зацепок для нового действия скуповато."
+            },
+            "agency": {
+              "status": "scored",
+              "score": 88,
+              "notes": "Герой действует, решение оставлено игроку; мир сопротивляется, не диктует."
+            },
+            "tone": {
+              "status": "scored",
+              "score": 90,
+              "notes": "Сдержанная героика, ведёт звуком/осязанием, второе лицо/прошедшее, финал в настоящем — в регистр."
+            },
+            "anti_slop": {
+              "status": "scored",
+              "score": 94,
+              "notes": "Пастиша и клише нет, чувства показаны телом, а не ярлыком."
+            }
+          },
+          "antiSlop": {
+            "violations": [],
+            "blocking": false
+          },
+          "budgetWarn": true,
+          "pass": true,
+          "aggregate": {
+            "score": 90,
+            "threshold": 80,
+            "pass": true,
+            "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+          }
+        }
+      }
+    ],
+    "summary": {
+      "n": 9,
+      "errored": [],
+      "scored": 9,
+      "perAxis": {
+        "specificity": {
+          "mean": 89.8,
+          "min": 88,
+          "n": 9
+        },
+        "accuracy": {
+          "mean": 91.2,
+          "min": 88,
+          "n": 9
+        },
+        "playability": {
+          "mean": 84.3,
+          "min": 80,
+          "n": 9
+        },
+        "agency": {
+          "mean": 87.7,
+          "min": 82,
+          "n": 9
+        },
+        "tone": {
+          "mean": 87.9,
+          "min": 84,
+          "n": 9
+        },
+        "anti_slop": {
+          "mean": 89.2,
+          "min": 85,
+          "n": 9
+        }
+      },
+      "aggregate": {
+        "mean": 88.4,
+        "min": 87,
+        "n": 9
+      },
+      "hardGateFails": 0,
+      "passCount": 9,
+      "passRate": 1,
+      "suitePass": true,
+      "rule": "pass = aggregate.pass && deterministic hard gate && no error; passRate = passCount / scored (errored excluded, re-run); suitePass = passRate >= 0.8 (PROVISIONAL)"
+    }
+  }
+}
