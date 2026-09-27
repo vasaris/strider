@@ -1,9 +1,11 @@
-// The A3 suite: 9 journey turns captured live from the engine (L3/L4 of the roadmap).
+// The A3 suite: 11 journey turns captured live from the engine (L3/L4 of the roadmap). The first 9
+// are the A3.3 set (kept byte-identical so L4 records stay comparable item by item); the last 2 were
+// appended at TP1 (3.1-C2) to cover the arrival step and a detection step.
 //
 // SEED-SEARCH PROCEDURE (reproducible; the search script itself is not committed). For each spec
 // below, in table order and independently of the others, try the candidate RNG seeds 'a3-0',
 // 'a3-1', 'a3-2', ... and take the FIRST one whose captured turn (captureTurn with the Stage-1
-// hero/route, the listed region and stepsBefore) meets the criterion, where
+// hero/route, the listed region, eyeGap and stepsBefore) meets the criterion, where
 //   sceneType = pkg.oracle.result_ref, detailFace = pkg.oracle.detail.row.face,
 //   significant = pkg.oracle.detail.row.significantEncounter,
 //   sceneCheck = record.sceneCheck?.outcome ?? null:
@@ -17,6 +19,10 @@
 //   j.dark.significant   dark_lands    terrible_misfortune or despair, detailFace 1, significant
 //                                      true -> sceneCheck null
 //   j.dark.midjourney    dark_lands    stepsBefore 2, any step with a scene (not an arrival)
+//   j.border.arrival     border_lands  stepsBefore 1, the captured step is the arrival
+//                                      (record.events contains an 'arrival' event)       [TP1]
+//   j.dark.detection     dark_lands    eyeGap 1 (Eye awareness = pursuit threshold - 1), stepsBefore
+//                                      0, the captured step has a 'detection' event       [TP1]
 // The `expect` of each entry pins what the engine produced for the chosen seed; the pins are
 // checked by engineProvider.test.ts, so a pack or engine change that moves a scene is caught.
 
@@ -73,6 +79,21 @@ export const SUITE_JOURNEYS: readonly SuiteJourney[] = [
     id: 'j.dark.midjourney',
     summary: 'dark lands: third step, a mishap',
     journey: { rngSeed: 'a3-3', region: 'dark_lands', stepsBefore: 2, expect: { sceneType: 'mishap', detailFace: 4, sceneCheck: 'failure' } },
+  },
+  {
+    id: 'j.border.arrival',
+    summary: 'border lands: arrival after a mishap (+1 day)',
+    journey: { rngSeed: 'a3-1', region: 'border_lands', stepsBefore: 1, expect: { sceneType: null, detailFace: null, sceneCheck: null, arrived: true } },
+  },
+  {
+    id: 'j.dark.detection',
+    summary: 'dark lands: terrible misfortune; the Eye reaches its threshold (detection)',
+    journey: {
+      rngSeed: 'a3-1',
+      region: 'dark_lands',
+      eyeGap: 1,
+      expect: { sceneType: 'terrible_misfortune', detailFace: 3, sceneCheck: 'failure', detection: true },
+    },
   },
 ];
 

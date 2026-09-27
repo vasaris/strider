@@ -62,6 +62,46 @@ describe('orchestrator package provider (structural seam)', () => {
     expect(p.journal_facts).toEqual([]);
   });
 
+  it('whole-package pin: key order and the TP1 slots default to null', () => {
+    const p = buildNarrativePackage({ intent: 'mundane', scene: 'free' });
+    expect(p).toEqual({
+      intent: 'mundane',
+      scene: 'free',
+      length_target: provisionalLengthFor('free'),
+      dice: null,
+      oracle: null,
+      detection: null,
+      patch: null,
+      journey: null,
+      lore_chunks: [],
+      journal_facts: [],
+    });
+    expect(Object.keys(p)).toEqual([
+      'intent',
+      'scene',
+      'length_target',
+      'dice',
+      'oracle',
+      'detection',
+      'patch',
+      'journey',
+      'lore_chunks',
+      'journal_facts',
+    ]);
+  });
+
+  it('TP1: journey and detection pass through from the turn verbatim', () => {
+    const journey = {
+      days_delta: -1,
+      travel_check: { feat_symbol: null, success_icons: 1, target_number: 13, outcome: 'weak' },
+    } as const;
+    const detection = { table: 'detection_scenes', scene: 'Слуги Врага устраивают засаду или ловушку.' };
+    const p = buildNarrativePackage({ ...TURN, journey, detection });
+    expect(p.journey).toEqual(journey);
+    expect(p.detection).toEqual(detection);
+    expect(p.dice?.target_number).toBe(14); // the scene check stays in dice, untouched by the travel roll
+  });
+
   it('an oracle turn with no scene detail leaves oracle.detail null', () => {
     const p = buildNarrativePackage({
       intent: 'yes_no_question',

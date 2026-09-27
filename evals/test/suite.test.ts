@@ -89,7 +89,7 @@ function tx(
 }
 
 describe('suite runner (A3.3)', () => {
-  it('golden: the live engine -> package wiring over the 9 suite seeds (stub keeper, deterministic judge)', async () => {
+  it('golden: the live engine -> package wiring over the 11 suite seeds (stub keeper, deterministic judge)', async () => {
     const report = await runSuite(toEngineSeeds('STUB-PROMPT'), {
       packageProvider: engineProvider(env),
       keeper: new StubKeeper(CLEAN_PROSE),
@@ -106,15 +106,17 @@ describe('suite runner (A3.3)', () => {
       j.dark.misfortune    terrible_misfortune/3/failure  92/400..800!     clean     -   -   -   -   -   100 | -
       j.dark.significant   despair/1/-                    92/400..800!     clean     -   -   -   -   -   100 | -
       j.dark.midjourney    mishap/4/failure               92/400..800!     clean     -   -   -   -   -   100 | -
+      j.border.arrival     -/-/-                          92/400..800!     clean     -   -   -   -   -   100 | -
+      j.dark.detection     terrible_misfortune/3/failure  92/400..800!     clean     -   -   -   -   -   100 | -
 
       specificity  mean - min - (n 0)
       accuracy     mean - min - (n 0)
       playability  mean - min - (n 0)
       agency       mean - min - (n 0)
       tone         mean - min - (n 0)
-      anti_slop    mean 100 min 100 (n 9)
+      anti_slop    mean 100 min 100 (n 11)
       aggregate    mean - min - (n 0)
-      hard-gate fails: 0/9
+      hard-gate fails: 0/11
       pass: 0/0 scored; passRate -
       suitePass (PROVISIONAL, >= 0.8): - (nothing scored)
       rule: pass = aggregate.pass && deterministic hard gate && no error; passRate = passCount / scored (errored excluded, re-run); suitePass = passRate >= 0.8 (PROVISIONAL)"
@@ -128,7 +130,7 @@ describe('suite runner (A3.3)', () => {
         },
         "errored": [],
         "hardGateFails": 0,
-        "n": 9,
+        "n": 11,
         "passCount": 0,
         "passRate": null,
         "perAxis": {
@@ -145,7 +147,7 @@ describe('suite runner (A3.3)', () => {
           "anti_slop": {
             "mean": 100,
             "min": 100,
-            "n": 9,
+            "n": 11,
           },
           "playability": {
             "mean": null,
@@ -192,6 +194,13 @@ describe('suite runner (A3.3)', () => {
       row.significant_encounter: false
       ## patch
       fatigue_delta: 1
+      ## journey
+      days_delta: -1
+      travel_check.feat_symbol: null
+      travel_check.success_icons: 1
+      travel_check.total: 14
+      travel_check.target_number: 13
+      travel_check.outcome: strong
 
       ## turn
       intent: journey
@@ -213,6 +222,12 @@ describe('suite runner (A3.3)', () => {
       row.prompt: БДИТЕЛЬНОСТЬ, чтобы понять его значение
       row.skill: awareness
       row.significant_encounter: false
+      ## journey
+      days_delta: 0
+      travel_check.feat_symbol: gandalf
+      travel_check.success_icons: 0
+      travel_check.target_number: 13
+      travel_check.outcome: weak
 
       ## turn
       intent: journey
@@ -237,6 +252,13 @@ describe('suite runner (A3.3)', () => {
       row.significant_encounter: false
       ## patch
       fatigue_delta: 3
+      ## journey
+      days_delta: 1
+      travel_check.feat_symbol: null
+      travel_check.success_icons: 1
+      travel_check.total: 21
+      travel_check.target_number: 13
+      travel_check.outcome: strong
 
       ## turn
       intent: journey
@@ -259,6 +281,13 @@ describe('suite runner (A3.3)', () => {
       row.prompt: ОХОТА, чтобы обменяться историями
       row.skill: hunting
       row.significant_encounter: false
+      ## journey
+      days_delta: 0
+      travel_check.feat_symbol: null
+      travel_check.success_icons: 0
+      travel_check.total: 11
+      travel_check.target_number: 13
+      travel_check.outcome: failure
 
       ## turn
       intent: journey
@@ -285,6 +314,13 @@ describe('suite runner (A3.3)', () => {
       fatigue_delta: 2
       shadow_delta: 1
       eye_delta: 1
+      ## journey
+      days_delta: 0
+      travel_check.feat_symbol: null
+      travel_check.success_icons: 0
+      travel_check.total: 14
+      travel_check.target_number: 13
+      travel_check.outcome: weak
 
       ## turn
       intent: journey
@@ -311,6 +347,13 @@ describe('suite runner (A3.3)', () => {
       fatigue_delta: 2
       shadow_delta: 2
       eye_delta: 2
+      ## journey
+      days_delta: 0
+      travel_check.feat_symbol: null
+      travel_check.success_icons: 0
+      travel_check.total: 12
+      travel_check.target_number: 13
+      travel_check.outcome: failure
 
       ## turn
       intent: journey
@@ -337,6 +380,13 @@ describe('suite runner (A3.3)', () => {
       fatigue_delta: 3
       eye_delta: 1
       conditions_gained: wounded
+      ## journey
+      days_delta: 0
+      travel_check.feat_symbol: null
+      travel_check.success_icons: 1
+      travel_check.total: 21
+      travel_check.target_number: 13
+      travel_check.outcome: strong
 
       ## turn
       intent: journey
@@ -355,6 +405,13 @@ describe('suite runner (A3.3)', () => {
       row.significant_encounter: true
       ## patch
       fatigue_delta: 2
+      ## journey
+      days_delta: 0
+      travel_check.feat_symbol: null
+      travel_check.success_icons: 0
+      travel_check.total: 13
+      travel_check.target_number: 13
+      travel_check.outcome: weak
 
       ## turn
       intent: journey
@@ -378,7 +435,63 @@ describe('suite runner (A3.3)', () => {
       row.skill: hunting
       row.significant_encounter: false
       ## patch
-      fatigue_delta: 3"
+      fatigue_delta: 3
+      ## journey
+      days_delta: 1
+      travel_check.feat_symbol: null
+      travel_check.success_icons: 0
+      travel_check.total: 7
+      travel_check.target_number: 13
+      travel_check.outcome: failure
+
+      ## turn
+      intent: journey
+      scene: journey
+      length_target: 400..800 chars
+      ## journey
+      days_delta: 0
+      arrived: true
+      days_total: 8
+      travel_check.feat_symbol: gandalf
+      travel_check.success_icons: 1
+      travel_check.target_number: 13
+      travel_check.outcome: strong
+
+      ## turn
+      intent: journey
+      scene: journey
+      length_target: 400..800 chars
+      ## dice
+      feat_symbol: null
+      success_icons: 1
+      total: 10
+      target_number: 15
+      outcome: failure
+      ## oracle
+      table: journey_scenes
+      result_ref: terrible_misfortune
+      ### detail
+      table: scene_details.terrible_misfortune
+      result_ref: scene_details.terrible_misfortune#face=3
+      row.face: 3
+      row.scene: Ужасная погода
+      row.prompt: ИССЛЕДОВАНИЕ, чтобы найти приют
+      row.skill: exploration
+      row.significant_encounter: false
+      ## detection
+      table: detection_scenes
+      scene: Враг захватывает важное место.
+      ## patch
+      fatigue_delta: 3
+      eye_delta: 1
+      conditions_gained: wounded
+      ## journey
+      days_delta: 0
+      travel_check.feat_symbol: null
+      travel_check.success_icons: 1
+      travel_check.total: 21
+      travel_check.target_number: 13
+      travel_check.outcome: strong"
     `);
   });
 

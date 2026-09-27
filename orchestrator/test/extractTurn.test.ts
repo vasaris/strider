@@ -1,6 +1,7 @@
-import type { CheckResult, HeroState, JourneyEvent, StepRecord } from '@brodyazhnik/engine';
+import { makeRng, type CheckResult, type HeroState, type JourneyEvent, type JourneyState, type StepRecord } from '@brodyazhnik/engine';
 import { describe, expect, it } from 'vitest';
-import { buildNarrativePackage, extractTurn } from '../src/provider.js';
+import * as api from '../src/index.js';
+import { buildNarrativePackage, extractJourneyTurn, type EngineTurnResult } from '../src/provider.js';
 import { renderNarrativePackage } from '../src/render.js';
 
 // Minimal hero fixture; only the fields diffHeroState reads matter for these tests.
@@ -37,6 +38,36 @@ function check(overrides: Partial<CheckResult> = {}): CheckResult {
   };
 }
 
+// Minimal JourneyState wrapper: only hero and journey.durationDays matter to the projection.
+// The route/rng/log are fixture filler (never stepped here).
+function jstate(h: HeroState, durationDays = 7, arrived = false): JourneyState {
+  return {
+    hero: h,
+    journey: {
+      route: {
+        totalHexes: 7,
+        difficultHexes: 0,
+        mounted: false,
+        forcedMarch: false,
+        mountCarry: 0,
+        dangerZones: [],
+        region: 'wild_lands',
+        season: 'winter_autumn',
+      },
+      remainingHexes: arrived ? 0 : 3,
+      durationDays,
+      arrived,
+    },
+    rng: makeRng('fixture'),
+    log: [],
+  };
+}
+
+/** The public producer over two heroes (the day count unchanged unless given). */
+function extractTurn(prev: HeroState, next: HeroState, record: StepRecord, days: readonly [number, number] = [7, 7]): EngineTurnResult {
+  return extractJourneyTurn(jstate(prev, days[0]), jstate(next, days[1]), record);
+}
+
 const sceneEvent: JourneyEvent = {
   kind: 'scene',
   sceneType: 'mishap',
@@ -50,7 +81,7 @@ const sceneEvent: JourneyEvent = {
   eyeDelta: 0,
 };
 
-describe('extractTurn (turn-producer: engine step -> EngineTurnResult)', () => {
+describe('extractJourneyTurn (turn-producer: engine step -> EngineTurnResult)', () => {
   it('maps the scene oracle refs + surfaces the SD1 row verbatim (no re-roll)', () => {
     const record: StepRecord = { events: [sceneEvent], travelCheck: check(), sceneCheck: check() };
     const turn = extractTurn(hero(), hero({ fatigue: 1 }), record);
@@ -141,18 +172,65 @@ describe('extractTurn (turn-producer: engine step -> EngineTurnResult)', () => {
     expect(pkg.journal_facts).toEqual([]); // F-journal
   });
 
-  it('the arrival step: no scene oracle and no dice (the travel check is not surfaced; A4.1)', () => {
+  it('the arrival step: no scene oracle and no dice; the travel check surfaces only in journey (A4.1, TP1)', () => {
     const record: StepRecord = {
       events: [
         { kind: 'travel_check', outcome: 'success', advance: 4, remainingAfter: 0, eyeDelta: 0 },
         { kind: 'arrival', durationDays: 7 },
       ],
-      travelCheck: check({ degree: 'success' }),
+      travelCheck: check({ degree: 'success', targetNumber: 13 }),
       sceneCheck: null,
     };
     const turn = extractTurn(hero(), hero(), record);
     expect(turn.oracleTable).toBeUndefined();
     expect(turn.sceneDetail).toBeUndefined();
     expect(turn.dice).toBeNull();
+    expect(turn.detection).toBeNull();
+    expect(turn.journey).toEqual({
+      days_delta: 0,
+      arrived: true,
+      days_total: 7,
+      travel_check: { feat_symbol: null, success_icons: 1, target_number: 13, outcome: 'weak', total: 17 },
+    });
+    expect(Object.keys(turn.journey ?? {})).toEqual(['days_delta', 'arrived', 'days_total', 'travel_check']);
+  });
+
+  it('a non-arrival step: journey carries days_delta (0 included) and the travel check, no arrived/days_total', () => {
+    const record: StepRecord = { events: [sceneEvent], travelCheck: check({ targetNumber: 99 }), sceneCheck: check() };
+    const same = extractTurn(hero(), hero(), record);
+    expect(same.journey).toEqual({
+      days_delta: 0,
+      travel_check: { feat_symbol: null, success_icons: 1, target_number: 99, outcome: 'weak', total: 17 },
+    });
+    expect('arrived' in (same.journey ?? {})).toBe(false);
+    expect(extractTurn(hero(), hero(), record, [7, 8]).journey?.days_delta).toBe(1); // mishap +1 day
+    expect(extractTurn(hero(), hero(), record, [7, 6]).journey?.days_delta).toBe(-1); // short cut -1 day
+  });
+
+  it('detection: eye_delta is the growth up to the detection (+1), not growth-plus-reset (TP1)', () => {
+    const detection: JourneyEvent = {
+      kind: 'detection',
+      awareness: 14,
+      threshold: 14,
+      sceneText: 'Шпионы Врага узнают о задании героя.',
+      resetTo: 0,
+    };
+    const record: StepRecord = { events: [sceneEvent, detection], travelCheck: check(), sceneCheck: check() };
+    // awareness 13 -> event awareness 14 (threshold reached) -> engine reset to the initial 0
+    const turn = extractTurn(hero({ eye: { awareness: 13, initial: 0 } }), hero({ shadow: { points: 1, scars: 0 } }), record);
+    expect(turn.patch).toEqual({ shadow_delta: 1, eye_delta: 1 });
+    expect(turn.detection).toEqual({ table: 'detection_scenes', scene: 'Шпионы Врага узнают о задании героя.' });
+    expect(turn.detection?.scene).toBe(detection.kind === 'detection' ? detection.sceneText : null); // verbatim
+  });
+
+  it('record.travelCheck === null (the engine already-arrived no-op) throws: not a turn', () => {
+    const noop: StepRecord = { events: [], travelCheck: null, sceneCheck: null };
+    expect(() => extractJourneyTurn(jstate(hero(), 7, true), jstate(hero(), 7, true), noop)).toThrow(/not a turn/);
+  });
+
+  it('surface: the hero-level projection is internal; extractJourneyTurn is the public producer (P4)', () => {
+    expect('extractTurn' in api).toBe(false);
+    expect('projectStep' in api).toBe(false);
+    expect(typeof api.extractJourneyTurn).toBe('function');
   });
 });

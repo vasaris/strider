@@ -117,10 +117,40 @@ export interface StatePatchSummary {
   readonly fatigue_delta?: number;
   readonly hope_delta?: number;
   readonly shadow_delta?: number;
-  readonly eye_delta?: number; // Eye of Mordor awareness change
+  // Eye of Mordor awareness GROWTH this step, up to any detection. When the Eye reaches the
+  // pursuit threshold the engine resets awareness to the initial rating; that reset is NOT a
+  // delta here (it is implied by NarrativePackage.detection), so a detection step reports the
+  // growth that triggered it (e.g. +1), never growth-plus-reset folded into one negative diff.
+  readonly eye_delta?: number;
   readonly conditions_gained?: readonly string[];
   readonly conditions_cleared?: readonly string[];
   readonly notes?: readonly string[]; // opaque, engine-authored
+}
+
+/**
+ * Journey progress of ONE engine step (TP1). Present on every real journey step; absent (null)
+ * on non-journey turns. The travel check lives HERE, next to the day count, and nowhere else:
+ * `NarrativePackage.dice` stays the SCENE check only (A4.1), so the Keeper cannot narrate the
+ * guide's Travel roll as the outcome of the scene.
+ */
+export interface JourneyStepSummary {
+  // Change of the journey duration (days) this step: scene journey_days_delta effects (a short
+  // cut -1, a mishap +1). 0 is INCLUDED -- it tells the Keeper the day count did not move.
+  readonly days_delta: number;
+  readonly arrived?: true; // present only on the arrival step
+  readonly days_total?: number; // present only on the arrival step: the final journey duration in days
+  readonly travel_check: DiceResult; // the guide's Travel roll of this step -- NOT the scene outcome (that is `dice`)
+}
+
+/**
+ * A detection scene the engine rolled this step: Eye awareness reached the pursuit threshold, the
+ * engine rolled kv.solo.detection_scenes and reset awareness to the initial rating. The scene is
+ * opaque pack text carried verbatim; the Keeper weaves it like an oracle result (never re-rolls,
+ * never substitutes its own).
+ */
+export interface DetectionScene {
+  readonly table: string; // 'detection_scenes'
+  readonly scene: string; // opaque pack text of the rolled row, verbatim
 }
 
 /**
@@ -152,7 +182,9 @@ export interface NarrativePackage {
   readonly length_target: LengthTarget;
   readonly dice?: DiceResult | null;
   readonly oracle?: OracleResult | null;
+  readonly detection?: DetectionScene | null; // TP1: a detection scene rolled this step
   readonly patch?: StatePatchSummary | null;
+  readonly journey?: JourneyStepSummary | null; // TP1: days / arrival / travel check of this step
   readonly lore_chunks?: readonly LoreChunk[];
   readonly journal_facts?: readonly JournalFact[];
 }

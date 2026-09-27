@@ -19,11 +19,22 @@
 //     (strip the 4-space indent, join with '\n') returns the source with its terminators
 //     normalized to '\n': the terminator KIND is the only reversibility loss.
 //   - DETERMINISTIC: sections and fields follow a fixed order declared in code (contract
-//     declaration order), never Object.keys of the input.
+//     declaration order), never Object.keys of the input. Sections: `## turn`, `## dice`,
+//     `## oracle`, `## detection`, `## patch`, `## journey`, `## lore`, `## journal`.
+//   - TRAVEL ROLL LABELED (TP1): `## dice` is the SCENE check only (A4.1); the guide's Travel roll
+//     renders only inside `## journey`, next to the day count, as `travel_check.*` fields (the
+//     same dice renderer with a prefix), so it can never be read as the scene's outcome.
 //
 // Content-clean: ASCII structure only; VK content arrives at runtime as opaque values.
 
-import type { DiceResult, NarrativePackage, OracleResult, StatePatchSummary } from './contract.js';
+import type {
+  DetectionScene,
+  DiceResult,
+  JourneyStepSummary,
+  NarrativePackage,
+  OracleResult,
+  StatePatchSummary,
+} from './contract.js';
 
 type Scalar = string | number | boolean | null | undefined;
 
@@ -60,15 +71,30 @@ function section(heading: string, body: readonly string[]): string[] {
   return body.length === 0 ? [] : [heading, ...body];
 }
 
-function renderDice(d: DiceResult): string[] {
+/** Dice body; `prefix` namespaces every key (the journey section's travel roll uses
+ *  'travel_check.'). */
+function renderDice(d: DiceResult, prefix = ''): string[] {
   return [
-    ...field('feat_die', d.feat_die),
-    ...field('feat_symbol', d.feat_symbol),
-    ...listField('success_dice', d.success_dice),
-    ...field('success_icons', d.success_icons),
-    ...field('total', d.total),
-    ...field('target_number', d.target_number),
-    ...field('outcome', d.outcome),
+    ...field(`${prefix}feat_die`, d.feat_die),
+    ...field(`${prefix}feat_symbol`, d.feat_symbol),
+    ...listField(`${prefix}success_dice`, d.success_dice),
+    ...field(`${prefix}success_icons`, d.success_icons),
+    ...field(`${prefix}total`, d.total),
+    ...field(`${prefix}target_number`, d.target_number),
+    ...field(`${prefix}outcome`, d.outcome),
+  ];
+}
+
+function renderDetection(d: DetectionScene): string[] {
+  return [...field('table', d.table), ...field('scene', d.scene)];
+}
+
+function renderJourney(j: JourneyStepSummary): string[] {
+  return [
+    ...field('days_delta', j.days_delta),
+    ...field('arrived', j.arrived),
+    ...field('days_total', j.days_total),
+    ...renderDice(j.travel_check, 'travel_check.'),
   ];
 }
 
@@ -108,8 +134,9 @@ function renderPatch(p: StatePatchSummary): string[] {
 }
 
 /**
- * Render a NarrativePackage as sectioned text: `## turn`, `## dice`, `## oracle`, `## patch`,
- * `## lore`, `## journal` in that fixed order, each emitted only when it has a body line.
+ * Render a NarrativePackage as sectioned text: `## turn`, `## dice`, `## oracle`, `## detection`,
+ * `## patch`, `## journey`, `## lore`, `## journal` in that fixed order, each emitted only when it
+ * has a body line.
  * Lines are joined with '\n'; no blank lines (an empty line inside a block value is exactly
  * BLOCK_INDENT), no trailing newline. Pure and deterministic.
  */
@@ -123,7 +150,9 @@ export function renderNarrativePackage(pkg: NarrativePackage): string {
     ]),
     ...section('## dice', pkg.dice ? renderDice(pkg.dice) : []),
     ...section('## oracle', pkg.oracle ? renderOracle(pkg.oracle, 0) : []),
+    ...section('## detection', pkg.detection ? renderDetection(pkg.detection) : []),
     ...section('## patch', pkg.patch ? renderPatch(pkg.patch) : []),
+    ...section('## journey', pkg.journey ? renderJourney(pkg.journey) : []),
     ...section(
       '## lore',
       (pkg.lore_chunks ?? []).flatMap((c) => [...field('chunk_id', c.chunk_id), ...field('text', c.text)]),

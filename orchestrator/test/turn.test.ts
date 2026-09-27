@@ -14,8 +14,8 @@ import {
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { buildNarrativePackage, extractTurn } from '../src/provider.js';
-import { journeyTurn } from '../src/turn.js';
+import { buildNarrativePackage, extractJourneyTurn } from '../src/provider.js';
+import { JourneyOverError, journeyTurn } from '../src/turn.js';
 
 const packRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..', 'content-packs/kv');
 const cfg: JourneyConfigs = journeyConfigsFromPack(loadPack(nodePackSource(packRoot)));
@@ -55,12 +55,12 @@ const STATE: JourneyState = {
 };
 
 describe('journeyTurn (one live journey step -> package)', () => {
-  it('pkg is exactly buildNarrativePackage(extractTurn(...)) of the same step', () => {
+  it('pkg is exactly buildNarrativePackage(extractJourneyTurn(...)) of the same step', () => {
     const t = journeyTurn(STATE, cfg);
     const [next, record] = stepJourney(STATE, cfg);
     expect(t.record).toEqual(record);
-    expect(t.turn).toEqual(extractTurn(STATE.hero, next.hero, record));
-    expect(t.pkg).toEqual(buildNarrativePackage(extractTurn(STATE.hero, next.hero, record)));
+    expect(t.turn).toEqual(extractJourneyTurn(STATE, next, record));
+    expect(t.pkg).toEqual(buildNarrativePackage(extractJourneyTurn(STATE, next, record)));
   });
 
   it('next is exactly the engine step (no extra RNG draw)', () => {
@@ -71,11 +71,8 @@ describe('journeyTurn (one live journey step -> package)', () => {
     expect(journeyTurn(STATE, cfg)).toEqual(journeyTurn(STATE, cfg));
   });
 
-  it('an already-arrived state is a no-op turn: no events, no oracle', () => {
+  it('an already-arrived state throws JourneyOverError (the engine no-op never reaches the Keeper)', () => {
     const arrived: JourneyState = { ...STATE, journey: { ...STATE.journey, remainingHexes: 0, arrived: true } };
-    const t = journeyTurn(arrived, cfg);
-    expect(t.record.events).toEqual([]);
-    expect(t.pkg.oracle).toBeNull();
-    expect(t.next).toBe(arrived);
+    expect(() => journeyTurn(arrived, cfg)).toThrow(JourneyOverError);
   });
 });

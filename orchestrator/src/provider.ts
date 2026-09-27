@@ -8,9 +8,10 @@
 //
 // RECONCILE status:
 //   R-workspace-1: CLOSED. SceneDetailRow -> real engine type (ws-b). The turn-producer
-//     residue is now implemented (A1, track A): extractTurn() below is the real producer --
-//     dice via mapDice (engine CheckResult -> contract DiceResult), patch via diffHeroState
-//     (prev/next hero diff), SD1 row off the scene event. journalFacts stays [] (arch sec 2.4
+//     residue is now implemented (A1, track A; TP1): extractJourneyTurn() below is the real
+//     producer -- dice via mapDice (engine CheckResult -> contract DiceResult), patch via
+//     diffHeroState (prev/next hero diff), SD1 row off the scene event, and (TP1) journey days /
+//     arrival / travel check plus the detection scene. journalFacts stays [] (arch sec 2.4
 //     context-compression, Stage 3+). Raw dice faces (feat_die/success_dice) were re-homed to
 //     docs/DEFERRED.md#DD-DICE-FACES (a UI/dice-panel concern, DUE Stage 3.2.b), not the Keeper's.
 //     (R-WS1-RESIDUE moved to DEFERRED "Closed".)
@@ -20,12 +21,14 @@
 //     arch sec 2.3.4 numbers are provisional in code now; tone.md owns them at activation).
 //     Still OPEN: blocked on 2.3.c (length relocation into tone.md).
 
-import type { CheckResult, HeroState, SceneDetailRow, StepRecord } from '@brodyazhnik/engine';
+import type { CheckResult, HeroState, JourneyState, SceneDetailRow, StepRecord } from '@brodyazhnik/engine';
 import type {
   CheckOutcome as ContractCheckOutcome,
+  DetectionScene,
   DiceResult,
   IntentKind,
   JournalFact,
+  JourneyStepSummary,
   LengthTarget,
   NarrativePackage,
   OracleResult,
@@ -49,7 +52,9 @@ export interface EngineTurnResult {
   readonly oracleResultRef?: string; // top-level rolled entry ref (e.g. the scene type)
   readonly detailTable?: string; // scene_details.* sub-table id (SD1)
   readonly sceneDetail?: SceneDetailRow | null; // SD1 Fork A raw row, already rolled (real engine type)
+  readonly detection?: DetectionScene | null; // TP1: detection scene rolled this step
   readonly patch?: StatePatchSummary | null;
+  readonly journey?: JourneyStepSummary | null; // TP1: days / arrival / travel check of this step
   readonly journalFacts?: readonly JournalFact[];
 }
 
@@ -98,23 +103,28 @@ export function buildNarrativePackage(turn: EngineTurnResult): NarrativePackage 
     length_target: provisionalLengthFor(turn.scene),
     dice: turn.dice ?? null,
     oracle: buildOracle(turn),
+    detection: turn.detection ?? null,
     patch: turn.patch ?? null,
+    journey: turn.journey ?? null,
     lore_chunks: [], // empty slot until LT1 lore activation (RAG retrieval is later)
     journal_facts: turn.journalFacts ?? [],
   };
 }
 
 // ============================================================================
-// TURN-PRODUCER (A1.b, track A) -- closes the R-workspace-1 residue for dice + patch.
-// extractTurn maps one engine journey step (prev hero, next hero, StepRecord) to the
+// TURN-PRODUCER (A1.b, track A; TP1) -- closes the R-workspace-1 residue for dice + patch.
+// extractJourneyTurn maps one engine journey step (prev state, next state, StepRecord) to the
 // orchestrator's EngineTurnResult PROJECTION. It NEVER re-rolls: dice come from the scene
 // CheckResult the engine already rolled this step (StepRecord, channel B), patch from a
-// prev/next hero diff, and the SD1 detail straight off the scene event.
+// prev/next hero diff, the SD1 detail straight off the scene event, the detection scene off the
+// detection event, and the journey days / arrival from the prev/next JourneyProgress.
 //
-// Dice = the SCENE check only (A4.1). The travel check is never surfaced: a step without a
-// scene check (a significant encounter, the arrival step) carries no dice, so the Keeper cannot
-// narrate the travel roll as the scene's result. The travel check, journey days, arrival and
-// detection are to surface together later (DEFERRED TP1).
+// Dice = the SCENE check only (A4.1). The travel check surfaces ONLY in `journey.travel_check`,
+// next to the day count (TP1): a step without a scene check (a significant encounter, the
+// arrival step) carries dice null, so the Keeper cannot narrate the travel roll as the scene's
+// result. The ONLY public producers of a journey package are extractJourneyTurn (here) and
+// journeyTurn (turn.ts); the hero-level projection (projectStep) is internal, so no caller can
+// assemble a journey package that silently drops days / arrival / detection (reviewer P4).
 //
 // Scope: journey turns only (F-turn-source: journey-step is the Stage-2-exit source;
 // combat/council producers are later). journalFacts stays [] (F-journal: arch sec 2.4
@@ -154,8 +164,10 @@ function mapDice(check: CheckResult): DiceResult {
 }
 
 /** Derive the contract StatePatchSummary from a prev/next hero diff. Includes only what
- *  changed (summary, not a full dump). */
-function diffHeroState(prev: HeroState, next: HeroState): StatePatchSummary {
+ *  changed (summary, not a full dump). `eyeBeforeReset` is the awareness the engine recorded on
+ *  a detection event (BEFORE it reset to the initial rating): eye_delta is growth up to the
+ *  detection, the reset itself is implied by `detection`, not folded into the delta. */
+function diffHeroState(prev: HeroState, next: HeroState, eyeBeforeReset: number | null): StatePatchSummary {
   const patch: {
     endurance_delta?: number;
     fatigue_delta?: number;
@@ -169,7 +181,7 @@ function diffHeroState(prev: HeroState, next: HeroState): StatePatchSummary {
   const fatigueDelta = next.fatigue - prev.fatigue;
   const hopeDelta = next.hope.current - prev.hope.current;
   const shadowDelta = next.shadow.points - prev.shadow.points;
-  const eyeDelta = next.eye.awareness - prev.eye.awareness;
+  const eyeDelta = (eyeBeforeReset ?? next.eye.awareness) - prev.eye.awareness;
   if (enduranceDelta !== 0) patch.endurance_delta = enduranceDelta;
   if (fatigueDelta !== 0) patch.fatigue_delta = fatigueDelta;
   if (hopeDelta !== 0) patch.hope_delta = hopeDelta;
@@ -188,18 +200,21 @@ function diffHeroState(prev: HeroState, next: HeroState): StatePatchSummary {
 }
 
 /**
- * Build an EngineTurnResult from one journey step. `record.events` is the exact slice the
- * engine appended this step (single source of truth); the SD1 detail is read off the scene
- * event verbatim. Dice are the SCENE check only (that is what the Keeper narrates); a step with
- * no scene check has dice null -- the travel check is never surfaced (DEFERRED TP1).
+ * INTERNAL hero-level projection of one journey step (not exported from the package: a public
+ * journey package must also carry days / arrival / detection -- see extractJourneyTurn).
+ * `record.events` is the exact slice the engine appended this step (single source of truth); the
+ * SD1 detail is read off the scene event verbatim. Dice are the SCENE check only (that is what
+ * the Keeper narrates); a step with no scene check has dice null.
  */
-export function extractTurn(prev: HeroState, next: HeroState, record: StepRecord): EngineTurnResult {
+function projectStep(prev: HeroState, next: HeroState, record: StepRecord): EngineTurnResult {
   const sceneEvent = record.events.find((e) => e.kind === 'scene');
+  const detectionEvent = record.events.find((e) => e.kind === 'detection');
+  const eyeBeforeReset = detectionEvent !== undefined && detectionEvent.kind === 'detection' ? detectionEvent.awareness : null;
   const base: EngineTurnResult = {
     intent: 'journey',
     scene: 'journey',
     dice: record.sceneCheck === null ? null : mapDice(record.sceneCheck),
-    patch: diffHeroState(prev, next),
+    patch: diffHeroState(prev, next, eyeBeforeReset),
     journalFacts: [], // F-journal: context-compression is Stage 3+ (arch sec 2.4)
   };
   if (sceneEvent === undefined || sceneEvent.kind !== 'scene') return base;
@@ -210,4 +225,33 @@ export function extractTurn(prev: HeroState, next: HeroState, record: StepRecord
     detailTable: `scene_details.${sceneEvent.sceneType}`,
     sceneDetail: sceneEvent.detail,
   };
+}
+
+/**
+ * Build the EngineTurnResult of one REAL journey step (TP1): the hero-level projection plus the
+ * journey progress (days_delta from the prev/next JourneyProgress -- scene journey_days_delta
+ * effects; arrived/days_total on the arrival step; the travel check next to the days) and the
+ * detection scene (opaque pack text off the detection event, verbatim).
+ *
+ * Throws on `record.travelCheck === null`: that is the engine's degenerate already-arrived no-op,
+ * not a turn -- it must never reach the Keeper (journeyTurn guards it with JourneyOverError).
+ */
+export function extractJourneyTurn(prev: JourneyState, next: JourneyState, record: StepRecord): EngineTurnResult {
+  if (record.travelCheck === null) {
+    throw new Error('extractJourneyTurn: no travel check -- the already-arrived no-op is not a turn');
+  }
+  const arrivalEvent = record.events.find((e) => e.kind === 'arrival');
+  const detectionEvent = record.events.find((e) => e.kind === 'detection');
+  const journey: JourneyStepSummary = {
+    days_delta: next.journey.durationDays - prev.journey.durationDays,
+    ...(arrivalEvent !== undefined && arrivalEvent.kind === 'arrival'
+      ? { arrived: true as const, days_total: arrivalEvent.durationDays }
+      : {}),
+    travel_check: mapDice(record.travelCheck),
+  };
+  const detection: DetectionScene | null =
+    detectionEvent !== undefined && detectionEvent.kind === 'detection'
+      ? { table: 'detection_scenes', scene: detectionEvent.sceneText }
+      : null;
+  return { ...projectStep(prev.hero, next.hero, record), journey, detection };
 }

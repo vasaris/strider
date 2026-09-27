@@ -38,11 +38,16 @@ const FIXTURE: NarrativePackage = {
       detail: null,
     },
   },
+  detection: { table: 'detection_scenes', scene: 'opaque pack text at runtime' },
   patch: {
     fatigue_delta: 2,
     eye_delta: 1,
     conditions_gained: ['weary'],
     notes: ['crossing took its toll'],
+  },
+  journey: {
+    days_delta: 0,
+    travel_check: { feat_symbol: null, success_icons: 0, target_number: 14, outcome: 'failure' },
   },
   lore_chunks: [
     { chunk_id: 'lore.eriador.placeholder', text: 'opaque pack content at runtime' },
@@ -70,6 +75,25 @@ describe('narrative contract', () => {
     expect(detail?.table).toBe('scene_details.terrible_misfortune');
     // The slot nests recursively but terminates: detail.detail is null here.
     expect(detail?.detail).toBeNull();
+  });
+
+  it('TP1: journey progress (days_delta 0 included, arrival fields optional) and detection slots', () => {
+    expect(FIXTURE.journey?.days_delta).toBe(0);
+    expect(FIXTURE.journey?.arrived).toBeUndefined();
+    expect(FIXTURE.journey?.travel_check.outcome).toBe('failure');
+    expect(FIXTURE.detection?.table).toBe('detection_scenes');
+    const arrival: NarrativePackage = {
+      ...FIXTURE,
+      dice: null,
+      oracle: null,
+      detection: null,
+      journey: { days_delta: 0, arrived: true, days_total: 6, travel_check: { outcome: 'weak' } },
+    };
+    expect(arrival.journey?.days_total).toBe(6);
+    // A package without the TP1 slots is still a valid package (additive extension).
+    const { journey: _j, detection: _d, ...legacy } = FIXTURE;
+    const stillValid: NarrativePackage = legacy;
+    expect(stillValid.intent).toBe('journey');
   });
 
   it('clarifying questions support both modes (Q2); options present iff mode=options', () => {
