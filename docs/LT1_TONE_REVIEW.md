@@ -58,3 +58,17 @@
 - stoplist terms 1-9: confirmed at prepared severity (term 8 = warn, term 9 = block)
 - stoplist term 10 (time-inflation): raised warn -> block
 - seed note: high-frequency copula parasite dropped (noisy as warn) -> handled in evals seed by CCD
+
+## Sign-off (LT1 tone amendment: sec 1 person and tense, A4.2)
+
+- reviewer: Ivan
+- date: 2026-09-27
+- verdict: ACCEPTED
+- change: sec 1 (register) += «Лицо и время. Второе лицо («ты»), прошедшее время повествования;
+  текущее положение в конце сцены — допустимо в настоящем.»
+- basis: Ivan's decision 27.09 in the reviewer chat, on the L4 full-cycle transcripts (opus 9/9
+  second person «ты», sonnet 8/9 third person «он»); Keeper v0.2 §5 points here.
+- scope: tone.md prose only; tone.stoplist.json and the speech examples (dogfood) unchanged;
+  pack_version not bumped (tone.md is a sidecar outside manifest.json).
+- note: tone.md is appended to BOTH the Keeper and the judge system prompts, so the L4
+  calibration re-run (judge v0.2) covers this change.
