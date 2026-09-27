@@ -104,7 +104,7 @@ describe('suite runner (A3.3)', () => {
       j.dark.badchoice     bad_choice/2/failure           92/400..800!     clean     -   -   -   -   -   100 | -
       j.dark.despair       despair/5/failure              92/400..800!     clean     -   -   -   -   -   100 | -
       j.dark.misfortune    terrible_misfortune/3/failure  92/400..800!     clean     -   -   -   -   -   100 | -
-      j.dark.significant   despair/1/weak                 92/400..800!     clean     -   -   -   -   -   100 | -
+      j.dark.significant   despair/1/-                    92/400..800!     clean     -   -   -   -   -   100 | -
       j.dark.midjourney    mishap/4/failure               92/400..800!     clean     -   -   -   -   -   100 | -
 
       specificity  mean - min - (n 0)
@@ -342,12 +342,6 @@ describe('suite runner (A3.3)', () => {
       intent: journey
       scene: journey
       length_target: 400..800 chars
-      ## dice
-      feat_symbol: null
-      success_icons: 0
-      total: 13
-      target_number: 13
-      outcome: weak
       ## oracle
       table: journey_scenes
       result_ref: despair
@@ -503,7 +497,7 @@ describe('suite runner (A3.3)', () => {
     expect(new Set(report.transcripts.map((t) => JSON.stringify(t.package))).size).toBe(seeds.length);
   });
 
-  it("formatSuite marks the length column with '!' only when prose is outside length_target", async () => {
+  it("formatSuite's '!' length mark is the verdict's budgetWarn (package bounds via runScenario)", async () => {
     const PKG: NarrativePackage = { intent: 'journey', scene: 'journey', length_target: { min_chars: 400, max_chars: 800 } };
     const inRange = `${CLEAN_PROSE} `.repeat(6).trim(); // 6 x 92 chars + 5 spaces
     const seeds: Seed[] = [
@@ -515,13 +509,20 @@ describe('suite runner (A3.3)', () => {
       keeper: new ScriptedKeeper([CLEAN_PROSE, inRange]),
       judge: new DeterministicJudge(),
     });
+    expect(report.transcripts.map((t) => t.verdict.budgetWarn)).toEqual([true, false]);
     const rows = formatSuite(report).split('\n');
     const short = rows.find((l) => l.startsWith('short')) ?? '';
     const fits = rows.find((l) => l.startsWith('fits')) ?? '';
     expect(short).toContain(`${CLEAN_PROSE.length}/400..800!`);
     expect(fits).toContain(`${inRange.length}/400..800 `);
-    expect(inRange.length).toBeGreaterThanOrEqual(400);
-    expect(inRange.length).toBeLessThanOrEqual(800);
+
+    // The mark reads the verdict, not the prose length: a hand-built out-of-range transcript with
+    // budgetWarn false gets no '!', and with budgetWarn true it does.
+    const quiet = tx('quiet', { aggregate: null }); // prose 'x' (1 char), budgetWarn false
+    const loud: Transcript = { ...quiet, scenarioId: 'loud', verdict: { ...quiet.verdict, budgetWarn: true } };
+    const hand = formatSuite({ transcripts: [quiet, loud], summary: summarizeSuite([quiet, loud]) }).split('\n');
+    expect(hand.find((l) => l.startsWith('quiet'))).toContain('1/400..800 ');
+    expect(hand.find((l) => l.startsWith('loud'))).toContain('1/400..800!');
   });
 
   it('suitePass boundary: passRate exactly SUITE_PASS_RATE passes (4/5), below fails (3/5)', () => {

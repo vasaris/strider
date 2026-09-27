@@ -18,13 +18,23 @@
 //                is NOT embedded here. It is pack-side content under its own gates
 //                (content-packs/kv/tone.md) -- DEFERRED LT1 -- and is loaded as data,
 //                never hardcoded in this source. See VK_ADDENDUM_SLOT below.
+//  - `mixed_script` (A4.1) : a STRUCTURAL check, not a phrase stop-list. A token is a maximal
+//                run of letters/marks/digits (/[\p{L}\p{M}\p{N}]+/u; hyphen, apostrophe,
+//                punctuation and whitespace split tokens). Only LETTERS count toward a script:
+//                digits, number forms (e.g. Roman numerals, Script=Latin) and marks (e.g.
+//                Cyrillic titlo, Script=Cyrillic) are neutral but belong to the token. A token
+//                holding at least one Latin LETTER and at least one Cyrillic LETTER (e.g. a
+//                Latin-homoglyph word like 'papo' + 'ротнике') is a block: it is a generation
+//                glitch, never register. Latin words standing alone
+//                among Cyrillic ('XIX век', 'Bree') are fine. Greek homoglyphs: a Stage 5 note.
+//                Appended after all lists, so existing orderings do not move.
 //
 // SEVERITY is per-entry (StopEntry.severity), falling back to the list default. Severity is
 // thus a property of the term along the WHOLE path -- including the VK addendum loaded from
 // tone.md, whose curated per-entry severity (e.g. избранный=warn) is honored, not flattened.
 
 export type Severity = 'block' | 'warn';
-export type ListId = 'calque' | 'slop_ru' | 'slop_en' | 'register_parasite' | 'vk_addendum';
+export type ListId = 'calque' | 'slop_ru' | 'slop_en' | 'register_parasite' | 'vk_addendum' | 'mixed_script';
 
 export interface StopEntry {
   readonly term: string;
@@ -125,6 +135,7 @@ const LIST_DEFAULT_SEVERITY: Readonly<Record<ListId, Severity>> = {
   slop_en: 'warn',
   register_parasite: 'warn',
   vk_addendum: 'block',
+  mixed_script: 'block',
 };
 
 /** Unicode-aware loose word boundary: term not glued to another letter either side. */
@@ -147,10 +158,34 @@ function scanList(text: string, list: ListId, entries: readonly StopEntry[]): Vi
   return out;
 }
 
+const TOKEN = /[\p{L}\p{M}\p{N}]+/gu;
+// Letter-only script tests: the lookahead restricts each match to \p{L}, so Latin number forms
+// (Nl) and Cyrillic combining marks (Mn) never count toward a script.
+const LATIN_LETTER = /(?=\p{L})\p{Script=Latin}/u;
+const CYRILLIC_LETTER = /(?=\p{L})\p{Script=Cyrillic}/u;
+
+/** Structural check (see header): every token mixing Latin and Cyrillic letters, in offset order. */
+export function scanMixedScript(text: string): Violation[] {
+  const out: Violation[] = [];
+  for (const m of text.matchAll(TOKEN)) {
+    const token = m[0];
+    if (LATIN_LETTER.test(token) && CYRILLIC_LETTER.test(token)) {
+      out.push({
+        list: 'mixed_script',
+        term: token,
+        reason: 'Latin and Cyrillic letters in one token',
+        severity: LIST_DEFAULT_SEVERITY.mixed_script,
+        index: m.index,
+      });
+    }
+  }
+  return out;
+}
+
 /**
  * Scan prose against the seed stop-lists. `vkAddendum` is the pack-loaded VK list
  * (LT1); pass it through once tone.md exists. Returns every match found, ordered by
- * list then offset. An empty array means the seed found nothing -- NOT that the prose
+ * list then offset, then the mixed_script tokens (offset order). An empty array means the seed found nothing -- NOT that the prose
  * is clean (the LLM judge in 2.3 covers what regex cannot).
  */
 export function scanProse(
@@ -166,11 +201,12 @@ export function scanProse(
   if (vkAddendum) {
     violations.push(...scanList(text, 'vk_addendum', vkAddendum));
   }
+  violations.push(...scanMixedScript(text)); // structural bucket, after all lists
   return violations;
 }
 
 /** True iff the prose trips any 'block'-severity entry (a calque, a block-tagged purple
- *  phrase, or a block VK-addendum term). Severity is per-entry, read off each match. */
+ *  phrase, a block VK-addendum term, or a mixed-script token). Severity is per-entry, read off each match. */
 export function hasBlockingSlop(
   text: string,
   vkAddendum: readonly StopEntry[] | null = VK_ADDENDUM_SLOT,

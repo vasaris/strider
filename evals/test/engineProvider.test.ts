@@ -101,4 +101,12 @@ describe('engine provider (live engine -> extractTurn -> package)', () => {
     expect(meeting.pkg.patch).toEqual({});
     expect(renderNarrativePackage(meeting.pkg)).not.toContain('## patch');
   });
+
+  it('a significant encounter carries no dice: the travel check is never surfaced (A4.1)', () => {
+    const t = captureTurn(env, journeyOf('j.dark.significant'));
+    expect(t.record.sceneCheck).toBeNull();
+    expect(t.record.travelCheck).not.toBeNull(); // the engine did roll travel ...
+    expect(t.pkg.dice).toBeNull(); // ... but the package does not carry it
+    expect(renderNarrativePackage(t.pkg)).not.toContain('## dice');
+  });
 });

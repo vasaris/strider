@@ -1,6 +1,7 @@
 import type { CheckResult, HeroState, JourneyEvent, StepRecord } from '@brodyazhnik/engine';
 import { describe, expect, it } from 'vitest';
 import { buildNarrativePackage, extractTurn } from '../src/provider.js';
+import { renderNarrativePackage } from '../src/render.js';
 
 // Minimal hero fixture; only the fields diffHeroState reads matter for these tests.
 function hero(overrides: Partial<HeroState> = {}): HeroState {
@@ -74,7 +75,7 @@ describe('extractTurn (turn-producer: engine step -> EngineTurnResult)', () => {
 
   it('maps every degree tier and failure', () => {
     const mk = (c: Partial<CheckResult>) =>
-      extractTurn(hero(), hero(), { events: [], travelCheck: check(c), sceneCheck: null }).dice?.outcome;
+      extractTurn(hero(), hero(), { events: [sceneEvent], travelCheck: check(), sceneCheck: check(c) }).dice?.outcome;
     expect(mk({ outcome: 'failure', degree: null })).toBe('failure');
     expect(mk({ degree: 'success' })).toBe('weak');
     expect(mk({ degree: 'great_success' })).toBe('strong');
@@ -82,9 +83,13 @@ describe('extractTurn (turn-producer: engine step -> EngineTurnResult)', () => {
   });
 
   it('maps feat symbol (eye / gandalf / none) and omits total when null', () => {
-    const eye = extractTurn(hero(), hero(), { events: [], travelCheck: check({ isEyeOnFeat: true }), sceneCheck: null });
+    const eye = extractTurn(hero(), hero(), { events: [sceneEvent], travelCheck: check(), sceneCheck: check({ isEyeOnFeat: true }) });
     expect(eye.dice?.feat_symbol).toBe('eye');
-    const gandalf = extractTurn(hero(), hero(), { events: [], travelCheck: check({ autoSuccess: true, total: null }), sceneCheck: null });
+    const gandalf = extractTurn(hero(), hero(), {
+      events: [sceneEvent],
+      travelCheck: check(),
+      sceneCheck: check({ autoSuccess: true, total: null }),
+    });
     expect(gandalf.dice?.feat_symbol).toBe('gandalf');
     expect('total' in (gandalf.dice ?? {})).toBe(false); // total omitted (contract is number-only)
   });
@@ -92,17 +97,39 @@ describe('extractTurn (turn-producer: engine step -> EngineTurnResult)', () => {
   it('derives the patch from a prev/next hero diff (only non-zero deltas + condition transitions)', () => {
     const prev = hero();
     const next = hero({ fatigue: 3, eye: { awareness: 1, initial: 0 }, wounded: true });
-    const turn = extractTurn(prev, next, { events: [], travelCheck: check(), sceneCheck: null });
+    const turn = extractTurn(prev, next, { events: [sceneEvent], travelCheck: check(), sceneCheck: check() });
     expect(turn.patch).toEqual({ fatigue_delta: 3, eye_delta: 1, conditions_gained: ['wounded'] });
   });
 
-  it('prefers the scene check over the travel check for the salient die', () => {
+  it('the travel check is never surfaced: dice are the scene check only (A4.1)', () => {
     const record: StepRecord = {
       events: [sceneEvent],
-      travelCheck: check({ targetNumber: 99 }), // travel TN
-      sceneCheck: check({ targetNumber: 14 }), // scene TN -> this one wins
+      travelCheck: check({ targetNumber: 99, outcome: 'failure', degree: null }), // travel roll
+      sceneCheck: check({ targetNumber: 14 }), // scene roll -> the only dice source
     };
-    expect(extractTurn(hero(), hero(), record).dice?.target_number).toBe(14);
+    const dice = extractTurn(hero(), hero(), record).dice;
+    expect(dice?.target_number).toBe(14);
+    expect(dice?.outcome).toBe('weak');
+  });
+
+  it('a significant encounter (no scene check) carries no dice, even with a travel check (A4.1)', () => {
+    const significant: JourneyEvent = {
+      kind: 'scene',
+      sceneType: 'despair',
+      detailScene: 'servants of the Enemy',
+      detail: { face: 1, scene: 'servants of the Enemy', prompt: 'a significant encounter', skill: null, significantEncounter: true },
+      skill: null,
+      significantEncounter: true,
+      checkOutcome: null,
+      fatigueGained: 2,
+      appliedOps: [],
+      eyeDelta: 0,
+    };
+    const record: StepRecord = { events: [significant], travelCheck: check({ targetNumber: 13 }), sceneCheck: null };
+    const turn = extractTurn(hero(), hero({ fatigue: 2 }), record);
+    expect(turn.dice).toBeNull();
+    expect(turn.sceneDetail?.significantEncounter).toBe(true);
+    expect(renderNarrativePackage(buildNarrativePackage(turn))).not.toContain('## dice');
   });
 
   it('feeds buildNarrativePackage end-to-end (turn-producer -> package)', () => {
@@ -114,11 +141,18 @@ describe('extractTurn (turn-producer: engine step -> EngineTurnResult)', () => {
     expect(pkg.journal_facts).toEqual([]); // F-journal
   });
 
-  it('a travel-only (arrival) step: no scene oracle, dice from the travel check', () => {
-    const record: StepRecord = { events: [], travelCheck: check({ degree: 'success' }), sceneCheck: null };
+  it('the arrival step: no scene oracle and no dice (the travel check is not surfaced; A4.1)', () => {
+    const record: StepRecord = {
+      events: [
+        { kind: 'travel_check', outcome: 'success', advance: 4, remainingAfter: 0, eyeDelta: 0 },
+        { kind: 'arrival', durationDays: 7 },
+      ],
+      travelCheck: check({ degree: 'success' }),
+      sceneCheck: null,
+    };
     const turn = extractTurn(hero(), hero(), record);
     expect(turn.oracleTable).toBeUndefined();
     expect(turn.sceneDetail).toBeUndefined();
-    expect(turn.dice?.outcome).toBe('weak');
+    expect(turn.dice).toBeNull();
   });
 });

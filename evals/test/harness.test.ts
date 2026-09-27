@@ -1,5 +1,6 @@
 import { buildNarrativePackage, type EngineTurnResult, type NarrativePackage } from '@brodyazhnik/orchestrator';
 import { describe, expect, it } from 'vitest';
+import type { StopEntry } from '../src/antislop.js';
 import { DeterministicJudge } from '../src/harness/judge.js';
 import { StubKeeper } from '../src/harness/keeper.js';
 import { fixtureProvider, runScenario } from '../src/harness/run.js';
@@ -20,6 +21,8 @@ const PKG: NarrativePackage = {
 // Clean, sensory, in-register prose (leads with touch/sound/smell; no calque/cliche/VK).
 const CLEAN_PROSE =
   'Тропа вильнула к ольшанику; под сапогом хрустнул ледок, и потянуло дымом от дальнего костра.';
+
+const VK_EMPTY: readonly StopEntry[] = [];
 
 describe('eval harness: cycle plumbing', () => {
   it('runs seed -> provider -> stub keeper -> deterministic judge and passes clean prose', async () => {
@@ -53,9 +56,9 @@ describe('eval harness: cycle plumbing', () => {
       packageProvider: fixtureProvider(PKG),
       keeper: new StubKeeper(CLEAN_PROSE),
       judge: new DeterministicJudge(),
-      ctx: { lengthTarget: { minChars: 400, maxChars: 800 } },
     });
-    expect(t.verdict.budgetWarn).toBe(true); // CLEAN_PROSE is far under 400 chars
+    // bounds come from PKG.length_target (400..800) since A4.1; CLEAN_PROSE is far under 400
+    expect(t.verdict.budgetWarn).toBe(true);
     expect(t.verdict.pass).toBe(true); // anti-slop clean -> still passes
   });
 
@@ -170,7 +173,7 @@ describe('eval harness: cycle plumbing', () => {
               "status": "pending",
             },
           },
-          "budgetWarn": false,
+          "budgetWarn": true,
           "pass": true,
         },
       }
@@ -193,12 +196,28 @@ describe('eval harness: cycle plumbing', () => {
       packageProvider: fixtureProvider(PKG),
       keeper: new StubKeeper(CLEAN_PROSE),
       judge: recording,
-      ctx: { lengthTarget: { minChars: 400, maxChars: 800 }, package: decoy },
+      ctx: { lengthTarget: { minChars: 1, maxChars: 2 }, package: decoy, vkAddendum: VK_EMPTY },
     });
     expect(seen).toHaveLength(1);
     expect(seen[0]?.package).not.toBe(decoy);
     expect(seen[0]?.package).toBe(t.package); // the very object in the transcript
     expect(seen[0]?.package).toBe(PKG); // ... which is the provider's object
-    expect(seen[0]?.lengthTarget).toEqual({ minChars: 400, maxChars: 800 }); // caller ctx preserved
+    // lengthTarget: the package's bounds win over the caller's (RECONCILE 3 closed, A4.1)
+    expect(seen[0]?.lengthTarget).toEqual({ minChars: 400, maxChars: 800 });
+    expect(seen[0]?.vkAddendum).toBe(VK_EMPTY); // other caller ctx fields are preserved
+  });
+
+  it('length bounds come from the package, not a decoy ctx.lengthTarget (RECONCILE 3, A4.1)', async () => {
+    const long = Array.from({ length: 10 }, () => CLEAN_PROSE).join(' ').slice(0, 918);
+    expect(long.length).toBe(918);
+    const t = await runScenario({
+      seed: SEED,
+      packageProvider: fixtureProvider(PKG), // length_target 400..800
+      keeper: new StubKeeper(long),
+      judge: new DeterministicJudge(),
+      ctx: { lengthTarget: { minChars: 0, maxChars: 10000 } }, // decoy: would accept 918
+    });
+    expect(t.verdict.budgetWarn).toBe(true); // 918 > 800 -> WARN
+    expect(t.verdict.pass).toBe(true); // a WARN, never a block
   });
 });

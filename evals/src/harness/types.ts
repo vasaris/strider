@@ -7,14 +7,16 @@ import type { StopEntry, Violation } from '../antislop.js';
 
 // ============================================================================
 // RECONCILE -- mechanical checklist, not a drift hunt. Cross-package items 1/4
-// are CLOSED at ws-b (the workspace wires the real types); the rest stay, each
-// gated on a later deliverable:
+// are CLOSED at ws-b (the workspace wires the real types) and 3 at A4.1; the rest
+// stay, each gated on a later deliverable:
 //   1. CLOSED (ws-b): ScenarioPackage alias -> orchestrator NarrativePackage. The
 //      package the Keeper receives is now the real contract type.
 //   2. KeeperOutput.questions: string[] -> orchestrator ClarifyingQuestion[]. OPEN --
 //      adjacent to the real KeeperOutput (full-cycle/AnthropicKeeper), not ws-b.
-//   3. lengthTarget: lives in JudgeContext here -> PACKAGE-sourced once tone.md owns the
-//      bounds. OPEN -- blocked on 2.3.c (length relocation into tone.md) + a real package.
+//   3. CLOSED (A4.1): lengthTarget is PACKAGE-sourced -- runScenario fills the judge's
+//      ctx.lengthTarget from pkg.length_target (the package wins over a caller value). The
+//      NUMBERS stay provisional in orchestrator provider.ts until tone.md owns them
+//      (R-activation(tone.md) still OPEN).
 //   4. CLOSED (ws-b): packageProvider fixture -> orchestrator buildNarrativePackage (the
 //      real engine-turn -> package mapper; lives + is tested in orchestrator/, imported
 //      here via the workspace, not duplicated).
@@ -130,7 +132,9 @@ export interface LlmClient {
 export interface JudgeContext {
   /** Pack VK stop-list (LT1). Null until tone.md is activated; the seed still scans. */
   readonly vkAddendum?: readonly StopEntry[] | null;
-  /** Prose length bounds (RECONCILE 3: provisional here; package-sourced at 2.4). */
+  /** Prose length bounds -> budgetWarn (a WARN, never a block). runScenario sources them from
+   *  the package's length_target and they win over a caller value (RECONCILE 3 closed, A4.1);
+   *  direct judge.score callers (e.g. calibration) may still pass their own. */
   readonly lengthTarget?: { readonly minChars: number; readonly maxChars: number } | null;
   /** The package the Keeper received (decision 27.09 #1, A3.2). When set, LlmJudge renders it
    *  into the user message as a `ВХОДНОЙ ПАКЕТ:` block before the prose, so `accuracy` is scored

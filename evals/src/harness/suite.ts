@@ -121,12 +121,12 @@ function sceneCell(pkg: NarrativePackage): string {
   return `${o?.result_ref ?? '-'}/${num(o?.detail?.row?.face ?? null)}/${pkg.dice?.outcome ?? '-'}`;
 }
 
-/** Prose length vs package.length_target -- INFORMATIONAL ('!' when outside). The verdict's
- *  budgetWarn is untouched (RECONCILE 3 stays open: length is package-sourced here, ctx there). */
-function lenCell(prose: string, pkg: NarrativePackage): string {
-  const { min_chars: min, max_chars: max } = pkg.length_target;
-  const out = prose.length < min || prose.length > max ? '!' : '';
-  return `${prose.length}/${min}..${max}${out}`;
+/** Prose length vs package.length_target; '!' is the verdict's budgetWarn (a WARN, never a block).
+ *  Since RECONCILE 3 closed (A4.1) runScenario feeds the judge the package's bounds, so the mark and
+ *  the displayed bounds agree. */
+function lenCell(t: Transcript): string {
+  const { min_chars: min, max_chars: max } = t.package.length_target;
+  return `${t.output.prose.length}/${min}..${max}${t.verdict.budgetWarn ? '!' : ''}`;
 }
 
 /** Human-readable table + summary lines. */
@@ -141,7 +141,7 @@ export function formatSuite(report: SuiteReport): string {
     const agg = v.aggregate ? `${v.aggregate.score}(${v.aggregate.pass ? 'Y' : 'N'})` : '-';
     const err = v.error ? ` ERR ${v.error}` : '';
     lines.push(
-      `${pad(t.scenarioId, 20)} ${pad(sceneCell(t.package), 30)} ${pad(lenCell(t.output.prose, t.package), 16)} ${pad(det, 9)} ${axes}| ${agg}${err}`,
+      `${pad(t.scenarioId, 20)} ${pad(sceneCell(t.package), 30)} ${pad(lenCell(t), 16)} ${pad(det, 9)} ${axes}| ${agg}${err}`,
     );
   }
   const s = report.summary;

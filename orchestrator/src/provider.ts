@@ -107,9 +107,14 @@ export function buildNarrativePackage(turn: EngineTurnResult): NarrativePackage 
 // ============================================================================
 // TURN-PRODUCER (A1.b, track A) -- closes the R-workspace-1 residue for dice + patch.
 // extractTurn maps one engine journey step (prev hero, next hero, StepRecord) to the
-// orchestrator's EngineTurnResult PROJECTION. It NEVER re-rolls: dice come from the
-// CheckResults the engine already rolled this step (StepRecord, channel B), patch from a
+// orchestrator's EngineTurnResult PROJECTION. It NEVER re-rolls: dice come from the scene
+// CheckResult the engine already rolled this step (StepRecord, channel B), patch from a
 // prev/next hero diff, and the SD1 detail straight off the scene event.
+//
+// Dice = the SCENE check only (A4.1). The travel check is never surfaced: a step without a
+// scene check (a significant encounter, the arrival step) carries no dice, so the Keeper cannot
+// narrate the travel roll as the scene's result. The travel check, journey days, arrival and
+// detection are to surface together later (DEFERRED TP1).
 //
 // Scope: journey turns only (F-turn-source: journey-step is the Stage-2-exit source;
 // combat/council producers are later). journalFacts stays [] (F-journal: arch sec 2.4
@@ -185,16 +190,15 @@ function diffHeroState(prev: HeroState, next: HeroState): StatePatchSummary {
 /**
  * Build an EngineTurnResult from one journey step. `record.events` is the exact slice the
  * engine appended this step (single source of truth); the SD1 detail is read off the scene
- * event verbatim. The salient die for the package is the SCENE check when the step rolled one
- * (that is what the Keeper narrates), else the travel check.
+ * event verbatim. Dice are the SCENE check only (that is what the Keeper narrates); a step with
+ * no scene check has dice null -- the travel check is never surfaced (DEFERRED TP1).
  */
 export function extractTurn(prev: HeroState, next: HeroState, record: StepRecord): EngineTurnResult {
   const sceneEvent = record.events.find((e) => e.kind === 'scene');
-  const check = record.sceneCheck ?? record.travelCheck;
   const base: EngineTurnResult = {
     intent: 'journey',
     scene: 'journey',
-    dice: check === null ? null : mapDice(check),
+    dice: record.sceneCheck === null ? null : mapDice(record.sceneCheck),
     patch: diffHeroState(prev, next),
     journalFacts: [], // F-journal: context-compression is Stage 3+ (arch sec 2.4)
   };
