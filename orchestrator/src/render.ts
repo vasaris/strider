@@ -8,8 +8,12 @@
 //   - ABSENT -> OMITTED: a null/undefined field, an empty object (e.g. an unchanged-turn
 //     patch `{}`) or an empty list emits nothing -- no heading, no "none"/"-" placeholder --
 //     so the Keeper is never shown mechanics the package does not carry.
-//   - OPAQUE VALUES VERBATIM: scene/prompt/text/notes are pack/engine content and pass
-//     through unquoted and unescaped.
+//   - OPAQUE VALUES VERBATIM, SPOOF-PROOF (A2.1): every string value (scene/prompt/text/notes/
+//     journal text/list elements...) passes through unquoted, unescaped and untrimmed. A
+//     single-line value renders inline (`key: value`, `- value`). A multi-line value renders
+//     as a block scalar: `key: |` / `- |`, then every value line (the first included) indented
+//     by exactly 4 spaces -- so no value line can start at column 0 and pass for package
+//     structure (section-spoof guard). Lossless: strip the 4-space indent, join with '\n'.
 //   - DETERMINISTIC: sections and fields follow a fixed order declared in code (contract
 //     declaration order), never Object.keys of the input.
 //
@@ -19,16 +23,26 @@ import type { DiceResult, NarrativePackage, OracleResult, StatePatchSummary } fr
 
 type Scalar = string | number | boolean | null | undefined;
 
-/** One `key: value` line, or nothing when the value is undefined. null renders as `null`. */
-function field(key: string, value: Scalar): string[] {
-  if (value === undefined) return [];
-  return [`${key}: ${value === null ? 'null' : String(value)}`];
+const BLOCK_INDENT = '    ';
+
+/** The ONE path for every rendered value: `<prefix> <value>` when single-line; otherwise a block
+ *  scalar `<prefix> |` followed by each value line indented by BLOCK_INDENT. Never trims. */
+function scalar(prefix: string, value: string): string[] {
+  return value.includes('\n')
+    ? [`${prefix} |`, ...value.split('\n').map((l) => BLOCK_INDENT + l)]
+    : [`${prefix} ${value}`];
 }
 
-/** A scalar list joined with ', '; nothing when absent or empty. */
+/** A `key: value` field (via scalar), or nothing when the value is undefined. null renders as `null`. */
+function field(key: string, value: Scalar): string[] {
+  if (value === undefined) return [];
+  return scalar(`${key}:`, value === null ? 'null' : String(value));
+}
+
+/** A scalar list joined with ', ' (via field); nothing when absent or empty. */
 function listField(key: string, values: readonly (string | number)[] | undefined): string[] {
   if (values === undefined || values.length === 0) return [];
-  return [`${key}: ${values.join(', ')}`];
+  return field(key, values.join(', '));
 }
 
 /** A heading followed by its body, or nothing when the body is empty. */
@@ -79,14 +93,15 @@ function renderPatch(p: StatePatchSummary): string[] {
     ...field('eye_delta', p.eye_delta),
     ...listField('conditions_gained', p.conditions_gained),
     ...listField('conditions_cleared', p.conditions_cleared),
-    ...(notes.length > 0 ? ['notes:', ...notes.map((n) => `- ${n}`)] : []),
+    ...(notes.length > 0 ? ['notes:', ...notes.flatMap((n) => scalar('-', n))] : []),
   ];
 }
 
 /**
  * Render a NarrativePackage as sectioned text: `## turn`, `## dice`, `## oracle`, `## patch`,
  * `## lore`, `## journal` in that fixed order, each emitted only when it has a body line.
- * Lines are joined with '\n'; no blank lines, no trailing newline. Pure and deterministic.
+ * Lines are joined with '\n'; no blank lines (an empty line inside a block value is exactly
+ * BLOCK_INDENT), no trailing newline. Pure and deterministic.
  */
 export function renderNarrativePackage(pkg: NarrativePackage): string {
   const lt = pkg.length_target;
@@ -103,7 +118,7 @@ export function renderNarrativePackage(pkg: NarrativePackage): string {
       '## lore',
       (pkg.lore_chunks ?? []).flatMap((c) => [...field('chunk_id', c.chunk_id), ...field('text', c.text)]),
     ),
-    ...section('## journal', (pkg.journal_facts ?? []).map((f) => `${f.kind}: ${f.text}`)),
+    ...section('## journal', (pkg.journal_facts ?? []).flatMap((f) => field(f.kind, f.text))),
   ];
   return lines.join('\n');
 }
