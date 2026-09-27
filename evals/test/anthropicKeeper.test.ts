@@ -5,7 +5,7 @@ import { renderNarrativePackage, type NarrativePackage } from '@brodyazhnik/orch
 import { describe, expect, it } from 'vitest';
 import { AnthropicKeeper, buildKeeperUser } from '../src/harness/anthropicKeeper.js';
 import { DeterministicJudge } from '../src/harness/judge.js';
-import { buildKeeperSystem } from '../src/harness/keeperSystem.js';
+import { buildJudgeSystem, buildKeeperSystem } from '../src/harness/keeperSystem.js';
 import { fixtureProvider, runScenario } from '../src/harness/run.js';
 import type { KeeperInput, LlmClient, LlmRequest, Seed } from '../src/harness/types.js';
 
@@ -113,6 +113,11 @@ describe('AnthropicKeeper plumbing (mock client; no key/network)', () => {
     const calibratePath = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'calibrate.mts');
     const src = readFileSync(calibratePath, 'utf8');
     expect(src).toContain('`${judgePrompt}' + SEP.replaceAll('\n', '\\n') + '${toneMd}`');
+  });
+
+  it('buildJudgeSystem uses the same tone separator as buildKeeperSystem (A3.3)', () => {
+    expect(buildJudgeSystem('J', 'T')).toBe(`J${SEP}T`);
+    expect(buildJudgeSystem('J', 'T')).toBe(buildKeeperSystem('J', 'T'));
   });
 
   it('propagates an llm.complete rejection unchanged (nothing swallowed)', async () => {
