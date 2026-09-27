@@ -79,7 +79,8 @@ deferred-вердикт исправлен); открытый остаток —
       тесты; **Опция 2 — без кросс-пакетного импорта**
     - ◑ 2.4.p3 Инъекция в harness-шов (структурный engine-derived провайдер) + RECONCILE-чек-лист
   - **live (после `tone.md` + workspace):**
-    - 2.4.L1 Реальные engine-типы (RECONCILE на workspace) + `AnthropicKeeper`
+    - ✅ 2.4.L1 Реальные engine-типы (RECONCILE на workspace: ws-b `050fe18`, A1 `6c4cd2c`) +
+      `AnthropicKeeper`-плумбинг (A2 `61df2ce`, A2.1 `5790ae5`); живой прогон — A3
     - 2.4.L2 LLM-судья (5 осей + замена `anti_slop`), калибровка к ≥ 80
     - 2.4.L3 Suite-раннер (5–10 golden-сценариев, агрегат pass-rate ≥ 80) + цикл хода
     - 2.4.L4 End-to-end CLI-сцена; критерий выхода + handoff + проверка гейта

@@ -1,12 +1,18 @@
 # HANDOFF_STAGE3 — самодостаточный вход в Stage 3
 
-Точка входа для пересозданных чатов. HEAD = **`050fe18`** (Stage 3 opener закрыт: ws-a+ws-b
-поверх `ead78d2`). **Локальный** HEAD опережает `origin/main` на опенер-коммиты до пуша (пуш —
-только по явной отмашке Ивана). Все факты ниже сверены по репо, не по памяти.
+Точка входа для пересозданных чатов. Код-HEAD = **`5790ae5`** (трек A: A1 + A2 + A2.1 поверх
+опенера Stage 3), сверху — docs-коммит с этим файлом. **Локальный** `main` опережает `origin/main`
+(опенер + трек A + docs) до пуша (пуш — только по явной отмашке Ивана). Все факты ниже сверены по
+репо, не по памяти.
 
 **Опенер Stage 3 (ВЫПОЛНЕН, см. §4):**
 - `a4fb135` feat(stage3): ws-a root npm workspace (topology only, zero behavior change)
 - `050fe18` feat(stage3): ws-b real cross-package imports (close R-workspace-2, partial R-workspace-1)
+
+**Трек A — выход Stage 2 / full-cycle (A1–A2.1 ВЫПОЛНЕНЫ, см. §4):**
+- `6c4cd2c` feat(stage3): A1 turn-producer (close R-WS1-RESIDUE; channel B step record + extractTurn)
+- `61df2ce` feat(stage3): A2 AnthropicKeeper plumbing (LlmClient seam, lossless package render, keeper system assembly, offline mock tests; keeper-smoke keyed-shell entry)
+- `5790ae5` fix(stage3): A2.1 render multi-line opaque values as indented block scalars (section-spoof guard)
 
 ---
 
@@ -59,12 +65,12 @@ anti-slop, eval-харнесс, плумбинг 2.4, LT1-скаффолд+ге�
 **чистом детерм. anti_slop** (B5 эпик-инфляция мимо regex поймана судьёй); зазор худший-хороший(82)
 / лучший-плохой(53) **≈ 29**; шкала 0–100 корректна.
 
-**Инварианты (сверены прогоном на `050fe18`, из корня workspace И по-пакетно):**
-- `engine/` — **389 тестов** зелёные; **Cyrillic CLEAN** (perl-скан `src/**/*.ts`); `dependencies: null`.
-- `evals/` — **44 теста** зелёные (офлайн, мок-клиент, без ключа/сети).
-- `orchestrator/` — **9 тестов** зелёные.
+**Инварианты (сверены прогоном на `5790ae5`, `test:all` / `typecheck:all` из корня workspace):**
+- `engine/` — **394 теста** зелёные; **Cyrillic CLEAN** (perl-скан `src/**/*.ts`); `dependencies: null`.
+- `orchestrator/` — **30 тестов** зелёные; `orchestrator/src` — **Cyrillic CLEAN** (тот же perl-скан).
+- `evals/` — **50 тестов** зелёные (офлайн, мок-клиент, без ключа/сети).
 - Пак `content-packs/kv/` — **`pack_version` 0.1.0**, детерминированная загрузка; 5 golden
-  стабильны (Stage 1; byte-identical через опенер).
+  стабильны (Stage 1; byte-identical через опенер; A1 — empty-diff; A2/A2.1 `engine/` не трогали).
 - Запуск: `npm run test:all` / `npm run typecheck:all` из корня (порядок engine→orchestrator→evals).
 
 ---
@@ -97,14 +103,21 @@ anti-slop, eval-харнесс, плумбинг 2.4, LT1-скаффолд+ге�
     + journalFacts + проекция `EngineTurnResult` → full-cycle; см. `docs/DEFERRED.md#R-WS1-RESIDUE` и §5.
   - Гейт B доказан: `@brodyazhnik/*` резолвятся в TS-исходник под tsc И vitest.
 
-**Следующее — трек A (критерий выхода Stage 2, full-cycle):**
+**Трек A (критерий выхода Stage 2, full-cycle):**
+- ✅ **A1** `6c4cd2c` — turn-producer: `extractTurn` (канал B `StepRecord`); `R-WS1-RESIDUE` закрыт.
+- ✅ **A2** `61df2ce` — `AnthropicKeeper` за `Keeper`-швом (инъекция `LlmClient`, как у `LlmJudge`;
+  `AnthropicLlmClient` — только в keyed-скриптах); lossless-рендер пакета `renderNarrativePackage`
+  (orchestrator; его же переиспользует 3.1.b); `buildKeeperSystem` (промпт + tone.md, байт-симметрично
+  сборке судьи); keyed-вход `evals/keeper-smoke.mts`.
+- ✅ **A2.1** `5790ae5` — многострочные opaque-значения рендерятся блочным скаляром (`ключ: |` +
+  строки с отступом 4 пробела): значение не может подделать структуру пакета.
+- ▶ **Следующее — A3:** suite-раннер (5–10 golden, агрегат ≥ 80) + полный цикл: реальный ход
+  (`extractTurn` → `buildNarrativePackage`) → `AnthropicKeeper` → судья на живом выводе **с пакетом**
+  (см. §5 «Решения ревьюера 27.09») → **критерий выхода Stage 2**; full-cycle floor.
 - **lore-активация (LT1, контент Ивана)** — lore-чанки в пак → `pack_version` 0.2.0; RAG-вход +
   тон-сторона полного цикла. Гейтит выход Stage 2.
-- **полный цикл** — turn-producer (закрытие `R-WS1-RESIDUE`) → `AnthropicKeeper` (за тем же
-  `Keeper`-швом, что StubKeeper) + реальный пакет → судья на живом выводе → **критерий выхода
-  Stage 2**. Сюда же suite-раннер (5–10 golden, агрегат ≥ 80) и full-cycle floor.
 
-**НЕ начинать** трек A / Keeper без явной отмашки Ивана — это его решение об открытии деливерабла.
+**НЕ начинать** A3 без явной отмашки Ивана — это его решение об открытии деливерабла.
 
 ---
 
@@ -130,15 +143,29 @@ anti-slop, eval-харнесс, плумбинг 2.4, LT1-скаффолд+ге�
     `summary` переселён в `Seed`/`Transcript`.
   - **`R-activation(tone.md)` — ОТКРЫТ.** `provisionalLengthFor` остаётся provisional;
     blocked on 2.3.c (перенос длин в tone.md).
-  Зеркало — `evals/src/harness/types.ts` RECONCILE: **1 и 4 сняты (ws-b)**; **2/3/5/6/7 на месте**.
+  Зеркало — `evals/src/harness/types.ts` RECONCILE: **1 и 4 сняты (ws-b)**; **2/3/5/6/7 на месте**
+  (5 — с пометкой A2: класс за швом, живой swap — A3).
 - **Per-entry severity** в стоп-листах (block/warn пер-запись; фразы=block, неоднозначные
   одиночные слова=warn) — решено, не пересматривать.
 - **`mean(6)` provisional; floor отложен до full-cycle калибровки.** `accuracy` не измерима на
   прозе-only; floor 80 завалил бы 3/6 хороших. `aggregateMean` остаётся как есть до реального
   пакета. Рубрику/`cases.ts`/порог НЕ тюнить (правка под 13 примеров = overfit).
 - **Ключ-путь (а)** — `ANTHROPIC_API_KEY` ТОЛЬКО из `process.env` в keyed-вкладке Ивана, **никогда
-  не входит в процесс агента**, не пишется/не логируется. `calibrate.mts` гардит наличие ключа
-  до любого вызова API.
+  не входит в процесс агента**, не пишется/не логируется. `calibrate.mts` и `keeper-smoke.mts`
+  гардят наличие ключа до любого вызова API; запускаются из `evals/` (см. §7).
+
+### Решения ревьюера 27.09 (запертые развилки A3 — не переоткрывать)
+1. **Судья получает пакет.** `JudgeContext` += опциональный `package?: NarrativePackage | null`;
+   `LlmJudge` рендерит его через `renderNarrativePackage` в user-сообщение блоком `ВХОДНОЙ ПАКЕТ:`
+   перед `ПРОЗА:`; без пакета поведение байт-идентично текущему (калибровочные кейсы не меняются).
+   Рубрику / `cases.ts` / порог НЕ тюнить.
+2. **`stop_reason` в `LlmClient` невидим — риск принят** (4096 токенов против целевых ≤ 1500 знаков);
+   пересмотр только по факту обрезки в прогоне. Не DEFERRED.
+3. **Модель Хранителя:** smoke — на дефолте `claude-opus-4-8`; на L4 — прогон в двух вариантах через
+   `KEEPER_MODEL` (Sonnet-класс по arch §8) — это и есть A/B; в запись калибровки внести заметку о
+   риске самопредпочтения при совпадении моделей Хранителя и судьи.
+4. **Рендер:** многострочные opaque-значения — блочный скаляр `|` + 4 пробела (A2.1); защита от
+   подделки структуры — на стороне рендера, а не гейта LT1.
 
 ---
 
@@ -150,6 +177,7 @@ anti-slop, eval-харнесс, плумбинг 2.4, LT1-скаффолд+ге�
 | **SD1** | Этап 2 → 2.4 | live-сюрфейсинг **opaque-row** целиком в `oracle.detail` пакета (механика и плумбинг сделаны) | гейтит полный путь `oracle.detail`; закрывается на workspace/full-cycle |
 | **RV1** | content-gate (не roadmap-этап) | image-сверка `source_text` 4 карт (структурный проход — все PASS; нужны сканы у владельца) | не блокирует движок; блокирует доверие к `verified:true` этих карт |
 | **MX1** | Этап 2 или 4 (низкий) | Advance-бонус на core-дальнем выходе из боя | не гейтит; косметика §3.7 |
+| **DD-DICE-FACES** | Stage 3.2.b | сырые грани (`feat_die`/`success_dice`) для UI-панели костей; `extractTurn` их намеренно не заполняет | не гейтит Хранителя и выход Stage 2; только UI |
 
 **Watch (не в списке DUE≤3, но рядом):** **HC1** (создание героя) — DUE Этап 4, но `DEFERRED.md`
 помечает «вероятно нужно в Этапе 3 (лист героя)»; в роадмапе — развилка 3.3 (по умолчанию держать
@@ -173,6 +201,9 @@ anti-slop, eval-харнесс, плумбинг 2.4, LT1-скаффолд+ге�
   извлечения, не с грязного дерева (воспроизводимость).
 - **ADR-001** — ревьюер ≠ автор: верифицирующий проход независим от пишущего (касается и
   контент-гейтов, и кода).
+- **Keyed-скрипты — из `evals/`**: `cd evals && npx tsx <script>.mts` (`calibrate.mts`,
+  `keeper-smoke.mts`). В корне workspace нет `tsx` (корневой `node_modules` — только
+  `@brodyazhnik`); `npx tsx` из корня не найдёт локальный и предложит скачать из registry.
 
 ---
 
@@ -180,6 +211,6 @@ anti-slop, eval-харнесс, плумбинг 2.4, LT1-скаффолд+ге�
 
 Сначала **ориентировка**: прочитать `CLAUDE.md` → `brodyazhnik-architecture-v1.md` →
 `docs/ROADMAP_SESSIONS.md` → `docs/DEFERRED.md` → **этот файл** → последний коммит; подтвердить
-порядок чтения, состояние (HEAD `ead78d2`, инварианты 389/44/9, pack 0.1.0) и эхо-вывести
-DEFERRED с DUE ≤ Stage 3. Задачу (workspace) давать **после** подтверждения ориентировки, тактом 1
-(скелет), через ревьюера.
+порядок чтения, состояние (код-HEAD `5790ae5` + docs-коммит, инварианты 394/30/50, pack 0.1.0)
+и эхо-вывести DEFERRED с DUE ≤ Stage 3. Задачу (A3) давать **после** подтверждения ориентировки,
+тактом 1 (скелет), через ревьюера.

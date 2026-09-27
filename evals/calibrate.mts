@@ -3,7 +3,7 @@
 // keyed shell:
 //
 //     export ANTHROPIC_API_KEY=...        # in your terminal; do NOT paste the key into chat/files
-//     npx tsx evals/calibrate.mts
+//     cd evals && npx tsx calibrate.mts      # tsx lives in evals/ (the workspace root has none)
 //
 // The key is read ONLY from process.env, never written/logged/printed. The raw report goes to
 // evals/calibration-report.json (gitignored). Bring that file's contents here for analysis --
@@ -20,7 +20,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
     'ANTHROPIC_API_KEY is not set in this shell.\n' +
       '  Run in your keyed terminal (do NOT paste the key into chat or any file):\n' +
       '    export ANTHROPIC_API_KEY=...\n' +
-      '    npx tsx evals/calibrate.mts\n',
+      '    cd evals && npx tsx calibrate.mts\n',
   );
   process.exit(1);
 }
