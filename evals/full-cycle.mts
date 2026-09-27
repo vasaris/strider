@@ -12,9 +12,11 @@
 // Env (all optional): KEEPER_MODEL, JUDGE_MODEL (both default claude-opus-4-8); SEEDS = comma-
 // separated suite ids to run a subset (an unknown id is an error that lists the valid ids).
 // The key is read ONLY from process.env, never written/logged/printed. Output:
-// evals/full-cycle-report.<keeper-model>.json (gitignored).
+// evals/full-cycle-report.keeper-<keeper prompt version>.judge-<judge prompt version>.
+// <keeper-model>.<UTC stamp>.json (gitignored; RP1: a new file per run, created exclusively --
+// never overwrites an earlier report).
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AnthropicKeeper } from './src/harness/anthropicKeeper.js';
@@ -25,6 +27,7 @@ import { LlmJudge } from './src/harness/llmJudge.js';
 import { formatSuite, runSuite } from './src/harness/suite.js';
 import { SUITE_JOURNEYS, toEngineSeeds } from './src/harness/suiteSeeds.js';
 import { loadVkAddendumFromPack } from './src/lt1gate.js';
+import { reportFileName, writeReportExclusive } from './src/reports.js';
 
 if (!process.env.ANTHROPIC_API_KEY) {
   console.error(
@@ -85,7 +88,15 @@ if (sameModel) {
   );
 }
 
-const out = resolve(here, `full-cycle-report.${keeperModel.replace(/[^A-Za-z0-9._-]/g, '_')}.json`);
+const out = resolve(
+  here,
+  reportFileName({
+    kind: 'full-cycle',
+    prompts: { keeper: KEEPER_PROMPT, judge: JUDGE_PROMPT },
+    model: keeperModel,
+    now: new Date(),
+  }),
+);
 const record = {
   keeperModel,
   judgeModel,
@@ -95,5 +106,5 @@ const record = {
   seeds: seeds.map((s) => s.id),
   report,
 };
-writeFileSync(out, `${JSON.stringify(record, null, 2)}\n`, 'utf8');
+writeReportExclusive(out, `${JSON.stringify(record, null, 2)}\n`);
 console.log(`\nFull-cycle report -> ${out} (gitignored).`);

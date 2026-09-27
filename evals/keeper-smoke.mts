@@ -10,15 +10,18 @@
 // files from import.meta.url, so the cwd does not matter otherwise.
 //
 // Optional: KEEPER_MODEL (default claude-opus-4-8). The key is read ONLY from process.env, never
-// written/logged/printed. The output goes to evals/keeper-smoke.json (gitignored). This is the
+// written/logged/printed. The output goes to
+// evals/keeper-smoke.keeper-<keeper prompt version>.<model>.<UTC stamp>.json (gitignored; RP1: a
+// new file per run, created exclusively -- never overwrites an earlier one). This is the
 // Keeper smoke only -- no judge here; the full cycle engine -> package -> Keeper -> judge is A3.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildNarrativePackage, type EngineTurnResult } from '@brodyazhnik/orchestrator';
 import { AnthropicLlmClient } from './src/harness/anthropicLlmClient.js';
 import { AnthropicKeeper } from './src/harness/anthropicKeeper.js';
 import { buildKeeperSystem } from './src/harness/keeperSystem.js';
+import { reportFileName, writeReportExclusive } from './src/reports.js';
 
 if (!process.env.ANTHROPIC_API_KEY) {
   console.error(
@@ -33,7 +36,8 @@ if (!process.env.ANTHROPIC_API_KEY) {
 const here = dirname(fileURLToPath(import.meta.url)); // evals/
 const repoRoot = resolve(here, '..');
 
-const keeperPrompt = readFileSync(resolve(repoRoot, 'prompts/keeper.system.v0.2.md'), 'utf8');
+const KEEPER_PROMPT = 'prompts/keeper.system.v0.2.md';
+const keeperPrompt = readFileSync(resolve(repoRoot, KEEPER_PROMPT), 'utf8');
 const toneMd = readFileSync(resolve(repoRoot, 'content-packs/kv/tone.md'), 'utf8');
 const systemPrompt = buildKeeperSystem(keeperPrompt, toneMd);
 
@@ -68,6 +72,6 @@ const output = await keeper.run({ systemPrompt, package: pkg });
 
 console.log(output.prose);
 
-const out = resolve(here, 'keeper-smoke.json');
-writeFileSync(out, `${JSON.stringify({ model, package: pkg, output }, null, 2)}\n`, 'utf8');
+const out = resolve(here, reportFileName({ kind: 'keeper-smoke', prompts: { keeper: KEEPER_PROMPT }, model, now: new Date() }));
+writeReportExclusive(out, `${JSON.stringify({ model, package: pkg, output }, null, 2)}\n`);
 console.log(`\nKeeper smoke -> ${out} (gitignored).`);

@@ -6,16 +6,19 @@
 //     cd evals && npx tsx calibrate.mts      # tsx lives in evals/ (the workspace root has none)
 //
 // The key is read ONLY from process.env, never written/logged/printed. The raw report goes to
-// evals/calibration-report.json (gitignored). Bring that file's contents here for analysis --
-// the first run is DIAGNOSTIC; do not tune the rubric off it without review.
+// evals/calibration-report.judge-<judge prompt version>.<judge model>.<UTC stamp>.json
+// (gitignored; RP1: a new file per run, created exclusively -- never overwrites an earlier
+// report). Bring that file's contents here for analysis -- the first run is DIAGNOSTIC; do not
+// tune the rubric off it without review.
 // A4.3: judge prompt v0.3; the deterministic gate runs with the live VK addendum (pack sidecar).
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AnthropicLlmClient } from './src/harness/anthropicLlmClient.js';
 import { CALIBRATION_CASES } from './src/harness/cases.js';
 import { formatReport, runCalibration } from './src/harness/calibrationRunner.js';
 import { loadVkAddendumFromPack } from './src/lt1gate.js';
+import { reportFileName, writeReportExclusive } from './src/reports.js';
 
 if (!process.env.ANTHROPIC_API_KEY) {
   console.error(
@@ -30,7 +33,8 @@ if (!process.env.ANTHROPIC_API_KEY) {
 const here = dirname(fileURLToPath(import.meta.url)); // evals/
 const repoRoot = resolve(here, '..');
 
-const judgePrompt = readFileSync(resolve(repoRoot, 'prompts/judge.system.v0.3.md'), 'utf8');
+const JUDGE_PROMPT = 'prompts/judge.system.v0.3.md';
+const judgePrompt = readFileSync(resolve(repoRoot, JUDGE_PROMPT), 'utf8');
 const toneMd = readFileSync(resolve(repoRoot, 'content-packs/kv/tone.md'), 'utf8');
 const systemPrompt = `${judgePrompt}\n\n---\n\n# Активированный tone.md (живой сайдкар)\n\n${toneMd}`;
 
@@ -46,6 +50,6 @@ const report = await runCalibration({
 
 console.log(formatReport(report));
 
-const out = resolve(here, 'calibration-report.json');
-writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+const out = resolve(here, reportFileName({ kind: 'calibration', prompts: { judge: JUDGE_PROMPT }, model, now: new Date() }));
+writeReportExclusive(out, `${JSON.stringify(report, null, 2)}\n`);
 console.log(`\nRaw per-axis report -> ${out} (gitignored). Bring its contents here for analysis.`);

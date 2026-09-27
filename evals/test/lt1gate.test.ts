@@ -144,3 +144,11 @@ describe('LT1 gate: tone.md dogfood', () => {
     expect(verdicts[1]?.clean).toBe(false);
   });
 });
+
+describe('LT1 gate takes no package -> NF1 never applies', () => {
+  it('a lore text with a mid-sentence Titlecase name yields no nf1_* violation', () => {
+    const v = gateLoreChunkText('Дороги нынче неспокойные, дальше Пригорья не загадываю.', []);
+    expect(v.antiSlop.some((x) => x.list.startsWith('nf1_'))).toBe(false);
+    expect(v.blocking).toBe(false);
+  });
+});

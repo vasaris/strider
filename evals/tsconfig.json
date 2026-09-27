@@ -20,5 +20,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "calibrate.mts", "keeper-smoke.mts", "full-cycle.mts"]
+  "include": ["src/**/*.ts", "test/**/*.ts", "calibrate.mts", "keeper-smoke.mts", "full-cycle.mts", "grounding-replay.mts"]
 }

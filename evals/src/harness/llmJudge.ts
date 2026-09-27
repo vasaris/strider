@@ -1,6 +1,6 @@
 import { renderNarrativePackage, type NarrativePackage } from '@brodyazhnik/orchestrator';
 import { z } from 'zod';
-import { scanProse } from '../antislop.js';
+import { scanTurnProse } from '../grounding.js';
 import { aggregateMean } from './aggregate.js';
 import type {
   AggregateFn,
@@ -57,7 +57,9 @@ export function buildJudgeUser(prose: string, pkg?: NarrativePackage | null): st
  * seam. Fills all six rubric axes from the model (incl. a NUANCED anti_slop that REPLACES
  * the deterministic 0/100 -- RECONCILE 6) and computes the >=80 aggregate (RECONCILE 7: only
  * when all six are scored). `pass` stays the deterministic block-clean hard gate;
- * `aggregate.pass` is the >=80 rubric verdict.
+ * `aggregate.pass` is the >=80 rubric verdict. The deterministic gate is scanTurnProse: the
+ * stop-lists always, plus NF1 grounding (grounding.ts; an ungrounded name BLOCKS) only when
+ * ctx.package is set -- calibration cases carry no package, so NF1 never touches them.
  */
 export class LlmJudge implements Judge {
   private readonly aggregate: AggregateFn;
@@ -68,7 +70,7 @@ export class LlmJudge implements Judge {
 
   async score(prose: string, ctx: JudgeContext): Promise<Verdict> {
     const vk = ctx.vkAddendum ?? null;
-    const violations = scanProse(prose, vk);
+    const violations = scanTurnProse(prose, vk, ctx.package ?? null);
     const blocking = violations.some((v) => v.severity === 'block');
     const lt = ctx.lengthTarget ?? null;
     const budgetWarn = lt !== null && (prose.length < lt.minChars || prose.length > lt.maxChars);

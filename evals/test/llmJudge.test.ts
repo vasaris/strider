@@ -243,3 +243,24 @@ describe('judge sees the package (A3.2, decision 27.09 #1)', () => {
     expect(without.calls[0]?.system).toBe('SYS');
   });
 });
+
+describe('LlmJudge applies NF1 only with ctx.package (C1)', () => {
+  const PROSE = 'Тропа вела мимо Пригорья к броду.';
+  // A package whose render does not contain the name (no lore, no journal, no oracle rows).
+  const PKG: NarrativePackage = { intent: 'journey', scene: 'journey', length_target: { min_chars: 400, max_chars: 800 } };
+
+  it('with a package lacking the name: nf1_name blocks, pass=false', async () => {
+    const judge = new LlmJudge({ llm: new MockLlm(() => OK_JSON), model: 'm', systemPrompt: 's' });
+    const v = await judge.score(PROSE, { package: PKG });
+    expect(v.pass).toBe(false);
+    expect(v.antiSlop.blocking).toBe(true);
+    expect(v.antiSlop.violations).toContainEqual(expect.objectContaining({ list: 'nf1_name', term: 'Пригорья' }));
+  });
+
+  it('the same prose without a package: no nf1_* violation', async () => {
+    const judge = new LlmJudge({ llm: new MockLlm(() => OK_JSON), model: 'm', systemPrompt: 's' });
+    const v = await judge.score(PROSE, {});
+    expect(v.antiSlop.violations.some((x) => x.list.startsWith('nf1_'))).toBe(false);
+    expect(v.pass).toBe(true);
+  });
+});

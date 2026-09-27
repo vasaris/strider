@@ -221,3 +221,20 @@ describe('eval harness: cycle plumbing', () => {
     expect(t.verdict.pass).toBe(true); // a WARN, never a block
   });
 });
+
+describe('DeterministicJudge applies NF1 only with ctx.package (C1)', () => {
+  const PROSE = 'Тропа вела мимо Пригорья к броду.';
+
+  it('with a package lacking the name: nf1_name blocks, pass=false', async () => {
+    const v = await new DeterministicJudge().score(PROSE, { package: PKG });
+    expect(v.pass).toBe(false);
+    expect(v.antiSlop.blocking).toBe(true);
+    expect(v.antiSlop.violations).toContainEqual(expect.objectContaining({ list: 'nf1_name', term: 'Пригорья' }));
+  });
+
+  it('the same prose without a package: no nf1_* violation', async () => {
+    const v = await new DeterministicJudge().score(PROSE, {});
+    expect(v.antiSlop.violations.some((x) => x.list.startsWith('nf1_'))).toBe(false);
+    expect(v.pass).toBe(true);
+  });
+});

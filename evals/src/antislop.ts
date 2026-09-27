@@ -28,13 +28,24 @@
 //                glitch, never register. Latin words standing alone
 //                among Cyrillic ('XIX век', 'Bree') are fine. Greek homoglyphs: a Stage 5 note.
 //                Appended after all lists, so existing orderings do not move.
+//  - `nf1_name` / `nf1_backstory` (NF1) : PACKAGE-AWARE buckets produced ONLY by grounding.ts
+//                (scanTurnProse, when a package is given) -- never by scanProse, which has no
+//                package. Declared here so ListId and the default severities stay in one place.
 //
 // SEVERITY is per-entry (StopEntry.severity), falling back to the list default. Severity is
 // thus a property of the term along the WHOLE path -- including the VK addendum loaded from
 // tone.md, whose curated per-entry severity (e.g. избранный=warn) is honored, not flattened.
 
 export type Severity = 'block' | 'warn';
-export type ListId = 'calque' | 'slop_ru' | 'slop_en' | 'register_parasite' | 'vk_addendum' | 'mixed_script';
+export type ListId =
+  | 'calque'
+  | 'slop_ru'
+  | 'slop_en'
+  | 'register_parasite'
+  | 'vk_addendum'
+  | 'mixed_script'
+  | 'nf1_name'
+  | 'nf1_backstory';
 
 export interface StopEntry {
   readonly term: string;
@@ -136,6 +147,8 @@ const LIST_DEFAULT_SEVERITY: Readonly<Record<ListId, Severity>> = {
   register_parasite: 'warn',
   vk_addendum: 'block',
   mixed_script: 'block',
+  nf1_name: 'block', // grounding.ts only
+  nf1_backstory: 'warn', // grounding.ts only
 };
 
 /** Unicode-aware loose word boundary: term not glued to another letter either side. */

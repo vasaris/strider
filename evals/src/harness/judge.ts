@@ -1,4 +1,4 @@
-import { scanProse } from '../antislop.js';
+import { scanTurnProse } from '../grounding.js';
 import type { AxisScore, Judge, JudgeContext, RubricAxis, Verdict } from './types.js';
 
 function pending(): AxisScore {
@@ -7,10 +7,12 @@ function pending(): AxisScore {
 
 /**
  * Deterministic judge. Fills the anti-slop axis NOW by reusing scanProse (the same engine
- * the lore gate uses) and surfaces a length-budget WARN. The other five rubric axes --
- * specificity, accuracy, playability, agency, tone -- are PENDING until the LLM judge in
- * chat 2.4; tone also waits for tone.md activation. The Verdict already carries all six,
- * so 2.4 fills slots instead of reshaping it.
+ * the lore gate uses) via scanTurnProse, which adds the NF1 grounding check (grounding.ts:
+ * ungrounded names BLOCK, relative backstory WARN) ONLY when ctx.package is set -- without a
+ * package the violations are exactly scanProse's. It also surfaces a length-budget WARN.
+ * The other five rubric axes -- specificity, accuracy, playability, agency, tone -- are
+ * PENDING until the LLM judge in chat 2.4; tone also waits for tone.md activation. The Verdict
+ * already carries all six, so 2.4 fills slots instead of reshaping it.
  *
  * Budget is a WARN, never a block: the hard gate is anti-slop block-cleanliness, which
  * does not depend on any provisional length/token calibration.
@@ -32,7 +34,7 @@ export class DeterministicJudge implements Judge {
   // eslint-disable-next-line @typescript-eslint/require-await
   async score(prose: string, ctx: JudgeContext): Promise<Verdict> {
     const vk = ctx.vkAddendum ?? null;
-    const violations = scanProse(prose, vk);
+    const violations = scanTurnProse(prose, vk, ctx.package ?? null);
     const blocking = violations.some((v) => v.severity === 'block');
 
     const lt = ctx.lengthTarget ?? null;
