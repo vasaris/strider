@@ -14,13 +14,10 @@
 // evals/keeper-smoke.keeper-<keeper prompt version>.<model>.<UTC stamp>.json (gitignored; RP1: a
 // new file per run, created exclusively -- never overwrites an earlier one). This is the
 // Keeper smoke only -- no judge here; the full cycle engine -> package -> Keeper -> judge is A3.
-import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildNarrativePackage, type EngineTurnResult } from '@brodyazhnik/orchestrator';
-import { AnthropicLlmClient } from './src/harness/anthropicLlmClient.js';
-import { AnthropicKeeper } from './src/harness/anthropicKeeper.js';
-import { buildKeeperSystem } from './src/harness/keeperSystem.js';
+import { AnthropicKeeper, buildNarrativePackage, loadKeeperSetup, type EngineTurnResult } from '@brodyazhnik/orchestrator';
+import { AnthropicLlmClient } from '@brodyazhnik/orchestrator/anthropic';
 import { reportFileName, writeReportExclusive } from './src/reports.js';
 
 if (!process.env.ANTHROPIC_API_KEY) {
@@ -37,9 +34,9 @@ const here = dirname(fileURLToPath(import.meta.url)); // evals/
 const repoRoot = resolve(here, '..');
 
 const KEEPER_PROMPT = 'prompts/keeper.system.v0.3.md';
-const keeperPrompt = readFileSync(resolve(repoRoot, KEEPER_PROMPT), 'utf8');
-const toneMd = readFileSync(resolve(repoRoot, 'content-packs/kv/tone.md'), 'utf8');
-const systemPrompt = buildKeeperSystem(keeperPrompt, toneMd);
+// 3.1-C4: keeper prompt + tone.md over prompts/assembly.v1.json (orchestrator loadKeeperSetup).
+const setup = loadKeeperSetup({ repoRoot, keeperPrompt: KEEPER_PROMPT });
+const systemPrompt = setup.system;
 
 // Hand-built projection of an SD1 journey step (extractTurn is internal now; the public producer
 // is orchestrator's extractJourneyTurn). This fixture carries no journey/detection sections -- it
@@ -67,11 +64,11 @@ const turn: EngineTurnResult = {
 const pkg = buildNarrativePackage(turn); // -> oracle.detail.row set, oracle.row null, lore_chunks []
 
 const model = process.env.KEEPER_MODEL ?? 'claude-opus-4-8';
-const keeper = new AnthropicKeeper({ llm: new AnthropicLlmClient(), model });
+const keeper = new AnthropicKeeper({ llm: new AnthropicLlmClient(), model, assembly: setup.assembly });
 const output = await keeper.run({ systemPrompt, package: pkg });
 
 console.log(output.prose);
 
 const out = resolve(here, reportFileName({ kind: 'keeper-smoke', prompts: { keeper: KEEPER_PROMPT }, model, now: new Date() }));
-writeReportExclusive(out, `${JSON.stringify({ model, package: pkg, output }, null, 2)}\n`);
+writeReportExclusive(out, `${JSON.stringify({ model, prompts: setup.provenance, package: pkg, output }, null, 2)}\n`);
 console.log(`\nKeeper smoke -> ${out} (gitignored).`);

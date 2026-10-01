@@ -1,27 +1,32 @@
-// 3.1-C4 byte-identity gate rationale: evals/test/fixtures/keeper-requests.v0.3.json was captured
-// on the CURRENT evals path (keeper v0.3 + live tone.md, buildKeeperSystem/buildKeeperUser,
-// captureTurn over SUITE_JOURNEYS) BEFORE the Keeper seam moves into orchestrator at C4. That move
-// must reproduce these exact bytes -- system prompt and every seed's user message -- without this
-// fixture file changing. This test pins the fixture against the evals path so a drift here is
-// caught before the seam moves, and doubles as the NF1 x TP1 seam check: name grounding through
-// the new `## detection` / `## journey` sections the Keeper package now carries (3.1-C2/C3).
+// 3.1-C4 byte-identity gate: evals/test/fixtures/keeper-requests.v0.3.json was captured on the
+// pre-C4 evals path (keeper v0.3 + live tone.md, evals buildKeeperSystem/buildKeeperUser,
+// captureTurn over SUITE_JOURNEYS) BEFORE the Keeper seam moved into orchestrator. This test now
+// drives the ORCHESTRATOR path (loadKeeperSetup -> setup.system, buildKeeperUser(setup.assembly),
+// AnthropicKeeper, loadJourneyEnv) against the UNCHANGED fixture: the move reproduced the exact
+// bytes -- system prompt and every seed's user message. It doubles as the NF1 x TP1 seam check:
+// name grounding through the `## detection` / `## journey` sections (3.1-C2/C3).
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { scanTurnProse } from '../src/grounding.js';
-import { AnthropicKeeper, buildKeeperUser } from '../src/harness/anthropicKeeper.js';
-import { captureTurn, loadEngineEnv } from '../src/harness/engineProvider.js';
-import { buildKeeperSystem } from '../src/harness/keeperSystem.js';
+import {
+  AnthropicKeeper,
+  buildKeeperUser,
+  loadJourneyEnv,
+  loadKeeperSetup,
+  type LlmClient,
+  type LlmRequest,
+} from '@brodyazhnik/orchestrator';
+import { captureTurn } from '../src/harness/engineProvider.js';
 import { SUITE_JOURNEYS } from '../src/harness/suiteSeeds.js';
-import type { LlmClient, LlmRequest } from '../src/harness/types.js';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const env = loadEngineEnv(resolve(repoRoot, 'content-packs/kv'));
-const keeperPrompt = readFileSync(resolve(repoRoot, 'prompts/keeper.system.v0.3.md'), 'utf8');
+const env = loadJourneyEnv(resolve(repoRoot, 'content-packs/kv'));
+const setup = loadKeeperSetup({ repoRoot, keeperPrompt: 'prompts/keeper.system.v0.3.md' });
+const system = setup.system;
 const toneMd = readFileSync(resolve(repoRoot, 'content-packs/kv/tone.md'), 'utf8');
-const system = buildKeeperSystem(keeperPrompt, toneMd);
 
 const fixturePath = resolve(dirname(fileURLToPath(import.meta.url)), 'fixtures/keeper-requests.v0.3.json');
 const fixture = JSON.parse(readFileSync(fixturePath, 'utf8')) as {
@@ -53,17 +58,21 @@ describe('3.1-C4 byte-identity fixture (keeper-requests.v0.3.json)', () => {
     // Checked BEFORE the system-hash test below, so a tone.md edit fails here with a clear
     // "tone changed" message rather than an opaque system-sha256 mismatch.
     expect(createHash('sha256').update(toneMd, 'utf8').digest('hex')).toBe(fixture.toneSha256);
+    // The setup's provenance names the same tone bytes (sha256 of the file bytes).
+    expect(setup.provenance.tone.path).toBe(fixture.tone);
+    expect(setup.provenance.tone.sha256).toBe(fixture.toneSha256);
+    expect(setup.provenance.keeper.path).toBe(fixture.keeperPrompt);
   });
 
-  it('sha256 + UTF-8 byte length of buildKeeperSystem(v0.3, tone) equal the fixture', () => {
+  it('sha256 + UTF-8 byte length of loadKeeperSetup(v0.3).system equal the fixture', () => {
     expect(createHash('sha256').update(system, 'utf8').digest('hex')).toBe(fixture.system.sha256);
     expect(Buffer.byteLength(system, 'utf8')).toBe(fixture.system.utf8Bytes);
   });
 
-  it('for every seed, buildKeeperUser(captureTurn(env, j.journey).pkg) equals the fixture user', () => {
+  it('for every seed, buildKeeperUser(setup.assembly, captureTurn(env, j.journey).pkg) equals the fixture user', () => {
     for (const j of SUITE_JOURNEYS) {
       const pkg = captureTurn(env, j.journey).pkg;
-      expect(buildKeeperUser(pkg)).toBe(fixture.users[j.id]);
+      expect(buildKeeperUser(setup.assembly, pkg)).toBe(fixture.users[j.id]);
     }
   });
 
@@ -71,7 +80,7 @@ describe('3.1-C4 byte-identity fixture (keeper-requests.v0.3.json)', () => {
     for (const j of SUITE_JOURNEYS) {
       const pkg = captureTurn(env, j.journey).pkg;
       const llm = new MockLlm('Проза.');
-      const keeper = new AnthropicKeeper({ llm, model: 'm' });
+      const keeper = new AnthropicKeeper({ llm, model: 'm', assembly: setup.assembly });
       await keeper.run({ systemPrompt: system, package: pkg });
       expect(llm.calls).toHaveLength(1);
       const call = llm.calls[0]!;

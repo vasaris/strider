@@ -2,17 +2,17 @@
 // judge. Cross-package import enabled by the root workspace (ws-b): the real
 // orchestrator contract (NarrativePackage) resolves via @brodyazhnik/orchestrator.
 
-import type { NarrativePackage } from '@brodyazhnik/orchestrator';
+import type { Keeper, KeeperOutput, NarrativePackage } from '@brodyazhnik/orchestrator';
 import type { StopEntry, Violation } from '../antislop.js';
 
 // ============================================================================
 // RECONCILE -- mechanical checklist, not a drift hunt. Cross-package items 1/4
-// are CLOSED at ws-b (the workspace wires the real types) and 3 at A4.1; the rest
-// stay, each gated on a later deliverable:
+// are CLOSED at ws-b (the workspace wires the real types), 3 at A4.1, 2/5 at 3.1-C4; the
+// rest stay, each gated on a later deliverable:
 //   1. CLOSED (ws-b): ScenarioPackage alias -> orchestrator NarrativePackage. The
 //      package the Keeper receives is now the real contract type.
-//   2. KeeperOutput.questions: string[] -> orchestrator ClarifyingQuestion[]. OPEN --
-//      adjacent to the real KeeperOutput (full-cycle/AnthropicKeeper), not ws-b.
+//   2. CLOSED (3.1-C4): KeeperOutput is the orchestrator CONTRACT type (questions?:
+//      ClarifyingQuestion[]), re-exported below; no harness-local provisional shape remains.
 //   3. CLOSED (A4.1): lengthTarget is PACKAGE-sourced -- runScenario fills the judge's
 //      ctx.lengthTarget from pkg.length_target (the package wins over a caller value). The
 //      NUMBERS stay provisional in orchestrator provider.ts until tone.md owns them
@@ -20,9 +20,10 @@ import type { StopEntry, Violation } from '../antislop.js';
 //   4. CLOSED (ws-b): packageProvider fixture -> orchestrator buildNarrativePackage (the
 //      real engine-turn -> package mapper; lives + is tested in orchestrator/, imported
 //      here via the workspace, not duplicated).
-//   5. Keeper: StubKeeper -> AnthropicKeeper (same interface; real path is
-//      judge-scored, not byte-golden). OPEN -- full-cycle. A2 landed AnthropicKeeper behind
-//      this seam (offline, mock LlmClient); the live swap in a real run is the full cycle (A3).
+//   5. CLOSED (3.1-C4): Keeper: StubKeeper -> AnthropicKeeper (same interface; real path is
+//      judge-scored, not byte-golden). The live swap ran the full cycle on L4 and again in the
+//      3.1-C3 keyed runs; the seam (Keeper/LlmClient/AnthropicKeeper/request assembly) now lives
+//      in orchestrator (src/keeper/), shared with the Stage 3.1.b server route.
 //   6. Judge anti_slop axis: the LLM judge REPLACES this deterministic axis with a
 //      nuanced score -- do NOT sum deterministic + LLM on the same axis. OPEN -- judge.
 //   7. Aggregation guard: the >=80 pass-rate verdict is assembled ONLY when all six
@@ -31,22 +32,9 @@ import type { StopEntry, Violation } from '../antislop.js';
 
 // RECONCILE 1 CLOSED (ws-b): the Keeper now receives the real orchestrator NarrativePackage.
 
-// PROVISIONAL (RECONCILE 2).
-export interface KeeperOutput {
-  readonly prose: string;
-  readonly questions?: readonly string[];
-}
-
-export interface KeeperInput {
-  readonly systemPrompt: string;
-  readonly package: NarrativePackage;
-}
-
-/** The narrative model behind one seam. Both implementations exist: StubKeeper (canned,
- *  byte-deterministic) and AnthropicKeeper (injected LlmClient; judge-scored). */
-export interface Keeper {
-  run(input: KeeperInput): Promise<KeeperOutput>;
-}
+// RECONCILE 2/5 CLOSED (3.1-C4): the Keeper seam types come from orchestrator (src/keeper/seam.ts
+// + the contract KeeperOutput); re-exported so harness imports keep working.
+export type { Keeper, KeeperInput, KeeperOutput, LlmClient, LlmRequest } from '@brodyazhnik/orchestrator';
 
 /** Scenario seed: identity + system prompt + a human-facing transcript label. At full-cycle
  *  it also carries whatever the real orchestrator builder needs (engine state/action) to
@@ -110,24 +98,6 @@ export interface Verdict {
  *  without touching the judge). `mean(6)` is provisional and naive -- a catastrophe on one
  *  axis (e.g. tone=10) is masked by the average; calibration will likely add a per-axis floor. */
 export type AggregateFn = (axisScores: Readonly<Record<RubricAxis, number>>) => AggregateVerdict;
-
-/** The model call behind one seam, injectable (mock offline / AnthropicLlmClient in keyed
- *  scripts). Two callers share it:
- *   - judge (LlmJudge): system = rubric sec 0.7 + activated tone.md; user = the prose to
- *     score, plus the rendered package block when ctx.package is set (buildJudgeUser); the raw
- *     reply is the rubric JSON, parsed + Zod-validated by LlmJudge.
- *   - keeper (AnthropicKeeper): system = keeper prompt + activated tone.md (buildKeeperSystem);
- *     user = the rendered package (buildKeeperUser); the raw reply is the prose, trimmed by
- *     AnthropicKeeper.
- *  complete() returns the model's raw text output; interpretation belongs to the caller. */
-export interface LlmRequest {
-  readonly model: string; // RECONCILE: model is config, not hardcoded in caller logic
-  readonly system: string; // assembled by the caller (judge: rubric+tone; keeper: prompt+tone)
-  readonly user: string; // judge: the prose (+ package block if given); keeper: the rendered package
-}
-export interface LlmClient {
-  complete(req: LlmRequest): Promise<string>;
-}
 
 export interface JudgeContext {
   /** Pack VK stop-list (LT1). Null until tone.md is activated; the seed still scans. */

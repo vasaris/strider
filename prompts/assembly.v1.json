@@ -1,0 +1,5 @@
+{
+  "schema": "brodyazhnik.prompt-assembly/1",
+  "tone_sidecar_separator": "\n\n---\n\n# Активированный tone.md (живой сайдкар)\n\n",
+  "keeper_user_preamble": "Входной пакет хода — единственный источник фактов. Напиши прозу сцены.\n\n"
+}

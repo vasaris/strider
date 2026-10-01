@@ -12,7 +12,6 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.106.0",
     "@brodyazhnik/engine": "*",
     "@brodyazhnik/orchestrator": "*",
     "zod": "^3.23.8"

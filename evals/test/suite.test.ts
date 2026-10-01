@@ -1,8 +1,8 @@
-import { renderNarrativePackage, type NarrativePackage } from '@brodyazhnik/orchestrator';
+import { loadJourneyEnv, renderNarrativePackage, type NarrativePackage } from '@brodyazhnik/orchestrator';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { engineProvider, loadEngineEnv, type EngineSeed } from '../src/harness/engineProvider.js';
+import { engineProvider, type EngineSeed } from '../src/harness/engineProvider.js';
 import { DeterministicJudge } from '../src/harness/judge.js';
 import { StubKeeper } from '../src/harness/keeper.js';
 import { LlmJudge } from '../src/harness/llmJudge.js';
@@ -23,7 +23,7 @@ import type {
   Verdict,
 } from '../src/harness/types.js';
 
-const env = loadEngineEnv(resolve(dirname(fileURLToPath(import.meta.url)), '../..', 'content-packs/kv'));
+const env = loadJourneyEnv(resolve(dirname(fileURLToPath(import.meta.url)), '../..', 'content-packs/kv'));
 
 // Clean, sensory, in-register prose (style of CLEAN_PROSE in harness.test.ts).
 const CLEAN_PROSE =

@@ -221,7 +221,7 @@ function errorVerdict(
   };
 }
 
-// AnthropicLlmClient -> calibration (slot, not built here): a concrete LlmClient that wraps
-// `@anthropic-ai/sdk` (client.messages.create / .parse) with model=claude-opus-4-8 and returns
-// the rubric JSON text. It needs an API key + network, so it is wired at the live calibration
-// step, not in this offline plumbing. The mock LlmClient in the tests stands in for it now.
+// The live LlmClient is orchestrator's AnthropicLlmClient, reached only through the subpath
+// `@brodyazhnik/orchestrator/anthropic` (3.1-C4): the keyed scripts (calibrate.mts,
+// full-cycle.mts) construct it; it needs an API key + network, so this offline plumbing never
+// does. The mock LlmClient in the tests stands in for it.

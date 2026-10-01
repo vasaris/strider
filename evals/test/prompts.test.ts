@@ -241,3 +241,19 @@ describe('prompt diff pin 3.1-C3 (keeper v0.2 -> v0.3, judge v0.3 -> v0.4; bases
     expect(applyEdits(read('judge.system.v0.3.md'), JUDGE_V04_EDITS)).toBe(read('judge.system.v0.4.md'));
   });
 });
+
+// prompts/assembly.v1.json (3.1-C4): the Keeper/judge request framing moved out of evals source
+// into this file. Frozen from now on (sha256), and its two values are the pre-C4 evals literals
+// byte-for-byte (keeperSystem.ts TONE_SIDECAR_SEPARATOR; anthropicKeeper.ts buildKeeperUser preamble).
+const ASSEMBLY_V1_SHA256 = '6328dc596882834fe41bcd9a4602be50e15e330af57c0242a76bb472e22d0503';
+
+describe('prompts/assembly.v1.json (3.1-C4; frozen)', () => {
+  it('is pinned by sha256 and carries the pre-C4 literals byte-for-byte', () => {
+    expect(sha256('assembly.v1.json')).toBe(ASSEMBLY_V1_SHA256);
+    const doc = JSON.parse(read('assembly.v1.json')) as Record<string, unknown>;
+    expect(Object.keys(doc)).toEqual(['schema', 'tone_sidecar_separator', 'keeper_user_preamble']);
+    expect(doc['schema']).toBe('brodyazhnik.prompt-assembly/1');
+    expect(doc['tone_sidecar_separator']).toBe('\n\n---\n\n# Активированный tone.md (живой сайдкар)\n\n');
+    expect(doc['keeper_user_preamble']).toBe('Входной пакет хода — единственный источник фактов. Напиши прозу сцены.\n\n');
+  });
+});

@@ -15,14 +15,13 @@
 // evals/full-cycle-report.keeper-<keeper prompt version>.judge-<judge prompt version>.
 // <keeper-model>.<UTC stamp>.json (gitignored; RP1: a new file per run, created exclusively --
 // never overwrites an earlier report).
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { AnthropicKeeper } from './src/harness/anthropicKeeper.js';
-import { AnthropicLlmClient } from './src/harness/anthropicLlmClient.js';
-import { engineProvider, loadEngineEnv } from './src/harness/engineProvider.js';
-import { buildJudgeSystem, buildKeeperSystem } from './src/harness/keeperSystem.js';
+import { AnthropicKeeper, loadJourneyEnv, loadKeeperSetup, readFileRef } from '@brodyazhnik/orchestrator';
+import { AnthropicLlmClient } from '@brodyazhnik/orchestrator/anthropic';
+import { engineProvider } from './src/harness/engineProvider.js';
+import { buildJudgeSystem } from './src/harness/judgeSystem.js';
 import { LlmJudge } from './src/harness/llmJudge.js';
 import { formatSuite, runSuite } from './src/harness/suite.js';
 import { SUITE_JOURNEYS, toEngineSeeds } from './src/harness/suiteSeeds.js';
@@ -44,12 +43,7 @@ const repoRoot = resolve(here, '..');
 
 const KEEPER_PROMPT = 'prompts/keeper.system.v0.3.md';
 const JUDGE_PROMPT = 'prompts/judge.system.v0.4.md';
-const TONE = 'content-packs/kv/tone.md';
 const read = (rel: string): string => readFileSync(resolve(repoRoot, rel), 'utf8');
-const fileRef = (rel: string): { path: string; sha256: string } => ({
-  path: rel,
-  sha256: createHash('sha256').update(readFileSync(resolve(repoRoot, rel))).digest('hex'),
-});
 
 const keeperModel = process.env.KEEPER_MODEL ?? 'claude-opus-4-8';
 const judgeModel = process.env.JUDGE_MODEL ?? 'claude-opus-4-8';
@@ -65,16 +59,18 @@ if (unknown.length > 0) {
   process.exit(1);
 }
 
-const toneMd = read(TONE);
-const keeperSystem = buildKeeperSystem(read(KEEPER_PROMPT), toneMd);
-const judgeSystem = buildJudgeSystem(read(JUDGE_PROMPT), toneMd);
+// 3.1-C4: the Keeper system (keeper prompt + tone.md over prompts/assembly.v1.json) and its
+// provenance come from orchestrator loadKeeperSetup -- the same assembly the server route uses.
+const setup = loadKeeperSetup({ repoRoot, keeperPrompt: KEEPER_PROMPT });
+const keeperSystem = setup.system;
+const judgeSystem = buildJudgeSystem(setup.assembly, read(JUDGE_PROMPT), read(setup.provenance.tone.path));
 const ctx = { vkAddendum: loadVkAddendumFromPack(resolve(repoRoot, 'content-packs/kv')) };
-const env = loadEngineEnv(resolve(repoRoot, 'content-packs/kv'));
+const env = loadJourneyEnv(resolve(repoRoot, 'content-packs/kv'));
 
 const seeds = toEngineSeeds(keeperSystem).filter((s) => wanted.length === 0 || wanted.includes(s.id));
 
 const llm = new AnthropicLlmClient();
-const keeper = new AnthropicKeeper({ llm, model: keeperModel });
+const keeper = new AnthropicKeeper({ llm, model: keeperModel, assembly: setup.assembly });
 const judge = new LlmJudge({ llm, model: judgeModel, systemPrompt: judgeSystem, shortCircuit: false });
 
 const report = await runSuite(seeds, { packageProvider: engineProvider(env), keeper, judge, ctx });
@@ -101,7 +97,13 @@ const record = {
   keeperModel,
   judgeModel,
   sameModel,
-  prompts: { keeper: fileRef(KEEPER_PROMPT), judge: fileRef(JUDGE_PROMPT), tone: fileRef(TONE) },
+  prompts: {
+    keeper: setup.provenance.keeper,
+    judge: readFileRef(repoRoot, JUDGE_PROMPT),
+    tone: setup.provenance.tone,
+    assembly: setup.provenance.assembly,
+  },
+  packId: env.packId,
   packVersion: env.packVersion,
   seeds: seeds.map((s) => s.id),
   report,

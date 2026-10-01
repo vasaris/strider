@@ -1,23 +1,24 @@
 import { pursuitThreshold, stepJourney } from '@brodyazhnik/engine';
 // Drift pin via a DEEP import (this test file only, never in src): scenario.ts is not part of the
-// engine's public API, so evals mirrors its fixtures and pins the mirror here.
+// engine's public API, so orchestrator's pregen (pregenWanderer / startJourney, 3.1-C4) mirrors its
+// fixtures and the mirror is pinned here.
 import { makeMilestoneState, makeTestHero } from '@brodyazhnik/engine/src/cli/scenario.js';
-import { journeyTurn, renderNarrativePackage } from '@brodyazhnik/orchestrator';
+import {
+  journeyTurn,
+  loadJourneyEnv,
+  pregenWanderer,
+  renderNarrativePackage,
+  startJourney,
+} from '@brodyazhnik/orchestrator';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import {
-  captureTurn,
-  evalHero,
-  initialJourneyState,
-  loadEngineEnv,
-  type JourneySpec,
-} from '../src/harness/engineProvider.js';
+import { captureTurn, initialJourneyState, type JourneySpec } from '../src/harness/engineProvider.js';
 import { SUITE_JOURNEYS } from '../src/harness/suiteSeeds.js';
 
 const packDir = resolve(dirname(fileURLToPath(import.meta.url)), '../..', 'content-packs/kv');
-const env = loadEngineEnv(packDir);
+const env = loadJourneyEnv(packDir);
 
 const journeyOf = (id: string): JourneySpec => {
   const j = SUITE_JOURNEYS.find((x) => x.id === id);
@@ -36,11 +37,15 @@ function sectionBody(rendered: string, name: string): string[] {
 }
 
 describe('engine provider (live engine -> journeyTurn -> package)', () => {
-  it('drift pin: the eval hero/route/start state mirror the Stage-1 milestone fixtures', () => {
-    expect(evalHero(env.cfg)).toEqual(makeTestHero(env.cfg));
+  it('drift pin: orchestrator pregen hero/route/start state mirror the Stage-1 milestone fixtures', () => {
+    expect(pregenWanderer(env.cfg)).toEqual(makeTestHero(env.cfg));
     // pins route, duration, rng and hero in one go
-    expect(initialJourneyState(env, { rngSeed: 'dark-1', region: 'dark_lands' })).toEqual(
+    expect(startJourney(env.cfg, { rngSeed: 'dark-1', region: 'dark_lands' })).toEqual(
       makeMilestoneState(env.cfg, 'dark-1'),
+    );
+    // without eyeGap the eval start IS the pregen start
+    expect(initialJourneyState(env, { rngSeed: 'dark-1', region: 'dark_lands' })).toEqual(
+      startJourney(env.cfg, { rngSeed: 'dark-1', region: 'dark_lands' }),
     );
   });
 
@@ -48,7 +53,7 @@ describe('engine provider (live engine -> journeyTurn -> package)', () => {
     const spec = journeyOf('j.dark.misfortune');
     const a = JSON.stringify(captureTurn(env, spec).pkg);
     expect(JSON.stringify(captureTurn(env, spec).pkg)).toBe(a);
-    expect(JSON.stringify(captureTurn(loadEngineEnv(packDir), spec).pkg)).toBe(a);
+    expect(JSON.stringify(captureTurn(loadJourneyEnv(packDir), spec).pkg)).toBe(a);
   });
 
   it('every suite journey captures the engine scene it pins (engine-produced, not invented)', () => {

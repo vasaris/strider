@@ -11,12 +11,16 @@
 // report). Bring that file's contents here for analysis -- the first run is DIAGNOSTIC; do not
 // tune the rubric off it without review.
 // 3.1-C3: judge prompt v0.4; the deterministic gate runs with the live VK addendum (pack sidecar).
+// 3.1-C4: the judge system is buildJudgeSystem over prompts/assembly.v1.json (the separator shared
+// with the Keeper); the SDK client comes from the orchestrator `/anthropic` subpath.
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { AnthropicLlmClient } from './src/harness/anthropicLlmClient.js';
+import { loadPromptAssembly } from '@brodyazhnik/orchestrator';
+import { AnthropicLlmClient } from '@brodyazhnik/orchestrator/anthropic';
 import { CALIBRATION_CASES } from './src/harness/cases.js';
 import { formatReport, runCalibration } from './src/harness/calibrationRunner.js';
+import { buildJudgeSystem } from './src/harness/judgeSystem.js';
 import { loadVkAddendumFromPack } from './src/lt1gate.js';
 import { reportFileName, writeReportExclusive } from './src/reports.js';
 
@@ -36,7 +40,7 @@ const repoRoot = resolve(here, '..');
 const JUDGE_PROMPT = 'prompts/judge.system.v0.4.md';
 const judgePrompt = readFileSync(resolve(repoRoot, JUDGE_PROMPT), 'utf8');
 const toneMd = readFileSync(resolve(repoRoot, 'content-packs/kv/tone.md'), 'utf8');
-const systemPrompt = `${judgePrompt}\n\n---\n\n# Активированный tone.md (живой сайдкар)\n\n${toneMd}`;
+const systemPrompt = buildJudgeSystem(loadPromptAssembly(repoRoot), judgePrompt, toneMd);
 
 const model = process.env.JUDGE_MODEL ?? 'claude-opus-4-8';
 
