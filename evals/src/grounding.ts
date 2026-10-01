@@ -166,11 +166,36 @@ export function scanUngroundedNames(prose: string, renderedPackage: string): Vio
   return out;
 }
 
+// One row per Russian ordinal stem (Russian morphology, not rules content): its regex fragment,
+// its normalized lookup key ('ё' -> 'е', so 'четвёрт'/'четверт' share 'четверт'), its number, and
+// whether it takes the soft ending set ('третий/третья...') instead of the regular one.
+interface OrdinalStem {
+  readonly pattern: string;
+  readonly key: string;
+  readonly n: number;
+  readonly soft: boolean;
+}
+const ORDINAL_STEMS: readonly OrdinalStem[] = [
+  { pattern: 'перв', key: 'перв', n: 1, soft: false },
+  { pattern: 'втор', key: 'втор', n: 2, soft: false },
+  { pattern: 'трет', key: 'трет', n: 3, soft: true },
+  { pattern: 'четв[её]рт', key: 'четверт', n: 4, soft: false },
+  { pattern: 'пят', key: 'пят', n: 5, soft: false },
+  { pattern: 'шест', key: 'шест', n: 6, soft: false },
+  { pattern: 'седьм', key: 'седьм', n: 7, soft: false },
+  { pattern: 'восьм', key: 'восьм', n: 8, soft: false },
+  { pattern: 'девят', key: 'девят', n: 9, soft: false },
+  { pattern: 'десят', key: 'десят', n: 10, soft: false },
+];
+const stemPatterns = (soft: boolean): string =>
+  ORDINAL_STEMS.filter((r) => r.soft === soft)
+    .map((r) => r.pattern)
+    .join('|');
 // Explicit ordinal endings (never \p{L}*): cardinals пять/шесть/девять/десять cannot match.
-const ORDINAL_STEM = '(?:перв|втор|четв[её]рт|пят|шест|седьм|восьм|девят|десят|трет)';
+const ORDINAL_STEM = `(?:${stemPatterns(false)}|${stemPatterns(true)})`;
 const ORDINAL =
-  '(?:(?:перв|втор|четв[её]рт|пят|шест|седьм|восьм|девят|десят)(?:ый|ой|ая|ое|ые|ого|ому|ым|ом|ую|ых|ыми)' +
-  '|трет(?:ий|ья|ье|ьи|ьего|ьему|ьим|ьем|ью|ьих|ьими))';
+  `(?:(?:${stemPatterns(false)})(?:ый|ой|ая|ое|ые|ого|ому|ым|ом|ую|ых|ыми)` +
+  `|${stemPatterns(true)}(?:ий|ья|ье|ьи|ьего|ьему|ьим|ьем|ью|ьих|ьими))`;
 const DAY_UNIT = '(?:день|дня|дню|днём|днем|сутки|суток|недел\\p{L}*)';
 const ORDINAL_DAY = `${ORDINAL}\\s+${DAY_UNIT}`;
 const BACKSTORY = new RegExp(
@@ -186,21 +211,10 @@ const BACKSTORY = new RegExp(
     ')(?=$|[^\\p{L}])',
   'giu',
 );
-// Ordinal stem -> its cardinal number (Russian morphology, not rules content). Endings are
-// stripped by ORDINAL_DAY_PARSE below, so only the stem needs mapping; 'четвёрт'/'четверт' both
-// normalize to 'четверт' ('ё' -> 'е') before lookup.
-const ORDINAL_NUMBERS: Readonly<Record<string, number>> = {
-  перв: 1,
-  втор: 2,
-  трет: 3,
-  четверт: 4,
-  пят: 5,
-  шест: 6,
-  седьм: 7,
-  восьм: 8,
-  девят: 9,
-  десят: 10,
-};
+// Normalized stem key -> its cardinal number. Endings are stripped by ORDINAL_DAY_PARSE below.
+const ORDINAL_NUMBERS: Readonly<Record<string, number>> = Object.fromEntries(
+  ORDINAL_STEMS.map((r) => [r.key, r.n]),
+);
 // DAY units only -- excludes недел* (a week is never exempted, whatever days_total is).
 const DAY_ONLY_UNIT = '(?:день|дня|дню|днём|днем|сутки|суток)';
 const ORDINAL_DAY_PARSE = new RegExp(`^(${ORDINAL_STEM})\\p{L}*\\s+(${DAY_ONLY_UNIT})$`, 'iu');
