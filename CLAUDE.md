@@ -24,7 +24,7 @@
 - **Механика не в LLM.** Броски/проверки/таблицы/состояние — детерминированный код; нарратив получает структурный результат и не выдумывает числа/исходы.
 - **Оракулы — механика движка.** Катит engine; LLM интерпретирует выпавшее, не подменяет.
 - **`engine/` без контента ВК.** Весь контент — в `content-packs/kv/` за манифестом. `engine/` юридически чист — единственная часть с возможным коммерческим будущим.
-- **`engine/src/**/*.ts` — без кириллицы** (ASCII; `name_ru` и пр. в JSON-паке — можно). Скан — ниже.
+- **`engine/src/**/*.ts` и `orchestrator/src/**/*.ts` — без кириллицы** (ASCII; `name_ru` и пр. в JSON-паке — можно; русские строки оркестратора — данные в `prompts/assembly.v1.json`). Скан — ниже.
 - **Без книжных чисел в коде.** Всё число — из `parameters`/дескрипторов верифицированного пака; стаб-карты с другими числами в тестах доказывают pack-sourcing.
 - **RNG сидируемый** (sfc32+cyrb128); чистые функции `(state, action, rng) → (result, patch)`, RNG передаётся явно.
 - **`verified: true`** — без него таблицы в прод не грузятся.
@@ -42,25 +42,32 @@
 TypeScript strict ESM, zero runtime deps, vitest. PWA: Next.js App Router, Tailwind, Postgres/Supabase, Anthropic API.
 
 ## Коммиты
-- `git add` новых файлов **явно** (`commit -am` молча пропустит untracked).
-- `git commit -m` только; команды — из КОРНЯ репо (не из `engine/`, иначе `engine/`-пути в add падают).
-- Сообщения — английский/ASCII.
+- `git add` новых файлов **явно** (`commit -am` молча пропустит untracked); удаления — `git rm`.
+- Многострочные сообщения (и любые с бэктиками/кавычками) — **только `git commit -F <файл>`** (канон: zsh ломает `-m`); `-m` — лишь для однострочных. Команды — из КОРНЯ репо (не из `engine/`, иначе `engine/`-пути в add падают).
+- Сообщения — английский/ASCII; хвост `Co-Authored-By` по текущей инструкции харнесса.
+- Каждый код-коммит — зелёный и после **независимого верификатора**; docs-коммит — после вердикта ревьюера. Архив ревьюеру: `git archive --format=zip -o brodyazhnik-<sha>.zip HEAD`. Пуш — только после вердикта.
 
 ## Команды
 ```bash
-cd engine && npm run typecheck && npm test     # зелёное; на закрытии Stage 1 — 389 тестов
+npm run test:all && npm run typecheck:all      # из корня; на 5937e3a — 394 / 78 / 201, typecheck чист
 # golden-демо (из engine/):
 npm run combat ; npm run journey ; npm run council ; npm run progression ; npm run fellowship
-# скан кириллицы в исходниках (из engine/):
-find src -name '*.ts' | xargs perl -CSD -ne 'exit 1 if /\p{Cyrillic}/' && echo CLEAN || echo DIRTY
+# скан кириллицы (из корня; engine/src и orchestrator/src должны быть CLEAN):
+find engine/src orchestrator/src -name '*.ts' -exec perl -CSD -ne 'exit 1 if /\p{Cyrillic}/' {} + && echo CLEAN || echo DIRTY
+# NF1-реплей по L4 (офлайн, без ключа): 2 блока / 10 warn
+cd evals && npx tsx grounding-replay.mts | tail -1
 ```
+Keyed-скрипты (`calibrate.mts`, `full-cycle.mts`, `keeper-smoke.mts`) запускает **только Иван** в keyed-шелле; ключ — только `process.env`, `.env` не читать.
 
 ## Текущее состояние
-- **Stage 1 закрыт** на доказательстве (coverage-аудит — `docs/STAGE1_COVERAGE.md`; анти-хардкод чисто; известные/новые пробелы в `DEFERRED.md` с гейтом).
-- Последний код-коммит: `c0b6168` (соло-манёвр; 389 тестов, Cyrillic CLEAN, 5 golden стабильны). Поверх — docs-коммиты (реестр/аудит/роадмап/этот файл).
-- **Следующее:** `ROADMAP_SESSIONS.md` → **чат 2.1** (Stage 2): нарративный контракт + скелет системного промпта Хранителя.
+- **Stage 0–2 закрыты**; **Stage 3 (PWA) в работе.** Чат 3.1 **блок I закрыт** (docs-коммит блока I): NF1 + RP1 `be08b85`, TP1 `6959977`, keeper v0.3 + judge v0.4 `877340d`, `ecad509`, шов Хранителя в orchestrator `5937e3a`; прогоны с ключом 27.09 — `evals/records/`, запись — `docs/CALIBRATION_TONE_JUDGE.md` §«3.1, 27.09».
+- Последний код-коммит `5937e3a`: `test:all` 394 / 78 / 201, typecheck чист, кириллицы нет в `engine/src` и `orchestrator/src`, 5 golden стабильны, pack 0.1.0.
+- **Следующее:** `ROADMAP_SESSIONS.md` → **чат 3.1 часть 2** (C5.0 → C5 → C6 → C7 → docs II); вход — `docs/HANDOFF_STAGE3_1_PART2.md`. Нужны ответы Ивана Q1 (БД) и Q2 (модель снимков).
 
 ## Карта репо
 - `engine/` — чистый TS-движок (`src/` модули по подсистемам, `test/`, `cli/`).
+- `orchestrator/` — контракт движок→Хранитель, сборка и рендер пакета, цикл хода (`journeyTurn`), шов Хранителя (`AnthropicKeeper`, `loadKeeperSetup`; SDK-клиент только через `@brodyazhnik/orchestrator/anthropic`), pregen-герой.
+- `evals/` — анти-слоп, NF1, судьи, харнесс, keyed-скрипты; аудит-след `l4-records/` (Stage 2) и `records/` (с 3.1).
+- `prompts/` — версионные промпты Хранителя и судьи (ранние версии заморожены sha256-пинами) + `assembly.v1.json`.
 - `content-packs/kv/` — верифицированный пак (mechanics/ tables/solo/ lifepaths/).
 - `brodyazhnik-architecture-v1.md` — архитектура+roadmap. `docs/` — ADR, HANDOFF_*, DEFERRED, ROADMAP_SESSIONS, STAGE1_COVERAGE, gate-инструменты в `tools/`.

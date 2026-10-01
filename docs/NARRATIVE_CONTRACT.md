@@ -2,8 +2,10 @@
 
 > Чат 2.1.a. Канон контракта между детерминированным движком и нарративным слоем.
 > Тип: [`orchestrator/src/contract.ts`](../orchestrator/src/contract.ts) (ASCII,
-> content-clean). Промпт-потребитель: [`prompts/keeper.system.v0.md`](../prompts/keeper.system.v0.md).
-> Машинная проверка запрещёнки: [`evals/src/antislop.ts`](../evals/src/antislop.ts).
+> content-clean). Промпт-потребитель: [`prompts/keeper.system.v0.3.md`](../prompts/keeper.system.v0.3.md)
+> (текущая версия; ранние заморожены sha256-пинами).
+> Машинная проверка запрещёнки: [`evals/src/antislop.ts`](../evals/src/antislop.ts) + имена и
+> предыстория против пакета — [`evals/src/grounding.ts`](../evals/src/grounding.ts) (NF1).
 > Источник: `brodyazhnik-architecture-v1.md` sec 2.3.
 
 ## Идея

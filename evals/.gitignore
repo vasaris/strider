@@ -19,4 +19,10 @@ full-cycle-report*
 # reports and calibration stdout captures, versioned by name (see DEFERRED RP1). Re-included on
 # purpose; the working-copy reports above stay ignored. .env stays ignored everywhere.
 !l4-records/**
-l4-records/**/.env
+l4-records/**/.env*
+
+# Keyed-run records (Stage 3.1 on; successor of l4-records): committed copies of RP1-named reports
+# and stdout captures (see records/README.md). Re-included on purpose; the working-copy reports
+# in evals/ stay ignored. .env stays ignored here too.
+!records/**
+records/**/.env*

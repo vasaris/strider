@@ -1,0 +1,1040 @@
+{
+  "model": "claude-opus-4-8",
+  "rows": [
+    {
+      "id": "G1",
+      "kind": "good",
+      "targetAxis": null,
+      "scores": {
+        "specificity": 88,
+        "accuracy": 70,
+        "playability": 82,
+        "agency": 84,
+        "tone": 86,
+        "anti_slop": 90
+      },
+      "aggregate": {
+        "score": 83,
+        "pass": true
+      },
+      "antiSlopBlocking": false,
+      "error": null,
+      "rawSample": null,
+      "provisionalOk": true
+    },
+    {
+      "id": "G2",
+      "kind": "good",
+      "targetAxis": null,
+      "scores": {
+        "specificity": 82,
+        "accuracy": 75,
+        "playability": 74,
+        "agency": 85,
+        "tone": 88,
+        "anti_slop": 90
+      },
+      "aggregate": {
+        "score": 82,
+        "pass": true
+      },
+      "antiSlopBlocking": false,
+      "error": null,
+      "rawSample": null,
+      "provisionalOk": true
+    },
+    {
+      "id": "G3",
+      "kind": "good",
+      "targetAxis": null,
+      "scores": {
+        "specificity": 82,
+        "accuracy": 70,
+        "playability": 68,
+        "agency": 78,
+        "tone": 80,
+        "anti_slop": 85
+      },
+      "aggregate": {
+        "score": 77,
+        "pass": false
+      },
+      "antiSlopBlocking": false,
+      "error": null,
+      "rawSample": null,
+      "provisionalOk": false
+    },
+    {
+      "id": "G4",
+      "kind": "good",
+      "targetAxis": null,
+      "scores": {
+        "specificity": 84,
+        "accuracy": 80,
+        "playability": 72,
+        "agency": 85,
+        "tone": 90,
+        "anti_slop": 92
+      },
+      "aggregate": {
+        "score": 84,
+        "pass": true
+      },
+      "antiSlopBlocking": false,
+      "error": null,
+      "rawSample": null,
+      "provisionalOk": true
+    },
+    {
+      "id": "G5",
+      "kind": "good",
+      "targetAxis": null,
+      "scores": {
+        "specificity": 82,
+        "accuracy": 70,
+        "playability": 62,
+        "agency": 78,
+        "tone": 85,
+        "anti_slop": 88
+      },
+      "aggregate": {
+        "score": 78,
+        "pass": false
+      },
+      "antiSlopBlocking": false,
+      "error": null,
+      "rawSample": null,
+      "provisionalOk": false
+    },
+    {
+      "id": "G6",
+      "kind": "good",
+      "targetAxis": null,
+      "scores": {
+        "specificity": 88,
+        "accuracy": 75,
+        "playability": 62,
+        "agency": 80,
+        "tone": 90,
+        "anti_slop": 92
+      },
+      "aggregate": {
+        "score": 81,
+        "pass": true
+      },
+      "antiSlopBlocking": false,
+      "error": null,
+      "rawSample": null,
+      "provisionalOk": true
+    },
+    {
+      "id": "B1",
+      "kind": "coarse",
+      "targetAxis": null,
+      "scores": {
+        "specificity": 5,
+        "accuracy": 10,
+        "playability": 5,
+        "agency": 10,
+        "tone": 3,
+        "anti_slop": 0
+      },
+      "aggregate": {
+        "score": 6,
+        "pass": false
+      },
+      "antiSlopBlocking": true,
+      "error": null,
+      "rawSample": null,
+      "provisionalOk": true
+    },
+    {
+      "id": "B2",
+      "kind": "coarse",
+      "targetAxis": null,
+      "scores": {
+        "specificity": 8,
+        "accuracy": 20,
+        "playability": 10,
+        "agency": 12,
+        "tone": 5,
+        "anti_slop": 40
+      },
+      "aggregate": {
+        "score": 16,
+        "pass": false
+      },
+      "antiSlopBlocking": true,
+      "error": null,
+      "rawSample": null,
+      "provisionalOk": true
+    },
+    {
+      "id": "B3",
+      "kind": "coarse",
+      "targetAxis": null,
+      "scores": {
+        "specificity": 18,
+        "accuracy": 40,
+        "playability": 15,
+        "agency": 45,
+        "tone": 22,
+        "anti_slop": 10
+      },
+      "aggregate": {
+        "score": 25,
+        "pass": false
+      },
+      "antiSlopBlocking": true,
+      "error": null,
+      "rawSample": null,
+      "provisionalOk": true
+    },
+    {
+      "id": "B4",
+      "kind": "coarse",
+      "targetAxis": null,
+      "scores": {
+        "specificity": 8,
+        "accuracy": 15,
+        "playability": 5,
+        "agency": 10,
+        "tone": 12,
+        "anti_slop": 5
+      },
+      "aggregate": {
+        "score": 9,
+        "pass": false
+      },
+      "antiSlopBlocking": true,
+      "error": null,
+      "rawSample": null,
+      "provisionalOk": true
+    },
+    {
+      "id": "B5",
+      "kind": "subtle",
+      "targetAxis": "tone",
+      "scores": {
+        "specificity": 62,
+        "accuracy": 50,
+        "playability": 30,
+        "agency": 40,
+        "tone": 25,
+        "anti_slop": 15
+      },
+      "aggregate": {
+        "score": 37,
+        "pass": false
+      },
+      "antiSlopBlocking": false,
+      "error": null,
+      "rawSample": null,
+      "provisionalOk": true
+    },
+    {
+      "id": "B6",
+      "kind": "subtle",
+      "targetAxis": "specificity",
+      "scores": {
+        "specificity": 55,
+        "accuracy": 50,
+        "playability": 45,
+        "agency": 40,
+        "tone": 30,
+        "anti_slop": 35
+      },
+      "aggregate": {
+        "score": 43,
+        "pass": false
+      },
+      "antiSlopBlocking": false,
+      "error": null,
+      "rawSample": null,
+      "provisionalOk": true
+    },
+    {
+      "id": "B7",
+      "kind": "subtle",
+      "targetAxis": "tone",
+      "scores": {
+        "specificity": 45,
+        "accuracy": 70,
+        "playability": 30,
+        "agency": 65,
+        "tone": 40,
+        "anti_slop": 55
+      },
+      "aggregate": {
+        "score": 51,
+        "pass": false
+      },
+      "antiSlopBlocking": false,
+      "error": null,
+      "rawSample": null,
+      "provisionalOk": true
+    }
+  ],
+  "raw": [
+    {
+      "id": "G1",
+      "verdict": {
+        "axes": {
+          "specificity": {
+            "status": "scored",
+            "score": 88,
+            "notes": "Ольшаник, лёд с треском, сырой ивняк, мшистый камень, борозда — плотная фактура."
+          },
+          "accuracy": {
+            "status": "scored",
+            "score": 70,
+            "notes": "Пакет не дан; внутренне согласовано, оценка по когерентности."
+          },
+          "playability": {
+            "status": "scored",
+            "score": 82,
+            "notes": "Развилка, знак под мхом, борозда к северу — ясная зацепка для выбора."
+          },
+          "agency": {
+            "status": "scored",
+            "score": 84,
+            "notes": "Мир подан, решение за игроком не сделано; пальцы героя без выбора направления."
+          },
+          "tone": {
+            "status": "scored",
+            "score": 86,
+            "notes": "Ведёт звуком/запахом, конкретика быта, сдержанно, второе лицо неявно; регистр выдержан."
+          },
+          "anti_slop": {
+            "status": "scored",
+            "score": 90,
+            "notes": "Ни пастиша, ни клише, ни ярлыков чувств; чисто."
+          }
+        },
+        "antiSlop": {
+          "violations": [],
+          "blocking": false
+        },
+        "budgetWarn": false,
+        "pass": true,
+        "aggregate": {
+          "score": 83,
+          "threshold": 80,
+          "pass": true,
+          "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+        }
+      }
+    },
+    {
+      "id": "G2",
+      "verdict": {
+        "axes": {
+          "specificity": {
+            "status": "scored",
+            "score": 82,
+            "notes": "лямка, перевал, пасеки, сапоги, чай — конкретный быт и география"
+          },
+          "accuracy": {
+            "status": "scored",
+            "score": 75,
+            "notes": "пакета нет; внутренне согласовано, без выдуманной механики"
+          },
+          "playability": {
+            "status": "scored",
+            "score": 74,
+            "notes": "дождь и перевал задают ставку и развилку, но зацепка мягкая"
+          },
+          "agency": {
+            "status": "scored",
+            "score": 85,
+            "notes": "герой строит планы, не решает за игрока"
+          },
+          "tone": {
+            "status": "scored",
+            "score": 88,
+            "notes": "хоббичья мера домашним, 'за гребень не загадываю' — точная привычка"
+          },
+          "anti_slop": {
+            "status": "scored",
+            "score": 90,
+            "notes": "чисто, без пастиша и ярлыков чувств"
+          }
+        },
+        "antiSlop": {
+          "violations": [],
+          "blocking": false
+        },
+        "budgetWarn": false,
+        "pass": true,
+        "aggregate": {
+          "score": 82,
+          "threshold": 80,
+          "pass": true,
+          "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+        }
+      }
+    },
+    {
+      "id": "G3",
+      "verdict": {
+        "axes": {
+          "specificity": {
+            "status": "scored",
+            "score": 82,
+            "notes": "Мокрый камень, глина, лук и старое железо — конкретный бой через тело и запах."
+          },
+          "accuracy": {
+            "status": "scored",
+            "score": 70,
+            "notes": "Пакета нет; внутренне согласованно, исход выпада открыт."
+          },
+          "playability": {
+            "status": "scored",
+            "score": 68,
+            "notes": "Схватка в моменте, но нет явной точки для решения игрока — обрыв без зацепки на следующий шаг."
+          },
+          "agency": {
+            "status": "scored",
+            "score": 78,
+            "notes": "'Герой перенёс вес, ударил' решает за игрока в бою; результат не навязан, но действие уже совершено за него."
+          },
+          "tone": {
+            "status": "scored",
+            "score": 80,
+            "notes": "Сдержанно, звук и запах ведут, зрение не первым — в регистре."
+          },
+          "anti_slop": {
+            "status": "scored",
+            "score": 85,
+            "notes": "Чисто, без пастиша и клише; чувства не названы ярлыком."
+          }
+        },
+        "antiSlop": {
+          "violations": [],
+          "blocking": false
+        },
+        "budgetWarn": false,
+        "pass": true,
+        "aggregate": {
+          "score": 77,
+          "threshold": 80,
+          "pass": false,
+          "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+        }
+      }
+    },
+    {
+      "id": "G4",
+      "verdict": {
+        "axes": {
+          "specificity": {
+            "status": "scored",
+            "score": 84,
+            "notes": "Шов, притолока, сырой камень — конкретика ремесла и износа."
+          },
+          "accuracy": {
+            "status": "scored",
+            "score": 80,
+            "notes": "Пакета нет; внутренне согласовано, механика не выдумана."
+          },
+          "playability": {
+            "status": "scored",
+            "score": 72,
+            "notes": "«Торопились» намекает на историю места, но прямой зацепки для действия мало."
+          },
+          "agency": {
+            "status": "scored",
+            "score": 85,
+            "notes": "Гном говорит от себя, за игрока ничего не решает."
+          },
+          "tone": {
+            "status": "scored",
+            "score": 90,
+            "notes": "Голос гнома выдержан: счёт, ремесло, скупость, оценка кладки."
+          },
+          "anti_slop": {
+            "status": "scored",
+            "score": 92,
+            "notes": "Чисто, без пастиша и клише; чувства не названы ярлыком."
+          }
+        },
+        "antiSlop": {
+          "violations": [],
+          "blocking": false
+        },
+        "budgetWarn": false,
+        "pass": true,
+        "aggregate": {
+          "score": 84,
+          "threshold": 80,
+          "pass": true,
+          "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+        }
+      }
+    },
+    {
+      "id": "G5",
+      "verdict": {
+        "axes": {
+          "specificity": {
+            "status": "scored",
+            "score": 82,
+            "notes": "Мощение, топь, камни, осязаемый быт дороги — конкретно, хоть и лаконично."
+          },
+          "accuracy": {
+            "status": "scored",
+            "score": 70,
+            "notes": "Пакета нет; внутренне согласовано, без выдуманной механики."
+          },
+          "playability": {
+            "status": "scored",
+            "score": 62,
+            "notes": "Атмосферный NPC-момент, но зацепки к действию для игрока едва намечены."
+          },
+          "agency": {
+            "status": "scored",
+            "score": 78,
+            "notes": "За игрока не решает; реплика NPC оставляет пространство для реакции."
+          },
+          "tone": {
+            "status": "scored",
+            "score": 85,
+            "notes": "Родовая память, ремесло, счёт поколений — узнаваемый гномий голос, сдержанно."
+          },
+          "anti_slop": {
+            "status": "scored",
+            "score": 88,
+            "notes": "Чисто, без пастиша и клише; 'покуда руки держат' на грани, но живо."
+          }
+        },
+        "antiSlop": {
+          "violations": [],
+          "blocking": false
+        },
+        "budgetWarn": false,
+        "pass": true,
+        "aggregate": {
+          "score": 78,
+          "threshold": 80,
+          "pass": false,
+          "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+        }
+      }
+    },
+    {
+      "id": "G6",
+      "verdict": {
+        "axes": {
+          "specificity": {
+            "status": "scored",
+            "score": 88,
+            "notes": "Буки, ольха, молодой побег у обочины — конкретно и осязаемо."
+          },
+          "accuracy": {
+            "status": "scored",
+            "score": 75,
+            "notes": "Пакета нет; внутренне согласовано, противоречий не видно."
+          },
+          "playability": {
+            "status": "scored",
+            "score": 62,
+            "notes": "Атмосферная зарисовка, но зацепки для действия слабые, диалог без крючка."
+          },
+          "agency": {
+            "status": "scored",
+            "score": 80,
+            "notes": "NPC говорит о себе, за игрока ничего не решает."
+          },
+          "tone": {
+            "status": "scored",
+            "score": 90,
+            "notes": "Сдержанная долгая мера времени в духе дунэдайн, без напыщенности и пастиша."
+          },
+          "anti_slop": {
+            "status": "scored",
+            "score": 92,
+            "notes": "Чисто: ни клише Средиземья, ни ярлыков чувств, ни mock-архаики."
+          }
+        },
+        "antiSlop": {
+          "violations": [],
+          "blocking": false
+        },
+        "budgetWarn": false,
+        "pass": true,
+        "aggregate": {
+          "score": 81,
+          "threshold": 80,
+          "pass": true,
+          "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+        }
+      }
+    },
+    {
+      "id": "B1",
+      "verdict": {
+        "axes": {
+          "specificity": {
+            "status": "scored",
+            "score": 5,
+            "notes": "Ноль конкретики: ни места, ни детали, только абстрактный пафос."
+          },
+          "accuracy": {
+            "status": "scored",
+            "score": 10,
+            "notes": "Пакета нет; внутренне пусто, механики и зацепок никаких."
+          },
+          "playability": {
+            "status": "scored",
+            "score": 5,
+            "notes": "Игроку не за что зацепиться, нет выбора и следующего шага."
+          },
+          "agency": {
+            "status": "scored",
+            "score": 10,
+            "notes": "'Избранный остановит' — судьба навязана, субъектности героя нет."
+          },
+          "tone": {
+            "status": "scored",
+            "score": 3,
+            "notes": "Прямая противоположность сдержанной героике: инфляция масштаба."
+          },
+          "anti_slop": {
+            "status": "scored",
+            "score": 0,
+            "notes": "Пастиш-набор: 'древнее зло пробуждается', 'тьма грядёт', 'избранный', 'эпическая битва'."
+          }
+        },
+        "antiSlop": {
+          "violations": [
+            {
+              "list": "vk_addendum",
+              "term": "древнее зло пробуждается",
+              "reason": "Middle-earth pastiche; the single highest slop-risk line",
+              "severity": "block",
+              "index": 0
+            },
+            {
+              "list": "vk_addendum",
+              "term": "тьма грядёт",
+              "reason": "genre cliche; portentous abstraction",
+              "severity": "block",
+              "index": 39
+            },
+            {
+              "list": "vk_addendum",
+              "term": "силы тьмы",
+              "reason": "flattens specific adversaries into a generic mass",
+              "severity": "block",
+              "index": 109
+            },
+            {
+              "list": "vk_addendum",
+              "term": "судьба мира",
+              "reason": "epic-stakes inflation; the solo scope is personal, not world-ending",
+              "severity": "block",
+              "index": 52
+            },
+            {
+              "list": "vk_addendum",
+              "term": "избранный",
+              "reason": "chosen-one trope; AMBIGUOUS single word -> warn (Ivan finalizes or removes in review)",
+              "severity": "warn",
+              "index": 89
+            }
+          ],
+          "blocking": true
+        },
+        "budgetWarn": false,
+        "pass": false,
+        "aggregate": {
+          "score": 6,
+          "threshold": 80,
+          "pass": false,
+          "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+        }
+      }
+    },
+    {
+      "id": "B2",
+      "verdict": {
+        "axes": {
+          "specificity": {
+            "status": "scored",
+            "score": 8,
+            "notes": "Ноль сенсорики: голая механика без имени, звука, запаха, тела."
+          },
+          "accuracy": {
+            "status": "scored",
+            "score": 20,
+            "notes": "Пакета нет; текст оперирует механикой (хиты, спасбросок) как прозой — нечего сверять, внутренне пусто."
+          },
+          "playability": {
+            "status": "scored",
+            "score": 10,
+            "notes": "Ни зацепки, ни выбора, ни следующего шага — сухая сводка урона."
+          },
+          "agency": {
+            "status": "scored",
+            "score": 12,
+            "notes": "Спасбросок 'сделан и провален' за игрока, исход подан как свершившийся факт."
+          },
+          "tone": {
+            "status": "scored",
+            "score": 5,
+            "notes": "Не толкиновский регистр вообще — язык листа персонажа, не прозы."
+          },
+          "anti_slop": {
+            "status": "scored",
+            "score": 40,
+            "notes": "Пастиша нет, но механический канцелярит вместо сцены."
+          }
+        },
+        "antiSlop": {
+          "violations": [
+            {
+              "list": "calque",
+              "term": "хитов",
+              "reason": "D&D calque; TOR uses Выносливость/Изнурение",
+              "severity": "block",
+              "index": 22
+            },
+            {
+              "list": "calque",
+              "term": "очки жизни",
+              "reason": "HP calque; TOR has no hit points",
+              "severity": "block",
+              "index": 77
+            },
+            {
+              "list": "calque",
+              "term": "спасбросок",
+              "reason": "D&D calque (saving throw); TOR uses checks",
+              "severity": "block",
+              "index": 42
+            }
+          ],
+          "blocking": true
+        },
+        "budgetWarn": false,
+        "pass": false,
+        "aggregate": {
+          "score": 16,
+          "threshold": 80,
+          "pass": false,
+          "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+        }
+      }
+    },
+    {
+      "id": "B3",
+      "verdict": {
+        "axes": {
+          "specificity": {
+            "status": "scored",
+            "score": 18,
+            "notes": "Ни одной детали: воздух, тишина, поляна — всё абстрактно, ноль конкретики."
+          },
+          "accuracy": {
+            "status": "scored",
+            "score": 40,
+            "notes": "Пакета нет; внутренне непротиворечиво, но пусто, сверять нечего."
+          },
+          "playability": {
+            "status": "scored",
+            "score": 15,
+            "notes": "Никакой зацепки и вектора: неясно, где герой и что делать."
+          },
+          "agency": {
+            "status": "scored",
+            "score": 45,
+            "notes": "Решений не отнимает, но и субъектности мира/героя не даёт."
+          },
+          "tone": {
+            "status": "scored",
+            "score": 22,
+            "notes": "Не толкиновский регистр: абстрактный саспенс вместо конкретики быта и природы."
+          },
+          "anti_slop": {
+            "status": "scored",
+            "score": 10,
+            "notes": "Сплошной слоп: 'время остановилось', 'тишина давит', 'холодок', 'незримая угроза', 'витает'."
+          }
+        },
+        "antiSlop": {
+          "violations": [
+            {
+              "list": "slop_ru",
+              "term": "время словно остановилось",
+              "reason": "cliche; stops the scene dead",
+              "severity": "warn",
+              "index": 0
+            },
+            {
+              "list": "slop_ru",
+              "term": "по спине пробежал холодок",
+              "reason": "cliche; describes feeling, see sec 0.9",
+              "severity": "warn",
+              "index": 72
+            },
+            {
+              "list": "slop_ru",
+              "term": "воздух наполнен напряжением",
+              "reason": "purple; abstract tension (cf. warn \"воздух наполнился\")",
+              "severity": "block",
+              "index": 27
+            },
+            {
+              "list": "slop_ru",
+              "term": "тишина давит",
+              "reason": "purple; abstract menace, not a sound/percept",
+              "severity": "block",
+              "index": 56
+            }
+          ],
+          "blocking": true
+        },
+        "budgetWarn": false,
+        "pass": false,
+        "aggregate": {
+          "score": 25,
+          "threshold": 80,
+          "pass": false,
+          "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+        }
+      }
+    },
+    {
+      "id": "B4",
+      "verdict": {
+        "axes": {
+          "specificity": {
+            "status": "scored",
+            "score": 8,
+            "notes": "Ноль конкретики: ни места, ни быта, ни детали — только общие слова."
+          },
+          "accuracy": {
+            "status": "scored",
+            "score": 15,
+            "notes": "Пакета нет; внутренне пусто, ничего проверяемого, голое возвеличивание."
+          },
+          "playability": {
+            "status": "scored",
+            "score": 5,
+            "notes": "Игроку не за что зацепиться, нет ни сцены, ни выбора, ни следующего шага."
+          },
+          "agency": {
+            "status": "scored",
+            "score": 10,
+            "notes": "За героя решено, что он храбрец и совершил подвиг — оценка навязана вместо показа."
+          },
+          "tone": {
+            "status": "scored",
+            "score": 12,
+            "notes": "Mock-архаика 'поистине', жанровая инфляция 'подвиг будет жить века' — мимо сдержанной героики."
+          },
+          "anti_slop": {
+            "status": "scored",
+            "score": 5,
+            "notes": "Плотный слоп: 'стоит отметить', 'безусловно', 'поистине', пафос вечной славы."
+          }
+        },
+        "antiSlop": {
+          "violations": [
+            {
+              "list": "register_parasite",
+              "term": "данный",
+              "reason": "officialese filler; prefer этот or the concrete noun",
+              "severity": "warn",
+              "index": 20
+            },
+            {
+              "list": "register_parasite",
+              "term": "поистине",
+              "reason": "empty intensifier (distinct from VK addendum воистину)",
+              "severity": "warn",
+              "index": 56
+            },
+            {
+              "list": "register_parasite",
+              "term": "безусловно",
+              "reason": "empty intensifier",
+              "severity": "warn",
+              "index": 35
+            },
+            {
+              "list": "register_parasite",
+              "term": "стоит отметить",
+              "reason": "essayistic filler; breaks the scene",
+              "severity": "warn",
+              "index": 0
+            },
+            {
+              "list": "vk_addendum",
+              "term": "века и века",
+              "reason": "vague time-inflation filler",
+              "severity": "block",
+              "index": 88
+            }
+          ],
+          "blocking": true
+        },
+        "budgetWarn": false,
+        "pass": false,
+        "aggregate": {
+          "score": 9,
+          "threshold": 80,
+          "pass": false,
+          "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+        }
+      }
+    },
+    {
+      "id": "B5",
+      "verdict": {
+        "axes": {
+          "specificity": {
+            "status": "scored",
+            "score": 62,
+            "notes": "смола, сова, ветки конкретны, но третье предложение уходит в абстракцию"
+          },
+          "accuracy": {
+            "status": "scored",
+            "score": 50,
+            "notes": "пакета нет; внутренне первая часть согласована, финал противоречит сдержанному масштабу"
+          },
+          "playability": {
+            "status": "scored",
+            "score": 30,
+            "notes": "сцена статична, нет зацепки и выбора для игрока"
+          },
+          "agency": {
+            "status": "scored",
+            "score": 40,
+            "notes": "'герой' обезличен, третье лицо вместо 'ты', решает за игрока значимость ночи"
+          },
+          "tone": {
+            "status": "scored",
+            "score": 25,
+            "notes": "'судьба всего Средиземья' — прямая жанровая инфляция, ставки не личные"
+          },
+          "anti_slop": {
+            "status": "scored",
+            "score": 15,
+            "notes": "'судьба всего Средиземья' — эталонный пастиш из стоп-листа"
+          }
+        },
+        "antiSlop": {
+          "violations": [],
+          "blocking": false
+        },
+        "budgetWarn": false,
+        "pass": true,
+        "aggregate": {
+          "score": 37,
+          "threshold": 80,
+          "pass": false,
+          "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+        }
+      }
+    },
+    {
+      "id": "B6",
+      "verdict": {
+        "axes": {
+          "specificity": {
+            "status": "scored",
+            "score": 55,
+            "notes": "Есть запах сырости/мышей и хруст под сапогом, но темнота и «хрустнуло» без детали расплывчаты."
+          },
+          "accuracy": {
+            "status": "scored",
+            "score": 50,
+            "notes": "Пакета нет; внутренне согласно, но «Герой» вместо второго лица ломает контракт лица."
+          },
+          "playability": {
+            "status": "scored",
+            "score": 45,
+            "notes": "Есть зацепка (хруст, что-то под ногой), но крючок минимален и не развит."
+          },
+          "agency": {
+            "status": "scored",
+            "score": 40,
+            "notes": "«Охватил леденящий ужас» навязывает герою эмоцию и реакцию за игрока."
+          },
+          "tone": {
+            "status": "scored",
+            "score": 30,
+            "notes": "Третье лицо «Герой» вместо «ты»; ведёт зрением (темнота), а не звуком/запахом первым."
+          },
+          "anti_slop": {
+            "status": "scored",
+            "score": 35,
+            "notes": "«Леденящий ужас» — чувство ярлыком (sec 0.9), генерик-клише входа в подземелье."
+          }
+        },
+        "antiSlop": {
+          "violations": [],
+          "blocking": false
+        },
+        "budgetWarn": false,
+        "pass": true,
+        "aggregate": {
+          "score": 43,
+          "threshold": 80,
+          "pass": false,
+          "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+        }
+      }
+    },
+    {
+      "id": "B7",
+      "verdict": {
+        "axes": {
+          "specificity": {
+            "status": "scored",
+            "score": 45,
+            "notes": "Камень как деталь есть, но дальше вода: холмы, чудо, чай — без конкретики места/предмета."
+          },
+          "accuracy": {
+            "status": "scored",
+            "score": 70,
+            "notes": "Пакета нет; внутренне непротиворечиво, механику не выдумывает."
+          },
+          "playability": {
+            "status": "scored",
+            "score": 30,
+            "notes": "Риторический вопрос ни к чему не цепляет; игроку не за что взяться, следующего шага нет."
+          },
+          "agency": {
+            "status": "scored",
+            "score": 65,
+            "notes": "За игрока не решает, но и хода ему не даёт — просто вздох в пустоту."
+          },
+          "tone": {
+            "status": "scored",
+            "score": 40,
+            "notes": "Голос гнома сбит: 'чудо', мечтательный вздох и 'кто ж его знает' — это скорее хоббит, а не счёт/ремесло/скупость слова."
+          },
+          "anti_slop": {
+            "status": "scored",
+            "score": 55,
+            "notes": "'Эх, кто ж его знает', 'тёплый угол да чаю горячего' — уютные паразиты-клише, речь размыта под общий фольклор."
+          }
+        },
+        "antiSlop": {
+          "violations": [],
+          "blocking": false
+        },
+        "budgetWarn": false,
+        "pass": true,
+        "aggregate": {
+          "score": 51,
+          "threshold": 80,
+          "pass": false,
+          "rule": "mean(6)>=80 (PROVISIONAL: calibration likely adds a per-axis floor)"
+        }
+      }
+    }
+  ]
+}
