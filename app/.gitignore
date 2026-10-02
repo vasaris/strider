@@ -1,0 +1,11 @@
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+coverage/
+.env*
+
+# P14 -- tool-generated agent files are data, never committed.
+AGENTS.md
+CLAUDE.md
