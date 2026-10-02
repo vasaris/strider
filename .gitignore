@@ -19,3 +19,6 @@ brodyazhnik-*.zip
 # Root workspace: hoisted dependencies (npm workspaces). Member node_modules/ stay
 # ignored by their own .gitignore.
 /node_modules
+
+# Local env (DATABASE_URL, API keys): never committed, at any depth.
+.env*

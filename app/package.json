@@ -11,23 +11,28 @@
     "start": "NEXT_TELEMETRY_DISABLED=1 next start -H 127.0.0.1",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "icons": "node scripts/gen-icons.mjs"
+    "icons": "node scripts/gen-icons.mjs",
+    "db:migrate": "tsx --conditions=react-server scripts/db-migrate.ts"
   },
   "dependencies": {
     "@brodyazhnik/engine": "*",
     "@brodyazhnik/orchestrator": "*",
     "next": "16.3.8",
+    "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "0.0.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "^20.19.43",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "postcss": "^8.5.28",
     "tailwindcss": "4.3.3",
+    "tsx": "^4.22.4",
     "typescript": "^5.5.4",
     "vitest": "^4.1.11"
   }
