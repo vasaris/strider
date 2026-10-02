@@ -13,6 +13,6 @@
   "//workspaces-app": "app/ is a RESERVED topology slot (Next.js PWA). NOT listed here: npm fails on a missing workspace dir. Chat 3.1.a scaffolds app/ and adds it to this array.",
   "scripts": {
     "typecheck:all": "npm run typecheck -w engine && npm run typecheck -w orchestrator && npm run typecheck -w evals",
-    "test:all": "npm run test -w engine && npm run test -w orchestrator && npm run test -w evals"
+    "test:all": "node tools/check-lock-platforms.mjs && npm run test -w engine && npm run test -w orchestrator && npm run test -w evals"
   }
 }
