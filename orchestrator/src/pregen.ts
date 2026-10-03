@@ -57,12 +57,17 @@ export function pregenRoute(region: JourneyRegion): Route {
   };
 }
 
-/** The journey start: pregen hero + route, pack-derived duration, seeded RNG, empty log. */
+/** The journey start: pregen hero + route, pack-derived duration, seeded RNG, empty log.
+ *  `route` (3.1-C7) defaults to pregenRoute(region); a given route must be in `region` (throws
+ *  otherwise), so a caller that checks the route (the server's DZ1 422) plays that same object. */
 export function startJourney(
   cfg: JourneyConfigs,
-  opts: { readonly rngSeed: string; readonly region: JourneyRegion },
+  opts: { readonly rngSeed: string; readonly region: JourneyRegion; readonly route?: Route },
 ): JourneyState {
-  const route = pregenRoute(opts.region);
+  const route = opts.route ?? pregenRoute(opts.region);
+  if (route.region !== opts.region) {
+    throw new Error(`startJourney: route region ${route.region} does not match region ${opts.region}`);
+  }
   return {
     hero: pregenWanderer(cfg),
     journey: {

@@ -11,8 +11,10 @@ import {
   DEFAULT_ASSEMBLY,
   DEFAULT_TONE,
   loadKeeperSetup,
+  loadKeeperSetupWith,
   loadPromptAssembly,
   readFileRef,
+  type FileBytesReader,
 } from '../src/keeper/setup.js';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -54,5 +56,58 @@ describe('loadKeeperSetup (real files)', () => {
     expect(() => loadKeeperSetup({ repoRoot, keeperPrompt: KEEPER, tone: 'content-packs/kv/missing.md' })).toThrow();
     expect(() => loadKeeperSetup({ repoRoot, keeperPrompt: KEEPER, assembly: 'prompts/missing.json' })).toThrow();
     expect(() => readFileRef(repoRoot, 'nope/nothing.txt')).toThrow();
+  });
+});
+
+describe('loadKeeperSetupWith: one read per file (N1)', () => {
+  const abs = (rel: string): string => resolve(repoRoot, rel);
+
+  it('reads each of the 3 files exactly once and equals loadKeeperSetup', () => {
+    const counts = new Map<string, number>();
+    const read: FileBytesReader = (p) => {
+      counts.set(p, (counts.get(p) ?? 0) + 1);
+      return readFileSync(p);
+    };
+    const setup = loadKeeperSetupWith(read, { repoRoot, keeperPrompt: KEEPER });
+    expect([...counts.entries()].sort()).toEqual(
+      [[abs(KEEPER), 1], [abs(DEFAULT_TONE), 1], [abs(DEFAULT_ASSEMBLY), 1]].sort(),
+    );
+    expect(setup).toEqual(loadKeeperSetup({ repoRoot, keeperPrompt: KEEPER }));
+  });
+
+  it('a file that changes between reads cannot make provenance disagree with the text used', () => {
+    // The pre-N1 race: text from one read, sha256 from a second read of a replaced file. Every
+    // read here returns different bytes than the previous read of the same path.
+    const generation = new Map<string, number>();
+    const read: FileBytesReader = (p) => {
+      const n = (generation.get(p) ?? 0) + 1;
+      generation.set(p, n);
+      const real = readFileSync(p);
+      if (p === abs(DEFAULT_ASSEMBLY)) return real; // keep the assembly parseable
+      return Buffer.concat([real, Buffer.from(`\n<!-- read ${n} -->\n`, 'utf8')]);
+    };
+    const setup = loadKeeperSetupWith(read, { repoRoot, keeperPrompt: KEEPER });
+    const keeperBytes = Buffer.concat([bytes(KEEPER), Buffer.from('\n<!-- read 1 -->\n', 'utf8')]);
+    const toneBytes = Buffer.concat([bytes(DEFAULT_TONE), Buffer.from('\n<!-- read 1 -->\n', 'utf8')]);
+    const hash = (b: Buffer): string => createHash('sha256').update(b).digest('hex');
+    expect(setup.provenance.keeper.sha256).toBe(hash(keeperBytes));
+    expect(setup.provenance.tone.sha256).toBe(hash(toneBytes));
+    expect(setup.system).toBe(buildKeeperSystem(setup.assembly, keeperBytes.toString('utf8'), toneBytes.toString('utf8')));
+    expect(setup.system).toContain('<!-- read 1 -->');
+    expect(setup.system).not.toContain('<!-- read 2 -->');
+  });
+
+  it('the assembly provenance hashes the bytes that were parsed', () => {
+    const variant = Buffer.from(JSON.stringify(JSON.parse(bytes(DEFAULT_ASSEMBLY).toString('utf8')), null, 4), 'utf8');
+    let reads = 0;
+    const read: FileBytesReader = (p) => {
+      if (p !== abs(DEFAULT_ASSEMBLY)) return readFileSync(p);
+      reads++;
+      return reads === 1 ? variant : readFileSync(p);
+    };
+    const setup = loadKeeperSetupWith(read, { repoRoot, keeperPrompt: KEEPER });
+    expect(reads).toBe(1);
+    expect(setup.provenance.assembly.sha256).toBe(createHash('sha256').update(variant).digest('hex'));
+    expect(setup.provenance.assembly.sha256).not.toBe(sha(DEFAULT_ASSEMBLY));
   });
 });

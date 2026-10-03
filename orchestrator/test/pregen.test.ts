@@ -53,3 +53,24 @@ describe('pregen', () => {
     }
   });
 });
+
+describe('startJourney route option (3.1-C7)', () => {
+  it('without route: pregenRoute(region); with an equal route: the same state', () => {
+    const base = startJourney(cfg, { rngSeed: 'seed-r', region: 'dark_lands' });
+    expect(startJourney(cfg, { rngSeed: 'seed-r', region: 'dark_lands', route: pregenRoute('dark_lands') })).toEqual(base);
+  });
+
+  it('plays the given route object (duration derived from it)', () => {
+    const route = { ...pregenRoute('border_lands'), totalHexes: 3, dangerZones: [2] };
+    const s = startJourney(cfg, { rngSeed: 'seed-r', region: 'border_lands', route });
+    expect(s.journey.route).toBe(route);
+    expect(s.journey.remainingHexes).toBe(3);
+    expect(s.journey.durationDays).toBe(journeyDuration(route, cfg.rules));
+  });
+
+  it('throws when the route region differs from region', () => {
+    expect(() => startJourney(cfg, { rngSeed: 'seed-r', region: 'wild_lands', route: pregenRoute('dark_lands') })).toThrow(
+      /route region dark_lands does not match region wild_lands/,
+    );
+  });
+});

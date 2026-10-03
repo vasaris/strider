@@ -14,9 +14,15 @@ const manifest = JSON.parse(
 
 describe('GET /api/health', () => {
   it('returns 200 with the pack id and version', async () => {
-    const res = GET();
+    const res = GET(new Request('http://127.0.0.1:3000/api/health', { headers: { host: '127.0.0.1:3000' } }));
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true, pack: { id: manifest.pack_id, version: manifest.pack_version } });
+  });
+
+  it('403 forbidden_host for a foreign Host (3.1-C7)', async () => {
+    const res = GET(new Request('http://127.0.0.1:3000/api/health', { headers: { host: 'evil.example:3000' } }));
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: { code: 'forbidden_host', message: 'This host is not allowed.' } });
   });
 });
 

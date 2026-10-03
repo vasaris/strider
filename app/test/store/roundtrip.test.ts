@@ -4,7 +4,6 @@
 // next state deep-equal, the package rendered and framed for the Keeper byte for byte. The STORED
 // package must render identically too (the C7 regeneration path). jsonb normalizes key order, and
 // the test asserts that it did, so a pass-through store cannot pass it.
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -18,32 +17,16 @@ import {
   PREGEN_HERO_REF,
   renderNarrativePackage,
   startJourney,
-  type JourneyRegion,
 } from '@brodyazhnik/orchestrator';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { PostgresSessionStore } from '../../src/server/store/postgres';
 import { migratedDb } from '../support/pglite';
+import { SEEDS } from '../support/suiteSeeds';
 
 const REPO = fileURLToPath(new URL('../../..', import.meta.url));
 const env = loadJourneyEnv(join(REPO, 'content-packs', 'kv'));
 const asm = loadPromptAssembly(REPO);
-
-// Copied from evals/src/harness/suiteSeeds.ts (SUITE_JOURNEYS), in order; app does not depend on
-// evals. The drift pin below compares these tuples with that file's text.
-const SEEDS: readonly { id: string; rngSeed: string; region: JourneyRegion; eyeGap?: number }[] = [
-  { id: 'j.border.shortcut', rngSeed: 'a3-12', region: 'border_lands' },
-  { id: 'j.border.inspiring', rngSeed: 'a3-14', region: 'border_lands' },
-  { id: 'j.wild.mishap', rngSeed: 'a3-0', region: 'wild_lands' },
-  { id: 'j.wild.meeting', rngSeed: 'a3-22', region: 'wild_lands' },
-  { id: 'j.dark.badchoice', rngSeed: 'a3-7', region: 'dark_lands' },
-  { id: 'j.dark.despair', rngSeed: 'a3-10', region: 'dark_lands' },
-  { id: 'j.dark.misfortune', rngSeed: 'a3-1', region: 'dark_lands' },
-  { id: 'j.dark.significant', rngSeed: 'a3-4', region: 'dark_lands' },
-  { id: 'j.dark.midjourney', rngSeed: 'a3-3', region: 'dark_lands' },
-  { id: 'j.border.arrival', rngSeed: 'a3-1', region: 'border_lands' },
-  { id: 'j.dark.detection', rngSeed: 'a3-1', region: 'dark_lands', eyeGap: 1 },
-];
 
 /** As evals' initialJourneyState: eyeGap puts the Eye that far below the pursuit threshold. */
 function initialState(seed: (typeof SEEDS)[number]): JourneyState {
@@ -61,22 +44,6 @@ function expectReordered(back: object, orig: object): void {
   expect(back).toStrictEqual(orig);
   expect(Object.keys(back)).not.toEqual(Object.keys(orig));
 }
-
-describe('suite seed drift pin', () => {
-  it('matches the (id, rngSeed, region, eyeGap) tuples of evals/src/harness/suiteSeeds.ts, in order', () => {
-    const text = readFileSync(join(REPO, 'evals', 'src', 'harness', 'suiteSeeds.ts'), 'utf8');
-    const body = text.slice(text.indexOf('export const SUITE_JOURNEYS'));
-    const blocks = body.split(/\n\s*\{\s*\n\s*id: /).slice(1);
-    const parsed = blocks.map((b) => {
-      const id = /^'([^']+)'/.exec(b)?.[1];
-      const rngSeed = /rngSeed: '([^']+)'/.exec(b)?.[1];
-      const region = /region: '([^']+)'/.exec(b)?.[1];
-      const eyeGap = /eyeGap: (\d+)/.exec(b)?.[1];
-      return { id, rngSeed, region, ...(eyeGap === undefined ? {} : { eyeGap: Number(eyeGap) }) };
-    });
-    expect(parsed).toEqual(SEEDS);
-  });
-});
 
 describe('round-trip through jsonb: 11 suite journeys to arrival', () => {
   const turnsPerSeed: Record<string, number> = {};

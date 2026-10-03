@@ -7,6 +7,8 @@
 // without agentRules: false the files WOULD be written, so this test is meaningful on
 // any host, including one with no agent in its environment. The child env is an
 // allowlist (no API keys, no inherited agent variables).
+// 3.1-C7: the same single dev-server start also runs the API checks (test/support/devApi.ts;
+// Next's dev lock forbids a second `next dev` in app/).
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
@@ -16,6 +18,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
+
+import { devApiChecks } from './support/devApi';
 
 const APP = fileURLToPath(new URL('..', import.meta.url));
 const ROOT = join(APP, '..');
@@ -75,7 +79,7 @@ async function killGroup(child: ChildProcess): Promise<void> {
 
 describe('next dev with an agent detected (P14)', () => {
   it(
-    'serves the shell and writes no AGENTS.md / CLAUDE.md',
+    'serves the shell and the API guards, and writes no AGENTS.md / CLAUDE.md',
     async () => {
       const appAgents = join(APP, 'AGENTS.md');
       const appClaude = join(APP, 'CLAUDE.md');
@@ -127,6 +131,7 @@ describe('next dev with an agent detected (P14)', () => {
               expect(res.headers.get('content-security-policy')).toBe("default-src 'self'; script-src 'self'");
             }
           }
+          await devApiChecks(port, () => stripAnsi(output)); // 3.1-C7: the API through the real bundle
         } catch (err) {
           await delay(1_000); // let the child's last output arrive
           failIfLocked();

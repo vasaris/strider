@@ -11,6 +11,7 @@
     "start": "NEXT_TELEMETRY_DISABLED=1 next start -H 127.0.0.1",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
+    "test:pg": "vitest run --config vitest.pg.config.ts",
     "icons": "node scripts/gen-icons.mjs",
     "db:migrate": "tsx --conditions=react-server scripts/db-migrate.ts"
   },
