@@ -5,6 +5,10 @@
 // AnthropicKeeper, loadJourneyEnv) against the UNCHANGED fixture: the move reproduced the exact
 // bytes -- system prompt and every seed's user message. It doubles as the NF1 x TP1 seam check:
 // name grounding through the `## detection` / `## journey` sections (3.1-C2/C3).
+// 3.3a-K1 re-captured the fixture through this same orchestrator path for R2 (Eye growth only
+// from hero checks, never from the scene-table Feat die): users["j.dark.misfortune"] (loses
+// eye_delta) and users["j.dark.detection"] (re-seeded a3-1 -> a3-5) and the note changed; the
+// system prompt (sha256 / UTF-8 bytes) and toneSha256 are unchanged.
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';

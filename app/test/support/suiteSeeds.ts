@@ -23,7 +23,7 @@ export const SEEDS: readonly SuiteSeed[] = [
   { id: 'j.dark.significant', rngSeed: 'a3-4', region: 'dark_lands' },
   { id: 'j.dark.midjourney', rngSeed: 'a3-3', region: 'dark_lands', stepsBefore: 2 },
   { id: 'j.border.arrival', rngSeed: 'a3-1', region: 'border_lands', stepsBefore: 1 },
-  { id: 'j.dark.detection', rngSeed: 'a3-1', region: 'dark_lands', eyeGap: 1 },
+  { id: 'j.dark.detection', rngSeed: 'a3-5', region: 'dark_lands', eyeGap: 1 },
 ];
 
 /** As evals' initialJourneyState: eyeGap puts the Eye that far below the pursuit threshold. */

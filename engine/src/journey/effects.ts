@@ -16,6 +16,19 @@ function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
 }
 
+/** Eye growth from a shadow_points effect of value v (out of combat: +N for N gained). */
+function shadowEyeGain(v: number, cfg: JourneyConfigs): number {
+  return growthFromShadowGain(Math.max(0, v), false, cfg.eye);
+}
+
+/**
+ * Total Eye growth the shadow_points effects in `effects` cause when applied (the same
+ * per-effect amount applyEffect adds). Reported as the "shadow" Eye source of a beat.
+ */
+export function shadowEyeGrowth(effects: readonly Effect[], cfg: JourneyConfigs): number {
+  return effects.reduce((acc, e) => (e.op === "shadow_points" ? acc + shadowEyeGain(intValue(e, "shadow_points"), cfg) : acc), 0);
+}
+
 /**
  * Apply a single effect, routing its op to the right state slice. The journey is
  * out of combat throughout (milestone), so a Shadow gain also raises Eye
@@ -33,8 +46,7 @@ export function applyEffect(state: JourneyState, effect: Effect, cfg: JourneyCon
     case "shadow_points": {
       const v = intValue(effect, "shadow_points");
       const withShadow = gainShadow(hero, v); // caps at max Hope, preserves scars
-      const eyeGain = growthFromShadowGain(Math.max(0, v), false, cfg.eye); // out of combat
-      const eye = applyEyeAwarenessDelta(withShadow.eye, eyeGain);
+      const eye = applyEyeAwarenessDelta(withShadow.eye, shadowEyeGain(v, cfg));
       return { ...state, hero: { ...withShadow, eye } };
     }
     case "fatigue_points": {

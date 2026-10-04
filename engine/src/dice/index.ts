@@ -15,7 +15,9 @@ export type {
 } from "./types.js";
 
 export {
+  featDieResultOfFace,
   featRank,
+  keptFeatDie,
   resolveFeatModifier,
   rollFeatDie,
   rollFeatWithModifier,

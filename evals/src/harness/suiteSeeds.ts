@@ -25,6 +25,9 @@
 //                                      0, the captured step has a 'detection' event       [TP1]
 // The `expect` of each entry pins what the engine produced for the chosen seed; the pins are
 // checked by engineProvider.test.ts, so a pack or engine change that moves a scene is caught.
+// 3.3a-K1 (R2: the Eye grows only for an Eye on a hero check, never for the scene-table Feat die)
+// re-ran the procedure for all 11 specs: only j.dark.detection moved (a3-1 -> a3-5; its detection
+// had come from the scene-table Eye of terrible_misfortune). The other 10 kept their seeds.
 
 import type { EngineSeed, JourneySpec } from './engineProvider.js';
 
@@ -87,12 +90,12 @@ export const SUITE_JOURNEYS: readonly SuiteJourney[] = [
   },
   {
     id: 'j.dark.detection',
-    summary: 'dark lands: terrible misfortune; the Eye reaches its threshold (detection)',
+    summary: 'dark lands: a mishap; the Eye reaches its threshold (detection)',
     journey: {
-      rngSeed: 'a3-1',
+      rngSeed: 'a3-5',
       region: 'dark_lands',
       eyeGap: 1,
-      expect: { sceneType: 'terrible_misfortune', detailFace: 3, sceneCheck: 'failure', detection: true },
+      expect: { sceneType: 'mishap', detailFace: 5, sceneCheck: 'success', detection: true },
     },
   },
 ];

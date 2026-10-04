@@ -1,7 +1,7 @@
 import type { CheckResult } from "../checks/types.js";
-import type { DiceRoll } from "../dice/types.js";
+import type { DiceRoll, FeatModifier } from "../dice/types.js";
 import type { HeroState } from "../hero/state.js";
-import type { Effect } from "../oracles/types.js";
+import type { Effect, FaceKey, OracleAnswer } from "../oracles/types.js";
 import type { Rng } from "../rng/rng.js";
 import type { SceneDetailRow } from "./config.js";
 import type { Route } from "./route.js";
@@ -16,7 +16,29 @@ export interface JourneyProgress {
   /** Base duration (from the route) adjusted by scene journey_days_delta effects. */
   readonly durationDays: number;
   readonly arrived: boolean;
+  /**
+   * A drawn scene awaiting the player's skill check (set by travelBeat, cleared by
+   * checkBeat). ABSENT == null: the key is present ONLY while a check is pending; every
+   * other path leaves it absent (never written as null), so states produced by
+   * stepJourney serialise exactly as before the beat split.
+   */
+  readonly pending?: PendingSceneCheck | null;
 }
+
+/** The scene-table + detail draw of one step (TRANS1: shown to the player). Plain JSON data. */
+export interface SceneDraw {
+  readonly sceneType: string;
+  readonly detail: SceneDetailRow; // the rolled detail row, verbatim
+  readonly tableRoll: {
+    readonly feat: number; // physical face of the KEPT Feat die
+    readonly candidates: readonly number[]; // every physical Feat face rolled, in roll order (1 entry on a normal roll)
+    readonly modifier: FeatModifier; // the regional modifier the roll used
+  };
+  readonly detailDie: number; // the d6 face that picked the detail row
+}
+
+/** A drawn scene awaiting the player's skill check (travelBeat -> checkBeat). */
+export type PendingSceneCheck = SceneDraw;
 
 export interface JourneyState {
   readonly hero: HeroState;
@@ -60,7 +82,15 @@ export type JourneyEvent =
       readonly sceneText: string;
       readonly resetTo: number;
     }
-  | { readonly kind: "arrival"; readonly durationDays: number };
+  | { readonly kind: "arrival"; readonly durationDays: number }
+  | {
+      // A yes/no oracle question (kv.solo.answers). The question text is never stored.
+      readonly kind: "oracle";
+      readonly likelihoodKey: string;
+      readonly featFace: FaceKey;
+      readonly answer: "yes" | "no";
+      readonly extreme: boolean;
+    };
 
 /** A scene consequence: effects applied when the check outcome matches the trigger. */
 export interface Consequence {
@@ -104,4 +134,54 @@ export interface StepRecord {
 export interface CheckRoll {
   readonly roll: DiceRoll;
   readonly successCounted: readonly boolean[];
+}
+
+/**
+ * One source of Eye Awareness growth within a beat (only entries with delta > 0, in order of
+ * occurrence): the Eye on the hero's Travel check, the Eye on the hero's scene skill check, or
+ * Shadow points gained through the scene consequence (out of combat). Detection-scene effects
+ * are not listed: the detection resets Awareness, matching the orchestrator's eye_delta.
+ */
+export interface EyeSource {
+  readonly source: "travel_check" | "scene_check" | "shadow";
+  readonly delta: number;
+}
+
+/** A Hope spend for bonus Success dice on one roll: spent 0 or 1 point, and the dice it gave. */
+export interface HopeSpend {
+  readonly spent: 0 | 1;
+  readonly bonusDice: number;
+}
+
+/**
+ * How a travel beat ended: the journey arrived; a scene was drawn and awaits the player's
+ * check (journey.pending); or a significant encounter was drawn and resolved (no check).
+ */
+export type TravelBeatKind = "arrival" | "pending" | "encounter";
+
+/** Side record of travelBeat (the player's Travel check plus the scene draw that follows). */
+export interface TravelBeatRecord {
+  readonly kind: TravelBeatKind;
+  readonly events: readonly JourneyEvent[]; // exactly the log slice this beat appended
+  readonly travelCheck: CheckResult;
+  readonly travelRoll: CheckRoll;
+  readonly hope: HopeSpend;
+  readonly scene: SceneDraw | null; // null exactly on "arrival"; on "pending" it equals next.journey.pending
+  readonly eyeSources: readonly EyeSource[];
+}
+
+/** Side record of checkBeat (the player's skill check on the pending scene). */
+export interface CheckBeatRecord {
+  readonly events: readonly JourneyEvent[]; // exactly the log slice this beat appended
+  readonly scene: SceneDraw; // the pending scene this beat resolved
+  readonly sceneCheck: CheckResult;
+  readonly sceneRoll: CheckRoll;
+  readonly hope: HopeSpend;
+  readonly eyeSources: readonly EyeSource[];
+}
+
+/** Side record of askOracle. */
+export interface OracleRecord {
+  readonly events: readonly JourneyEvent[]; // the single oracle event appended
+  readonly answer: OracleAnswer;
 }

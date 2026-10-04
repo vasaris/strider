@@ -107,7 +107,7 @@ describe('suite runner (A3.3)', () => {
       j.dark.significant   despair/1/-                    92/400..800!     clean     -   -   -   -   -   100 | -
       j.dark.midjourney    mishap/4/failure               92/400..800!     clean     -   -   -   -   -   100 | -
       j.border.arrival     -/-/-                          92/400..800!     clean     -   -   -   -   -   100 | -
-      j.dark.detection     terrible_misfortune/3/failure  92/400..800!     clean     -   -   -   -   -   100 | -
+      j.dark.detection     mishap/5/weak                  92/400..800!     clean     -   -   -   -   -   100 | -
 
       specificity  mean - min - (n 0)
       accuracy     mean - min - (n 0)
@@ -378,7 +378,6 @@ describe('suite runner (A3.3)', () => {
       row.significant_encounter: false
       ## patch
       fatigue_delta: 3
-      eye_delta: 1
       conditions_gained: wounded
       ## journey
       days_delta: 0
@@ -463,35 +462,34 @@ describe('suite runner (A3.3)', () => {
       length_target: 400..800 chars
       ## dice
       feat_symbol: null
-      success_icons: 1
-      total: 10
+      success_icons: 0
+      total: 17
       target_number: 15
-      outcome: failure
+      outcome: weak
       ## oracle
       table: journey_scenes
-      result_ref: terrible_misfortune
+      result_ref: mishap
       ### detail
-      table: scene_details.terrible_misfortune
-      result_ref: scene_details.terrible_misfortune#face=3
-      row.face: 3
-      row.scene: Ужасная погода
-      row.prompt: ИССЛЕДОВАНИЕ, чтобы найти приют
+      table: scene_details.mishap
+      result_ref: scene_details.mishap#face=5
+      row.face: 5
+      row.scene: Сложный рельеф
+      row.prompt: ИССЛЕДОВАНИЕ, чтобы преодолеть безопасно
       row.skill: exploration
       row.significant_encounter: false
       ## detection
       table: detection_scenes
-      scene: Враг захватывает важное место.
+      scene: Шпионы Врага узнают о задании героя.
       ## patch
-      fatigue_delta: 3
+      fatigue_delta: 2
       eye_delta: 1
-      conditions_gained: wounded
       ## journey
       days_delta: 0
-      travel_check.feat_symbol: null
+      travel_check.feat_symbol: eye
       travel_check.success_icons: 1
-      travel_check.total: 21
+      travel_check.total: 10
       travel_check.target_number: 13
-      travel_check.outcome: strong"
+      travel_check.outcome: failure"
     `);
   });
 

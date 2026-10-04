@@ -9,7 +9,8 @@ function classifyFace(physicalFace: number, cfg: FeatDieConfig): FeatDieFace {
   return { kind: "number", value: physicalFace };
 }
 
-function buildResult(physicalFace: number, cfg: FeatDieConfig): FeatDieResult {
+/** The Feat result a physical face reads as (no RNG; shared by rolling and odds enumeration). */
+export function featDieResultOfFace(physicalFace: number, cfg: FeatDieConfig): FeatDieResult {
   const face = classifyFace(physicalFace, cfg);
   switch (face.kind) {
     case "gandalf_rune":
@@ -24,7 +25,7 @@ function buildResult(physicalFace: number, cfg: FeatDieConfig): FeatDieResult {
 /** Roll one Feat die. */
 export function rollFeatDie(cfg: FeatDieConfig, rng: Rng): readonly [FeatDieResult, Rng] {
   const [physicalFace, next] = rollDie(cfg.sides, rng);
-  return [buildResult(physicalFace, cfg), next] as const;
+  return [featDieResultOfFace(physicalFace, cfg), next] as const;
 }
 
 /**
@@ -87,18 +88,22 @@ export function rollFeatWithModifier(
   if (candidates.length === 0) {
     throw new Error(`rollFeatWithModifier: dice count resolved to 0 for modifier "${modifier}"`);
   }
-  let chosen: FeatDieResult;
+  return [{ chosen: keptFeatDie(modifier, candidates), candidates }, next] as const;
+}
+
+/**
+ * The Feat die kept from the candidates under a modifier: best (favoured), worst
+ * (ill-favoured), or the only candidate (normal). No RNG; rollFeatWithModifier and the
+ * check-odds enumeration (journey previewCheck) share it.
+ */
+export function keptFeatDie(modifier: FeatModifier, candidates: readonly FeatDieResult[]): FeatDieResult {
   switch (modifier) {
     case "favoured":
-      chosen = pickBest(candidates);
-      break;
+      return pickBest(candidates);
     case "ill_favoured":
-      chosen = pickWorst(candidates);
-      break;
+      return pickWorst(candidates);
     case "normal":
       // normalDiceCount is 1; the kept die is the (only) candidate.
-      chosen = candidates[0] as FeatDieResult;
-      break;
+      return candidates[0] as FeatDieResult;
   }
-  return [{ chosen, candidates }, next] as const;
 }

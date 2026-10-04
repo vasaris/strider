@@ -68,6 +68,14 @@ describe("end-of-journey fatigue removal", () => {
     expect(out.fatigue).toBe(2); // 7 - (2 + (1+1) + 1)
   });
 
+  it("failure -> 0 removed by the check (KV p.111: the reduction happens on a success)", () => {
+    const hero = { ...makeTestHero(cfg), fatigue: 7 };
+    const failed = removeFatigueAtJourneyEnd(hero, { mountCarry: 0, travelCheck: check("failure", 2), safeLongRests: 0 }, cfg.rules);
+    expect(failed.fatigue).toBe(7); // icons on a failed check remove nothing either
+    const withRest = removeFatigueAtJourneyEnd(hero, { mountCarry: 2, travelCheck: check("failure", 1), safeLongRests: 1 }, cfg.rules);
+    expect(withRest.fatigue).toBe(4); // 7 - (2 + 0 + 1): mount carry and rests unchanged
+  });
+
   it("never goes below 0", () => {
     const hero = { ...makeTestHero(cfg), fatigue: 1 };
     const out = removeFatigueAtJourneyEnd(hero, { mountCarry: 5, travelCheck: check("failure", 0), safeLongRests: 0 }, cfg.rules);
