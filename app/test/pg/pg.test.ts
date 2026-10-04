@@ -15,7 +15,7 @@ import { SessionService } from '../../src/server/service/sessions';
 import { PostgresSessionStore } from '../../src/server/store/postgres';
 import { runSessionStoreContract } from '../store/contract';
 import { MIGRATIONS_DIR } from '../support/pglite';
-import { ENV, testDeps } from '../support/service';
+import { BLOCKED_PROSE, ENV, testDeps } from '../support/service';
 import { SEEDS, seedInitialState } from '../support/suiteSeeds';
 import { testDatabaseUrl } from './target';
 
@@ -36,7 +36,7 @@ afterAll(async () => {
   }
 });
 
-runSessionStoreContract('postgres (TEST_DATABASE_URL)', async () => new PostgresSessionStore(sql));
+runSessionStoreContract('postgres (TEST_DATABASE_URL)', async () => new PostgresSessionStore(sql), { isolated: false });
 
 describe('one suite seed to arrival through pg', () => {
   it('j.dark.detection: every stored state continues the journey', async () => {
@@ -76,8 +76,19 @@ describe('service flow through pg (fake Keeper)', () => {
       if (t.journeyComplete) break;
       expect(n).toBeLessThan(100);
     }
-    const detail = await svc.getSession(session.id);
+    let detail = await svc.getSession(session.id);
     expect(detail.journeyComplete).toBe(true);
-    expect(detail.turns[0]).toMatchObject({ proseFailed: false, generations: 2 });
+    expect(detail.turns[0]).toMatchObject({ proseState: 'ready', generations: 2 });
+
+    // K4: a blocked regeneration keeps the accepted text; NUL stripped; the session list
+    deps.llm.replies.push(BLOCKED_PROSE);
+    expect((await svc.regenerateProse(session.id, 0)).proseState).toBe('blocked');
+    deps.llm.replies.push('The ford\u0000 was cold.');
+    expect((await svc.regenerateProse(session.id, 1)).prose).toBe('The ford was cold.');
+    detail = await svc.getSession(session.id);
+    expect(detail.turns[0]).toMatchObject({ proseState: 'ready', generations: 3 });
+    expect(JSON.stringify(detail)).not.toContain(BLOCKED_PROSE);
+    const list = await svc.listSessions();
+    expect(list.sessions[0]).toEqual({ session: detail.session, nextTurnIndex: detail.nextTurnIndex, journeyComplete: true });
   });
 });

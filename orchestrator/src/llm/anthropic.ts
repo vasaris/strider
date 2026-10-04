@@ -35,18 +35,44 @@ export interface MessagesClient {
   };
 }
 
+/** Transport options forwarded to `new Anthropic({ timeout, maxRetries })` (SDK semantics: timeout
+ *  in milliseconds per attempt, maxRetries = retries after the first attempt). Only the keys given
+ *  are forwarded; with no options at all the SDK client is built exactly as `new Anthropic()`. */
+export interface AnthropicClientOptions {
+  readonly timeout?: number;
+  readonly maxRetries?: number;
+}
+
+/** Builds the SDK client from the options (undefined: none given). Injectable for offline tests. */
+export type MessagesClientFactory = (options: AnthropicClientOptions | undefined) => MessagesClient;
+
+const sdkClient: MessagesClientFactory = (options) =>
+  options === undefined ? new Anthropic() : new Anthropic({ ...options }); // reads ANTHROPIC_API_KEY from process.env
+
 /**
  * Real LlmClient. The default client is `new Anthropic()`, which reads ANTHROPIC_API_KEY from
  * process.env (the keyed scripts guard its presence first and error with an instruction if
  * missing -- the key is NEVER read from anywhere else, written, logged, or printed). `model`
  * comes from the request. Returns the model's concatenated text blocks; interpretation (the
  * judge's JSON + Zod gate, the Keeper's trim) belongs to the caller.
+ *
+ * `options` (optional; the app's Keeper passes timeout / maxRetries) apply only to the default
+ * SDK client -- an injected `client` is used as given. `options.sdk` replaces the SDK
+ * constructor (tests record the forwarded options with it; no network).
  */
 export class AnthropicLlmClient implements LlmClient {
   private readonly client: MessagesClient;
 
-  constructor(client?: MessagesClient) {
-    this.client = client ?? new Anthropic(); // reads ANTHROPIC_API_KEY from process.env
+  constructor(client?: MessagesClient, options?: AnthropicClientOptions & { readonly sdk?: MessagesClientFactory }) {
+    if (client !== undefined) {
+      this.client = client;
+    } else {
+      const build = options?.sdk ?? sdkClient;
+      const forwarded: { timeout?: number; maxRetries?: number } = {};
+      if (options?.timeout !== undefined) forwarded.timeout = options.timeout;
+      if (options?.maxRetries !== undefined) forwarded.maxRetries = options.maxRetries;
+      this.client = build(Object.keys(forwarded).length === 0 ? undefined : forwarded);
+    }
   }
 
   async complete(req: LlmRequest): Promise<string> {

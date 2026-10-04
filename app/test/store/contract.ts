@@ -1,11 +1,15 @@
 // ONE contract for every SessionStore implementation (memory, postgres): methods, ordering,
 // null-returns, typed errors, P10 bounds, contiguity, prose XOR error, provenance round-trip,
-// the shared input rules (validate.ts: string types, no lone surrogates) and their order, and
-// immutability of every returned record and of inputs after the call.
+// the shared input rules (validate.ts: string types, no lone surrogates) and their order,
+// immutability of every returned record and of inputs after the call, and the session list (K4:
+// createdAt desc, limit, sessions without turns, the latest turn, after arrival).
+//
+// `opts.isolated` (default true): makeStore() returns an EMPTY store each call (memory, PGlite);
+// false for a shared database (test:pg), where the "empty store" case is skipped.
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { loadJourneyEnv, journeyTurn, PREGEN_HERO_REF, startJourney } from '@brodyazhnik/orchestrator';
+import { isJourneyOver, loadJourneyEnv, journeyTurn, PREGEN_HERO_REF, startJourney } from '@brodyazhnik/orchestrator';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import type { KeeperProvenance, NewGeneration, NewSession, NewTurn, SessionStore } from '../../src/server/store/types';
@@ -57,7 +61,10 @@ function scribble(v: unknown): void {
 
 const clone = <T>(v: T): T => structuredClone(v);
 
-export function runSessionStoreContract(name: string, makeStore: () => Promise<SessionStore>): void {
+const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export function runSessionStoreContract(name: string, makeStore: () => Promise<SessionStore>, opts: { readonly isolated?: boolean } = {}): void {
+  const isolated = opts.isolated ?? true;
   describe(`SessionStore contract: ${name}`, () => {
     let store: SessionStore;
     beforeAll(async () => {
@@ -285,6 +292,68 @@ export function runSessionStoreContract(name: string, makeStore: () => Promise<S
         const sid = await seeded(1);
         await expect(store.appendGeneration(prose(sid, 0, 'p', over))).rejects.toMatchObject({ code: 'invalid_record' });
         expect(await store.listGenerations(sid, 0)).toEqual([]);
+      });
+    });
+
+    describe('listRecentSessions', () => {
+      it.runIf(isolated)('an empty store lists nothing', async () => {
+        expect(await (await makeStore()).listRecentSessions(20)).toEqual([]);
+      });
+
+      // The pauses keep createdAt distinct: the memory store stamps milliseconds, and sessions of
+      // one millisecond are ordered by id (random), not by creation.
+      it('createdAt desc, limited; each session with its latest turn or null', async () => {
+        await pause(5);
+        const a = await store.createSession(newSession({ rngSeed: 'list-a' }));
+        await pause(5);
+        const b = await store.createSession(newSession({ rngSeed: 'list-b' }));
+        await store.appendTurn(newTurn(b.id, 0));
+        const b1 = await store.appendTurn(newTurn(b.id, 1));
+        await pause(5);
+        const c = await store.createSession(newSession({ rngSeed: 'list-c' }));
+        const top = await store.listRecentSessions(3);
+        expect(top).toEqual([
+          { session: c, latestTurn: null },
+          { session: b, latestTurn: b1 },
+          { session: a, latestTurn: null },
+        ]);
+        expect((await store.listRecentSessions(2)).map((r) => r.session.id)).toEqual([c.id, b.id]);
+        expect(await store.listRecentSessions(0)).toEqual([]);
+        const all = await store.listRecentSessions(1000);
+        const times = all.map((r) => r.session.createdAt);
+        expect([...times].sort().reverse()).toEqual(times);
+      });
+
+      it('after arrival: the latest turn is the arrival turn', async () => {
+        await pause(5);
+        const s = await store.createSession(newSession({ rngSeed: 'list-arrival' }));
+        let state = START;
+        let n = 0;
+        while (!isJourneyOver(state)) {
+          const t = journeyTurn(state, env.cfg);
+          await store.appendTurn({ sessionId: s.id, turnIndex: n++, state: t.next, pkg: t.pkg, packVersion: env.packVersion });
+          state = t.next;
+          expect(n).toBeLessThan(100);
+        }
+        const [top] = await store.listRecentSessions(1);
+        expect(top?.session.id).toBe(s.id);
+        expect(top?.latestTurn?.turnIndex).toBe(n - 1);
+        expect(isJourneyOver(top!.latestTurn!.state)).toBe(true);
+        expect(top?.latestTurn).toEqual(await store.latestTurn(s.id));
+      });
+
+      it.each([[-1], [1.5], [2 ** 31], [Number.NaN]])('rejects limit %j as invalid_record', async (limit) => {
+        await expect(store.listRecentSessions(limit)).rejects.toMatchObject({ code: 'invalid_record' });
+      });
+
+      it('returned records are copies', async () => {
+        await pause(5);
+        const s = await store.createSession(newSession({ rngSeed: 'list-copy' }));
+        await store.appendTurn(newTurn(s.id, 0));
+        const first = await store.listRecentSessions(1);
+        const expected = clone(first);
+        scribble(first);
+        expect(await store.listRecentSessions(1)).toEqual(expected);
       });
     });
 

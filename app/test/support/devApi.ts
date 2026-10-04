@@ -48,6 +48,8 @@ export async function devApiChecks(port: number, output: () => string): Promise<
   const checks: [string, () => Promise<Reply>, number, string][] = [
     ['POST /api/sessions', () => call(port, 'POST', '/api/sessions', jsonHeaders, '{"region":"dark_lands"}'), 503, 'database_not_configured'],
     ['GET /api/sessions/:id', () => call(port, 'GET', `/api/sessions/${ABSENT}`, { host }), 503, 'database_not_configured'],
+    ['GET /api/sessions', () => call(port, 'GET', '/api/sessions', { host }), 503, 'database_not_configured'],
+    ['foreign Host on the session list', () => call(port, 'GET', '/api/sessions', { host: 'evil.example' }), 403, 'forbidden_host'],
     ['POST turns (key guard first)', () => call(port, 'POST', `/api/sessions/${ABSENT}/turns`, jsonHeaders, '{"turnIndex":0}'), 503, 'keeper_not_configured'],
     ['POST prose (key guard first)', () => call(port, 'POST', `/api/sessions/${ABSENT}/turns/0/prose`, jsonHeaders, '{}'), 503, 'keeper_not_configured'],
     ['foreign Host on GET', () => call(port, 'GET', `/api/sessions/${ABSENT}`, { host: 'evil.example' }), 403, 'forbidden_host'],

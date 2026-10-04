@@ -83,7 +83,15 @@ export function handleCreateSession(req: Request, deps: ServiceDeps): Promise<Re
   });
 }
 
-/** GET /api/sessions/:id -> 200 { session, turns, nextTurnIndex, journeyComplete, packCurrent } */
+/** GET /api/sessions -> 200 { sessions: [{ session, nextTurnIndex, journeyComplete }] } (20 most recent) */
+export function handleListSessions(req: Request, deps: ServiceDeps): Promise<Response> {
+  return respond('GET /api/sessions', async () => {
+    checkHost(req);
+    return { status: 200, body: await new SessionService(deps).listSessions() };
+  });
+}
+
+/** GET /api/sessions/:id -> 200 { session, turns, labels, nextTurnIndex, journeyComplete, packCurrent } */
 export function handleGetSession(req: Request, id: string, deps: ServiceDeps): Promise<Response> {
   return respond('GET /api/sessions/:id', async () => {
     checkHost(req);
@@ -91,7 +99,8 @@ export function handleGetSession(req: Request, id: string, deps: ServiceDeps): P
   });
 }
 
-/** POST /api/sessions/:id/turns {turnIndex} -> 201 { turnIndex, pkg, prose, generationId, nextTurnIndex, journeyComplete } */
+/** POST /api/sessions/:id/turns {turnIndex} -> 201 { turnIndex, pkg, labels, prose, proseState, gate, generationId,
+ *  nextTurnIndex, journeyComplete } */
 export function handlePlayTurn(req: Request, id: string, deps: ServiceDeps): Promise<Response> {
   return respond('POST /api/sessions/:id/turns', async () => {
     checkMutation(req);
@@ -102,7 +111,7 @@ export function handlePlayTurn(req: Request, id: string, deps: ServiceDeps): Pro
   });
 }
 
-/** POST /api/sessions/:id/turns/:n/prose -> 201 { turnIndex, prose, generationId } */
+/** POST /api/sessions/:id/turns/:n/prose -> 201 { turnIndex, prose, proseState, gate, generationId } */
 export function handleRegenerate(req: Request, id: string, n: string, deps: ServiceDeps): Promise<Response> {
   return respond('POST /api/sessions/:id/turns/:n/prose', async () => {
     checkMutation(req);

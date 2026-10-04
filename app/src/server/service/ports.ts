@@ -3,8 +3,11 @@ import 'server-only';
 
 import type { JourneyConfigs, JourneyState, Route } from '@brodyazhnik/engine';
 import type { JourneyEnv, JourneyRegion, JourneyTurn, NarrativePackage } from '@brodyazhnik/orchestrator';
+import type { StopEntry } from '@brodyazhnik/prose-gate';
 
 import type { KeeperProvenance, SessionStore } from '../store/types';
+import type { Labels } from './labels';
+import type { GenerationLock } from './lock';
 
 /** One Keeper, built from ONE loadKeeperSetup (N1): its provenance names exactly the bytes behind
  *  every request it sends. run() resolves to the prose or rejects with the model call's error. */
@@ -30,4 +33,10 @@ export interface ServiceDeps {
   step(state: JourneyState, cfg: JourneyConfigs): JourneyTurn;
   /** Values that must never be recorded (production: the key and connection strings). */
   secrets(): readonly string[];
+  /** The pack's VK addendum for the prose gate (production: memoized next to env). */
+  vk(): readonly StopEntry[];
+  /** The pack's label catalog (production: memoized next to env). */
+  labels(): Labels;
+  /** The in-process generation lock (production: one module-level instance). */
+  readonly lock: GenerationLock;
 }

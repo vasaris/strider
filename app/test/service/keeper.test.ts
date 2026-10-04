@@ -1,8 +1,18 @@
-// The app's Keeper wiring: model default + KEEPER_MODEL override, and the recorded error text.
+// The app's Keeper wiring: model default + KEEPER_MODEL override, the transport bounds forwarded
+// to the SDK constructor (API-RES1 (2); a fake constructor, no network), and the recorded error text.
+import type { AnthropicClientOptions, MessagesClient } from '@brodyazhnik/orchestrator/anthropic';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { productionDeps } from '../../src/server/service/deps';
-import { DEFAULT_KEEPER_MODEL, KEEPER_PROMPT, keeperErrorText, keeperModel } from '../../src/server/service/keeper';
+import {
+  DEFAULT_KEEPER_MODEL,
+  KEEPER_MAX_RETRIES,
+  KEEPER_PROMPT,
+  KEEPER_TIMEOUT_MS,
+  keeperErrorText,
+  keeperLlmClient,
+  keeperModel,
+} from '../../src/server/service/keeper';
 
 describe('keeperModel', () => {
   it('defaults to claude-sonnet-5; KEEPER_MODEL wins when non-empty after trim', () => {
@@ -12,6 +22,30 @@ describe('keeperModel', () => {
     expect(keeperModel('')).toBe('claude-sonnet-5');
     expect(keeperModel('   ')).toBe('claude-sonnet-5');
     expect(keeperModel('  claude-opus-x \n')).toBe('claude-opus-x');
+  });
+});
+
+describe('keeperLlmClient (API-RES1 (2))', () => {
+  it('timeout 90 s and 1 retry reach the SDK constructor; the request goes through the same client', async () => {
+    expect(KEEPER_TIMEOUT_MS).toBe(90_000);
+    expect(KEEPER_MAX_RETRIES).toBe(1);
+    const seen: (AnthropicClientOptions | undefined)[] = [];
+    const created: unknown[] = [];
+    const fake: MessagesClient = {
+      messages: {
+        create: (params) => {
+          created.push(params);
+          return Promise.resolve({ content: [{ type: 'text', text: 'prose' }] });
+        },
+      },
+    };
+    const client = keeperLlmClient((o) => {
+      seen.push(o);
+      return fake;
+    });
+    expect(seen).toStrictEqual([{ timeout: 90_000, maxRetries: 1 }]);
+    expect(await client.complete({ model: 'm', system: 's', user: 'u' })).toBe('prose');
+    expect(Object.keys(created[0] as object).sort()).toEqual(['max_tokens', 'messages', 'model', 'system']); // no transport keys in the body
   });
 });
 

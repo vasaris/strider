@@ -23,6 +23,7 @@ import {
   type NewGeneration,
   type NewSession,
   type NewTurn,
+  type RecentSession,
   type SessionRecord,
   type SessionStore,
   type TurnRecord,
@@ -35,6 +36,12 @@ const TS = `to_char(created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z
 
 const SESSION_COLS = `id::text as id, ${TS} as created_at, rng_seed, hero_ref, pack_id, pack_version, initial_state::text as initial_state`;
 const TURN_COLS = `session_id::text as session_id, turn_index, ${TS} as created_at, state::text as state, pkg::text as pkg, pack_version`;
+// The session list: each session with its latest turn through a lateral join (t.* null: no turn).
+const RECENT_COLS =
+  `s.id::text as id, to_char(s.created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as created_at, ` +
+  's.rng_seed, s.hero_ref, s.pack_id, s.pack_version, s.initial_state::text as initial_state, ' +
+  `t.turn_index as t_turn_index, to_char(t.created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as t_created_at, ` +
+  't.state::text as t_state, t.pkg::text as t_pkg, t.pack_version as t_pack_version';
 const GENERATION_COLS =
   `id::text as id, ${TS} as created_at, session_id::text as session_id, turn_index, prose, error, model, ` +
   'keeper_prompt_path, keeper_prompt_sha256, tone_sha256, assembly_sha256';
@@ -47,6 +54,13 @@ interface SessionRow {
   pack_id: string;
   pack_version: string;
   initial_state: string;
+}
+interface RecentRow extends SessionRow {
+  t_turn_index: number | null;
+  t_created_at: string | null;
+  t_state: string | null;
+  t_pkg: string | null;
+  t_pack_version: string | null;
 }
 interface TurnRow {
   session_id: string;
@@ -135,6 +149,23 @@ export class PostgresSessionStore implements SessionStore {
     if (!isUuid(id)) return null;
     const { rows } = await this.sql.query<SessionRow>(`select ${SESSION_COLS} from brodyazhnik.sessions where id = $1::uuid`, [id]);
     return rows[0] === undefined ? null : toSession(rows[0]);
+  }
+
+  async listRecentSessions(limit: number): Promise<RecentSession[]> {
+    if (!isInt32(limit) || limit < 0) throw new InvalidRecordError('limit must be a 32-bit integer >= 0');
+    const { rows } = await this.sql.query<RecentRow>(
+      `select ${RECENT_COLS} from brodyazhnik.sessions s ` +
+        'left join lateral (select * from brodyazhnik.turns where session_id = s.id order by turn_index desc limit 1) t on true ' +
+        'order by s.created_at desc, s.id desc limit $1::integer',
+      [limit],
+    );
+    return rows.map((r) => ({
+      session: toSession(r),
+      latestTurn:
+        r.t_turn_index === null || r.t_created_at === null || r.t_state === null || r.t_pkg === null || r.t_pack_version === null
+          ? null
+          : toTurn({ session_id: r.id, turn_index: r.t_turn_index, created_at: r.t_created_at, state: r.t_state, pkg: r.t_pkg, pack_version: r.t_pack_version }),
+    }));
   }
 
   async appendTurn(input: NewTurn): Promise<TurnRecord> {

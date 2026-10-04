@@ -5,11 +5,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { API_ERRORS, ApiError, errorResponse, type ApiErrorCode } from '../../src/server/http/errors';
 import { BODY_LIMIT_BYTES } from '../../src/server/http/guard';
-import { handleCreateSession, handleGetSession, handlePlayTurn, handleRegenerate } from '../../src/server/http/handlers';
+import { handleCreateSession, handleGetSession, handleListSessions, handlePlayTurn, handleRegenerate } from '../../src/server/http/handlers';
 import type { ServiceDeps } from '../../src/server/service/ports';
 import { MemorySessionStore } from '../../src/server/store/memory';
 import { InvalidRecordError, type SessionStore } from '../../src/server/store/types';
-import { FAKE_SECRET, testDeps } from '../support/service';
+import { BLOCKED_PROSE, FAKE_SECRET, testDeps } from '../support/service';
 
 const HOST = '127.0.0.1:3000';
 const BASE = `http://${HOST}`;
@@ -44,6 +44,7 @@ function allHandlers(deps: ServiceDeps, headers: Record<string, string>) {
     () => handleGetSession(get(`/api/sessions/${ABSENT}`, headers), ABSENT, deps),
     () => handlePlayTurn(post(`/api/sessions/${ABSENT}/turns`, json({ turnIndex: 0 }), headers), ABSENT, deps),
     () => handleRegenerate(post(`/api/sessions/${ABSENT}/turns/0/prose`, null, headers), ABSENT, '0', deps),
+    () => handleListSessions(get('/api/sessions', headers), deps),
   ];
 }
 
@@ -55,7 +56,7 @@ describe('error table', () => {
     expect(Object.keys(API_ERRORS).sort()).toEqual(
       [
         'invalid_request', 'forbidden_host', 'forbidden_origin', 'not_found', 'session_not_found', 'turn_not_found',
-        'pack_mismatch', 'journey_complete', 'turn_conflict', 'payload_too_large', 'unsupported_media_type',
+        'pack_mismatch', 'journey_complete', 'turn_conflict', 'generation_in_progress', 'payload_too_large', 'unsupported_media_type',
         'unsupported_route', 'internal_error', 'keeper_failed', 'keeper_not_configured', 'database_not_configured',
         'database_unavailable', 'database_misconfigured',
       ].sort(),
@@ -65,7 +66,7 @@ describe('error table', () => {
 
 describe('Host (every route, DNS rebinding)', () => {
   it.each(['evil.example', 'evil.example:3000', '127.0.0.1.evil.example', 'localhost.evil', '127.0.0.2:3000', '[::1]x', '0.0.0.0:3000', ''])(
-    'foreign Host %j -> 403 forbidden_host on all four handlers',
+    'foreign Host %j -> 403 forbidden_host on all five handlers',
     async (host) => {
       const deps = testDeps(new MemorySessionStore());
       for (const call of allHandlers(deps, { host })) await expectError(await call(), 'forbidden_host');
@@ -311,12 +312,15 @@ describe('success responses', () => {
     expect(p.status).toBe(201);
     expect(p.headers.get('cache-control')).toBe('no-store');
     const played = (await p.json()) as Record<string, unknown>;
-    expect(Object.keys(played).sort()).toEqual(['generationId', 'journeyComplete', 'nextTurnIndex', 'pkg', 'prose', 'turnIndex']);
+    expect(Object.keys(played).sort()).toEqual([
+      'gate', 'generationId', 'journeyComplete', 'labels', 'nextTurnIndex', 'pkg', 'prose', 'proseState', 'turnIndex',
+    ]);
+    expect(played['proseState']).toBe('ready');
     expect(played['nextTurnIndex']).toBe(1);
 
     const r = await handleRegenerate(post(`/api/sessions/${id}/turns/0/prose`, '{}'), id, '0', deps);
     expect(r.status).toBe(201);
-    expect(Object.keys((await r.json()) as object).sort()).toEqual(['generationId', 'prose', 'turnIndex']);
+    expect(Object.keys((await r.json()) as object).sort()).toEqual(['gate', 'generationId', 'prose', 'proseState', 'turnIndex']);
 
     const g = await handleGetSession(get(`/api/sessions/${id}`), id, deps);
     expect(g.status).toBe(200);
@@ -333,5 +337,72 @@ describe('success responses', () => {
     const deps = testDeps(new MemorySessionStore(), { keyPresent: () => false });
     await expectError(await handlePlayTurn(post(`/api/sessions/${ABSENT}/turns`, json({ turnIndex: 0 })), ABSENT, deps), 'keeper_not_configured');
     await expectError(await handleRegenerate(post(`/api/sessions/${ABSENT}/turns/0/prose`, null), ABSENT, '0', deps), 'keeper_not_configured');
+  });
+});
+
+describe('K4: session list, generation lock, the gate in response bodies', () => {
+  it('GET /api/sessions -> 200 { sessions } (JSON, no-store), most recent first', async () => {
+    const deps = testDeps(new MemorySessionStore());
+    const empty = await handleListSessions(get('/api/sessions'), deps);
+    expect(empty.status).toBe(200);
+    expect(empty.headers.get('cache-control')).toBe('no-store');
+    expect(await empty.json()).toEqual({ sessions: [] });
+    const created = (await (await handleCreateSession(post('/api/sessions', json({ region: 'wild_lands' })), deps)).json()) as { session: { id: string } };
+    await handlePlayTurn(post(`/api/sessions/${created.session.id}/turns`, json({ turnIndex: 0 })), created.session.id, deps);
+    const list = (await (await handleListSessions(get('/api/sessions'), deps)).json()) as { sessions: Record<string, unknown>[] };
+    expect(list.sessions).toEqual([{ session: created.session, nextTurnIndex: 1, journeyComplete: false }]);
+  });
+
+  it('GET /api/sessions maps store errors to fixed bodies', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const deps = testDeps(async () => {
+      throw new ApiError('database_not_configured');
+    });
+    await expectError(await handleListSessions(get('/api/sessions'), deps), 'database_not_configured');
+    const failing = new Proxy(new MemorySessionStore(), {
+      get(target, prop, recv) {
+        if (prop === 'listRecentSessions') return () => Promise.reject(new Error(`boom ${SECRET_URL}`));
+        return Reflect.get(target, prop, recv) as unknown;
+      },
+    });
+    const res = await handleListSessions(get('/api/sessions'), testDeps(failing));
+    expect(await res.clone().text()).not.toContain('hunter2');
+    await expectError(res, 'internal_error');
+    expect(log.mock.calls.map((c) => String(c[0]))).toEqual(['GET /api/sessions: database_not_configured', 'GET /api/sessions: internal_error (Error)']);
+    log.mockRestore();
+  });
+
+  it('409 generation_in_progress: the fixed body, no extras', async () => {
+    const deps = testDeps(new MemorySessionStore());
+    const created = (await (await handleCreateSession(post('/api/sessions', json({ region: 'dark_lands' })), deps)).json()) as { session: { id: string } };
+    const id = created.session.id;
+    await handlePlayTurn(post(`/api/sessions/${id}/turns`, json({ turnIndex: 0 })), id, deps);
+    deps.lock.tryAcquire(id, 0);
+    await expectError(await handleRegenerate(post(`/api/sessions/${id}/turns/0/prose`, null), id, '0', deps), 'generation_in_progress');
+    deps.lock.tryAcquire(id, 1);
+    await expectError(await handlePlayTurn(post(`/api/sessions/${id}/turns`, json({ turnIndex: 1 })), id, deps), 'generation_in_progress');
+    const g = (await (await handleGetSession(get(`/api/sessions/${id}`), id, deps)).json()) as { turns: { generating: boolean }[] };
+    expect(g.turns[0]?.generating).toBe(true);
+  });
+
+  it('a blocked prose never appears in any response body (play, regenerate, get); its findings do', async () => {
+    const deps = testDeps(new MemorySessionStore());
+    const created = (await (await handleCreateSession(post('/api/sessions', json({ region: 'dark_lands' })), deps)).json()) as { session: { id: string } };
+    const id = created.session.id;
+    deps.llm.replies.push(BLOCKED_PROSE, BLOCKED_PROSE);
+    const bodies = [
+      await (await handlePlayTurn(post(`/api/sessions/${id}/turns`, json({ turnIndex: 0 })), id, deps)).text(),
+      await (await handleRegenerate(post(`/api/sessions/${id}/turns/0/prose`, null), id, '0', deps)).text(),
+      await (await handleGetSession(get(`/api/sessions/${id}`), id, deps)).text(),
+      await (await handleListSessions(get('/api/sessions'), deps)).text(),
+    ];
+    for (const b of bodies) expect(b).not.toContain(BLOCKED_PROSE);
+    const played = JSON.parse(bodies[0]!) as { prose: unknown; proseState: string; gate: { severity: string }[] };
+    expect(played.prose).toBeNull();
+    expect(played.proseState).toBe('blocked');
+    expect(played.gate.some((f) => f.severity === 'block')).toBe(true);
+    const detail = JSON.parse(bodies[2]!) as { turns: { proseState: string; prose: unknown }[]; labels: Record<string, unknown> };
+    expect(detail.turns[0]).toMatchObject({ proseState: 'blocked', prose: null });
+    expect(Object.keys(detail.labels).sort()).toEqual(['conditions', 'outcomes', 'scenes', 'skills']);
   });
 });

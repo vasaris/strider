@@ -17,6 +17,7 @@ export const API_ERRORS = {
   pack_mismatch: { status: 409, message: 'The session was started on a different content pack version.' },
   journey_complete: { status: 409, message: 'The journey is complete; there is no next turn.' },
   turn_conflict: { status: 409, message: 'The turn index is not the next turn of this session.' },
+  generation_in_progress: { status: 409, message: 'A generation for this turn is already in progress.' },
   payload_too_large: { status: 413, message: 'The request body is too large.' },
   unsupported_media_type: { status: 415, message: 'The request body must be application/json.' },
   unsupported_route: { status: 422, message: 'Routes with danger zones are not supported yet.' },

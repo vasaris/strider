@@ -1,8 +1,17 @@
 // The SDK binding (3.1-C4): buildMessageParams is THE single definition of the call parameters,
 // and AnthropicLlmClient forwards them and joins the text blocks. An injected fake client only --
-// no network, no API key (the default `new Anthropic()` is never constructed here).
+// no network, no API key (the default `new Anthropic()` is never constructed here; the options
+// tests inject a fake SDK constructor).
 import { describe, expect, it } from 'vitest';
-import { AnthropicLlmClient, LLM_MAX_TOKENS, buildMessageParams, type MessageParams, type MessagesClient } from '../src/llm/anthropic.js';
+import {
+  AnthropicLlmClient,
+  LLM_MAX_TOKENS,
+  buildMessageParams,
+  type AnthropicClientOptions,
+  type MessageParams,
+  type MessagesClient,
+  type MessagesClientFactory,
+} from '../src/llm/anthropic.js';
 import type { LlmRequest } from '../src/keeper/seam.js';
 
 const REQ: LlmRequest = { model: 'model-x', system: 'SYS\n', user: 'USER' };
@@ -51,5 +60,44 @@ describe('AnthropicLlmClient (injected fake client)', () => {
     const boom = new Error('boom');
     const fake: MessagesClient = { messages: { create: () => Promise.reject(boom) } };
     await expect(new AnthropicLlmClient(fake).complete(REQ)).rejects.toBe(boom);
+  });
+});
+
+describe('AnthropicLlmClient options (injected fake SDK constructor; K4 API-RES1 (2))', () => {
+  const ok: MessagesClient = { messages: { create: () => Promise.resolve({ content: [{ type: 'text', text: 'ok' }] }) } };
+
+  function recorder() {
+    const seen: (AnthropicClientOptions | undefined)[] = [];
+    const sdk: MessagesClientFactory = (o) => {
+      seen.push(o);
+      return ok;
+    };
+    return { seen, sdk };
+  }
+
+  it('forwards timeout and maxRetries to the SDK constructor', async () => {
+    const { seen, sdk } = recorder();
+    const c = new AnthropicLlmClient(undefined, { timeout: 90_000, maxRetries: 1, sdk });
+    expect(seen).toStrictEqual([{ timeout: 90_000, maxRetries: 1 }]);
+    expect(await c.complete(REQ)).toBe('ok');
+  });
+
+  it('forwards only the keys given (maxRetries 0 is a value, not absence)', () => {
+    const { seen, sdk } = recorder();
+    new AnthropicLlmClient(undefined, { maxRetries: 0, sdk });
+    new AnthropicLlmClient(undefined, { timeout: 5, sdk });
+    expect(seen).toStrictEqual([{ maxRetries: 0 }, { timeout: 5 }]);
+  });
+
+  it('no transport options: the SDK constructor gets undefined (i.e. `new Anthropic()` as before)', () => {
+    const { seen, sdk } = recorder();
+    new AnthropicLlmClient(undefined, { sdk });
+    expect(seen).toStrictEqual([undefined]);
+  });
+
+  it('an injected client wins; the SDK constructor is never called', () => {
+    const { seen, sdk } = recorder();
+    new AnthropicLlmClient(ok, { timeout: 1, maxRetries: 1, sdk });
+    expect(seen).toEqual([]);
   });
 });

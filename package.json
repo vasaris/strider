@@ -1,7 +1,7 @@
 {
   "name": "@brodyazhnik/root",
   "version": "0.1.0",
-  "description": "Brodyazhnik root workspace. Aggregates five packages: engine -> orchestrator -> prose-gate -> evals, and app (Next.js PWA over engine + orchestrator).",
+  "description": "Brodyazhnik root workspace. Aggregates five packages: engine -> orchestrator -> prose-gate -> evals, and app (Next.js PWA over engine + orchestrator + prose-gate).",
   "private": true,
   "type": "module",
   "license": "UNLICENSED",

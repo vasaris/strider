@@ -17,6 +17,7 @@ import {
   type NewGeneration,
   type NewSession,
   type NewTurn,
+  type RecentSession,
   type SessionRecord,
   type SessionStore,
   type TurnRecord,
@@ -75,6 +76,18 @@ export class MemorySessionStore implements SessionStore {
   async getSession(id: string): Promise<SessionRecord | null> {
     const rec = isUuid(id) ? this.sessions.get(id.toLowerCase()) : undefined;
     return rec === undefined ? null : copy(rec);
+  }
+
+  async listRecentSessions(limit: number): Promise<RecentSession[]> {
+    if (!isInt32(limit) || limit < 0) throw new InvalidRecordError('limit must be a 32-bit integer >= 0');
+    const sorted = [...this.sessions.values()].sort((a, b) =>
+      a.createdAt !== b.createdAt ? (a.createdAt < b.createdAt ? 1 : -1) : a.id < b.id ? 1 : a.id > b.id ? -1 : 0,
+    );
+    return sorted.slice(0, limit).map((session) => {
+      const list = this.turnList(session.id);
+      const latest = list[list.length - 1];
+      return copy({ session, latestTurn: latest ?? null });
+    });
   }
 
   // Order as in the Postgres store: id shapes, shared input rules (validate.ts), then as in the

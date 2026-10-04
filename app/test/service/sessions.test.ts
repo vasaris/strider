@@ -117,14 +117,21 @@ describe('a full journey through the service', () => {
     expect(detail.journeyComplete).toBe(true);
     expect(detail.packCurrent).toBe(true);
     expect(detail.turns.map((t) => t.turnIndex)).toEqual([...Array(n).keys()]);
-    expect(detail.turns.every((t) => t.generations === 1 && !t.proseFailed && t.prose !== null)).toBe(true);
+    expect(detail.turns.every((t) => t.generations === 1 && t.proseState === 'ready' && t.prose !== null && !t.generating)).toBe(true);
     expect(detail.turns[detail.turns.length - 1]?.pkg.journey?.arrived).toBe(true);
   });
 
   it('getSession of a fresh session: no turns, nextTurnIndex 0', async () => {
     const svc = new SessionService(testDeps(new MemorySessionStore()));
     const { session } = await svc.createSession('border_lands');
-    expect(await svc.getSession(session.id)).toEqual({ session, turns: [], nextTurnIndex: 0, journeyComplete: false, packCurrent: true });
+    expect(await svc.getSession(session.id)).toEqual({
+      session,
+      turns: [],
+      labels: { scenes: {}, skills: {}, conditions: {}, outcomes: {} },
+      nextTurnIndex: 0,
+      journeyComplete: false,
+      packCurrent: true,
+    });
   });
 });
 
@@ -205,7 +212,7 @@ describe('order of checks', () => {
     expect(deps.llm.calls).toHaveLength(1);
   });
 
-  it('a concurrent duplicate: exactly one 201 and one 409 turn_conflict; the Keeper runs once', async () => {
+  it('a concurrent duplicate: exactly one 201 and one 409 generation_in_progress (the lock); the Keeper runs once', async () => {
     const store = new MemorySessionStore();
     const deps = testDeps(store);
     const svc = new SessionService(deps);
@@ -216,9 +223,10 @@ describe('order of checks', () => {
     expect(ok).toHaveLength(1);
     expect(bad).toHaveLength(1);
     expect(bad[0]).toBeInstanceOf(ApiError);
-    expect((bad[0] as ApiError).code).toBe('turn_conflict');
-    expect((bad[0] as ApiError).extras).toEqual({ nextTurnIndex: 1 });
+    expect((bad[0] as ApiError).code).toBe('generation_in_progress');
+    expect((bad[0] as ApiError).extras).toEqual({});
     expect(deps.llm.calls).toHaveLength(1);
+    expect(deps.lock.size).toBe(0);
     expect(await store.listTurns(session.id)).toHaveLength(1);
     expect(await store.listGenerations(session.id, 0)).toHaveLength(1);
   });
@@ -267,7 +275,7 @@ describe('Keeper failure and regeneration', () => {
     expect(g1?.error).not.toContain(FAKE_SECRET);
     expect([...(g1?.error ?? '')].length).toBe(500);
     let detail = await svc.getSession(session.id);
-    expect(detail.turns[0]).toMatchObject({ prose: null, proseFailed: true, generations: 1 });
+    expect(detail.turns[0]).toMatchObject({ prose: null, proseState: 'failed', gate: [], generations: 1 });
     expect(detail.nextTurnIndex).toBe(1);
 
     // a failed regeneration appends another error row
@@ -275,12 +283,12 @@ describe('Keeper failure and regeneration', () => {
 
     deps.llm.fail = null;
     const regen = await svc.regenerateProse(session.id, 0);
-    expect(regen).toEqual({ turnIndex: 0, prose: 'The wind smelled of rain (1).', generationId: expect.any(String) });
+    expect(regen).toEqual({ turnIndex: 0, prose: 'The wind smelled of rain (1).', proseState: 'ready', gate: [], generationId: expect.any(String) });
     const gens = await store.listGenerations(session.id, 0);
     expect(gens.map((g) => g.prose === null)).toEqual([true, true, false]);
     expect(gens[2]?.id).toBe(regen.generationId);
     detail = await svc.getSession(session.id);
-    expect(detail.turns[0]).toMatchObject({ prose: regen.prose, proseFailed: false, generations: 3 });
+    expect(detail.turns[0]).toMatchObject({ prose: regen.prose, proseState: 'ready', generations: 3 });
 
     // the journey continues from the saved turn
     expect((await svc.playTurn(session.id, 1)).turnIndex).toBe(1);

@@ -5,16 +5,32 @@
 // generation is the one of the bytes that built its request (N1).
 //
 // Model: KEEPER_MODEL (trimmed, non-empty) or DEFAULT_KEEPER_MODEL. Call parameters come only
-// from orchestrator's buildMessageParams (inside AnthropicLlmClient).
+// from orchestrator's buildMessageParams (inside AnthropicLlmClient); the transport is bounded by
+// KEEPER_TIMEOUT_MS per attempt and KEEPER_MAX_RETRIES (API-RES1 (2)), forwarded to the SDK
+// constructor -- never part of the request body.
 import 'server-only';
 
 import { AnthropicKeeper, loadKeeperSetup, type LlmClient } from '@brodyazhnik/orchestrator';
+import { AnthropicLlmClient, type MessagesClientFactory } from '@brodyazhnik/orchestrator/anthropic';
 
 import type { KeeperRunner } from './ports';
 
 export const DEFAULT_KEEPER_MODEL = 'claude-sonnet-5';
 export const KEEPER_PROMPT = 'prompts/keeper.system.v0.3.md';
 const ERROR_TEXT_MAX = 500;
+/** The app Keeper's SDK timeout per attempt (milliseconds) and retries after the first attempt. */
+export const KEEPER_TIMEOUT_MS = 90_000;
+export const KEEPER_MAX_RETRIES = 1;
+
+/** The app's model client: AnthropicLlmClient with the Keeper transport bounds. `sdk` replaces the
+ *  SDK constructor (tests only). */
+export function keeperLlmClient(sdk?: MessagesClientFactory): AnthropicLlmClient {
+  return new AnthropicLlmClient(undefined, {
+    timeout: KEEPER_TIMEOUT_MS,
+    maxRetries: KEEPER_MAX_RETRIES,
+    ...(sdk === undefined ? {} : { sdk }),
+  });
+}
 
 /** KEEPER_MODEL trimmed if non-empty, else the default. */
 export function keeperModel(fromEnv: string | undefined): string {

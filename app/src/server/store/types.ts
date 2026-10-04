@@ -43,10 +43,19 @@ export type GenerationOutcome = { readonly prose: string; readonly error: null }
 export type NewGeneration = { readonly sessionId: string; readonly turnIndex: number } & KeeperProvenance & GenerationOutcome;
 export type GenerationRecord = { readonly id: string; readonly createdAt: string } & NewGeneration;
 
+/** A session with its latest turn (null: no turn yet), for the session list. */
+export interface RecentSession {
+  readonly session: SessionRecord;
+  readonly latestTurn: TurnRecord | null;
+}
+
 export interface SessionStore {
   createSession(input: NewSession): Promise<SessionRecord>;
   /** null when absent (including an id that is not a uuid). */
   getSession(id: string): Promise<SessionRecord | null>;
+  /** The `limit` most recent sessions (createdAt desc, then id desc), each with its latest turn.
+   *  @throws InvalidRecordError for a limit that is not an int32 >= 0 */
+  listRecentSessions(limit: number): Promise<RecentSession[]>;
   /** @throws SessionNotFoundError, TurnConflictError (not the next contiguous index), InvalidRecordError */
   appendTurn(input: NewTurn): Promise<TurnRecord>;
   getTurn(sessionId: string, turnIndex: number): Promise<TurnRecord | null>;

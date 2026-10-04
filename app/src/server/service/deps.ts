@@ -2,10 +2,13 @@
 // their own ServiceDeps and call the handlers with them.
 //   keyPresent  non-empty ANTHROPIC_API_KEY (read from process.env only; never logged, never
 //               copied into app/.env*; Ivan starts dev from a keyed shell)
-//   keeper      keeperFactory over AnthropicLlmClient (the SDK reads the key itself), model from
-//               KEEPER_MODEL or the default; setup loaded per request
+//   keeper      keeperFactory over keeperLlmClient (AnthropicLlmClient, timeout 90 s, 1 retry; the
+//               SDK reads the key itself), model from KEEPER_MODEL or the default; setup loaded
+//               per request
 //   store       getStore (db/ready.ts: DATABASE_URL pool, role check memoized on success)
-//   env         getJourneyEnv (memoized pack load)
+//   env         getJourneyEnv (memoized pack load); vk / labels: getVkAddendum / getPackLabels
+//               (memoized next to it)
+//   lock        ONE module-level InProcessGenerationLock (single process; DEFERRED for 3.4.b)
 //   newSeed     16 random bytes as hex (32 characters; P10 allows 1..128)
 //   routeFor    pregenRoute; step: journeyTurn
 //   secrets     the key, the auth token and connection strings, redacted from recorded Keeper
@@ -16,11 +19,11 @@ import 'server-only';
 import { randomBytes } from 'node:crypto';
 
 import { journeyTurn, pregenRoute } from '@brodyazhnik/orchestrator';
-import { AnthropicLlmClient } from '@brodyazhnik/orchestrator/anthropic';
 
 import { getStore } from '../db/ready';
-import { getJourneyEnv, repoRoot } from '../env';
-import { keeperFactory, keeperModel } from './keeper';
+import { getJourneyEnv, getPackLabels, getVkAddendum, repoRoot } from '../env';
+import { keeperFactory, keeperLlmClient, keeperModel } from './keeper';
+import { InProcessGenerationLock } from './lock';
 import type { ServiceDeps } from './ports';
 
 const SECRET_VARS = ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN', 'DATABASE_URL', 'TEST_DATABASE_URL'] as const;
@@ -43,6 +46,7 @@ function urlPassword(v: string): string[] {
 }
 
 let memo: ServiceDeps | undefined;
+const generationLock = new InProcessGenerationLock();
 
 export function productionDeps(): ServiceDeps {
   if (memo === undefined) {
@@ -50,11 +54,14 @@ export function productionDeps(): ServiceDeps {
       keyPresent: () => (process.env['ANTHROPIC_API_KEY'] ?? '').trim() !== '',
       keeper: keeperFactory({
         repoRoot,
-        llm: () => new AnthropicLlmClient(),
+        llm: () => keeperLlmClient(),
         model: () => keeperModel(process.env['KEEPER_MODEL']),
       }),
       store: getStore,
       env: getJourneyEnv,
+      vk: getVkAddendum,
+      labels: getPackLabels,
+      lock: generationLock,
       newSeed: () => randomBytes(16).toString('hex'),
       routeFor: pregenRoute,
       step: journeyTurn,
