@@ -1,5 +1,6 @@
 // API handlers (3.1-C7): guard -> parse/validate -> service -> JSON. Route files call these with
 // productionDeps(); tests call them with their own deps. Every response is JSON + no-store.
+// Response bodies are checked against the wire types in src/shared/api.ts (`satisfies`, K5).
 // Errors: an ApiError renders its fixed message; a known store / orchestrator / database error is
 // mapped by type or code; anything else is 500 internal_error. Logs carry the code (and the
 // error's class name or driver code) -- never the error object, its message, or env values.
@@ -24,6 +25,13 @@ import {
   TurnConflictError,
   TurnNotFoundError,
 } from '../store/types';
+import type {
+  CreatedSessionDto,
+  PlayedTurnDto,
+  RegeneratedProseDto,
+  SessionDetailDto,
+  SessionListDto,
+} from '../../shared/api';
 import { ApiError, errorResponse, jsonResponse } from './errors';
 import { checkHost, checkMutation, hasExactKeys, readJsonObject } from './guard';
 
@@ -79,7 +87,7 @@ export function handleCreateSession(req: Request, deps: ServiceDeps): Promise<Re
     checkMutation(req);
     const body = await readJsonObject(req);
     if (!hasExactKeys(body, ['region'])) throw new ApiError('invalid_request');
-    return { status: 201, body: await new SessionService(deps).createSession(body['region']) };
+    return { status: 201, body: (await new SessionService(deps).createSession(body['region'])) satisfies CreatedSessionDto };
   });
 }
 
@@ -87,7 +95,7 @@ export function handleCreateSession(req: Request, deps: ServiceDeps): Promise<Re
 export function handleListSessions(req: Request, deps: ServiceDeps): Promise<Response> {
   return respond('GET /api/sessions', async () => {
     checkHost(req);
-    return { status: 200, body: await new SessionService(deps).listSessions() };
+    return { status: 200, body: (await new SessionService(deps).listSessions()) satisfies SessionListDto };
   });
 }
 
@@ -95,7 +103,7 @@ export function handleListSessions(req: Request, deps: ServiceDeps): Promise<Res
 export function handleGetSession(req: Request, id: string, deps: ServiceDeps): Promise<Response> {
   return respond('GET /api/sessions/:id', async () => {
     checkHost(req);
-    return { status: 200, body: await new SessionService(deps).getSession(sessionId(id)) };
+    return { status: 200, body: (await new SessionService(deps).getSession(sessionId(id))) satisfies SessionDetailDto };
   });
 }
 
@@ -107,7 +115,7 @@ export function handlePlayTurn(req: Request, id: string, deps: ServiceDeps): Pro
     const body = await readJsonObject(req);
     const turnIndex = body['turnIndex'];
     if (!hasExactKeys(body, ['turnIndex']) || !isTurnIndex(turnIndex)) throw new ApiError('invalid_request');
-    return { status: 201, body: await new SessionService(deps).playTurn(sessionId(id), turnIndex) };
+    return { status: 201, body: (await new SessionService(deps).playTurn(sessionId(id), turnIndex)) satisfies PlayedTurnDto };
   });
 }
 
@@ -118,6 +126,6 @@ export function handleRegenerate(req: Request, id: string, n: string, deps: Serv
     const body = await readJsonObject(req, { allowEmpty: true });
     if (!hasExactKeys(body, [])) throw new ApiError('invalid_request');
     const turnIndex = pathIndex(n);
-    return { status: 201, body: await new SessionService(deps).regenerateProse(sessionId(id), turnIndex) };
+    return { status: 201, body: (await new SessionService(deps).regenerateProse(sessionId(id), turnIndex)) satisfies RegeneratedProseDto };
   });
 }
