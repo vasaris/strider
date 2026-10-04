@@ -108,7 +108,7 @@ export interface TurnView {
 export interface SessionDetail {
   readonly session: SessionView;
   readonly turns: readonly TurnView[];
-  readonly labels: Labels; // labels for the ids the turns' packages show (labels.ts)
+  readonly labels: Labels; // labels for the ids the turns' packages show and the session region (labels.ts)
   readonly nextTurnIndex: number;
   readonly journeyComplete: boolean;
   readonly packCurrent: boolean; // false: turns are refused with 409 pack_mismatch (P13)
@@ -214,7 +214,7 @@ export class SessionService {
     return {
       session: view(s),
       turns: views,
-      labels: labelsFor(this.deps.labels(), turns.map((t) => t.pkg)),
+      labels: labelsFor(this.deps.labels(), turns.map((t) => t.pkg), [s.initialState.journey.route.region]),
       nextTurnIndex: last === undefined ? 0 : last.turnIndex + 1,
       journeyComplete: isJourneyOver(state),
       packCurrent: packCurrent(s, env),
@@ -272,7 +272,7 @@ export class SessionService {
     return {
       turnIndex,
       pkg: t.pkg,
-      labels: labelsFor(this.deps.labels(), [t.pkg]),
+      labels: labelsFor(this.deps.labels(), [t.pkg], [s.initialState.journey.route.region]),
       ...written(gen),
       nextTurnIndex: after.nextTurnIndex,
       journeyComplete: after.journeyComplete,

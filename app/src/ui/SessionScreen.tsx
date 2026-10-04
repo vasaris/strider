@@ -6,13 +6,15 @@
 // lock, e.g. after a reload) or this client's own POST is in flight, GET is polled every 3 s:
 // a setTimeout chain re-decided after EVERY attempt, success or failure (a failed poll keeps the
 // last good detail, shows a quiet notice and is retried; see pollDelay in model.ts).
-// No automatic retries: a failed or blocked prose waits for "Переписать".
+// No automatic retries: a failed or blocked prose waits for "Переписать". Accepted prose of the
+// latest turn can be rewritten too (a quiet control); when that new version is not accepted the
+// GET keeps the previous text, and a quiet notice says so (rewriteNotice in model.ts).
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
 
 import type { PlayedTurnDto, RegeneratedProseDto, SessionDetailDto } from '../shared/api';
 import { apiGet, apiPost } from './api-client';
-import { canAdvance, days, errorMessage, isQuietConflict, journeyDaysTotal, pollDelay, turnsCount, type ClientErrorCode } from './model';
+import { canAdvance, days, errorMessage, isQuietConflict, journeyDaysTotal, labelOf, pollDelay, rewriteNotice, turnsCount, type ClientErrorCode } from './model';
 import { TurnCard } from './TurnCard';
 
 type Busy = { readonly kind: 'turn' } | { readonly kind: 'prose'; readonly turnIndex: number } | null;
@@ -123,9 +125,12 @@ export function SessionScreen({ id }: { id: string }): ReactElement {
     setError(null);
     setNotice(null);
     setBusy({ kind: 'prose', turnIndex });
+    const wasReady = detail?.turns.find((t) => t.turnIndex === turnIndex)?.proseState === 'ready';
     try {
       const r = await apiPost<RegeneratedProseDto>(`${base}/turns/${turnIndex}/prose`, {});
       await afterPost(r);
+      const note = r.ok ? rewriteNotice(wasReady, r.data.proseState) : null;
+      if (note !== null) setNotice(note);
     } finally {
       setBusy(null);
     }
@@ -155,6 +160,8 @@ export function SessionScreen({ id }: { id: string }): ReactElement {
   const actionsDisabled = busy !== null || anyGenerating || !detail.packCurrent;
   const totalDays = journeyDaysTotal(turns);
   const fresh = initialTurns.current ?? turns.length;
+  const lastIndex = turns[turns.length - 1]?.turnIndex ?? null;
+  const region = labelOf(labels, 'regions', session.region);
 
   return (
     <main className="page">
@@ -164,7 +171,7 @@ export function SessionScreen({ id }: { id: string }): ReactElement {
 
       <header className="session-head">
         <h1>
-          Сессия <span className="mono region">{session.region}</span>
+          Сессия <span className={region === session.region ? 'mono region' : 'region'}>{region}</span>
         </h1>
         <dl className="meta">
           <div>
@@ -195,6 +202,7 @@ export function SessionScreen({ id }: { id: string }): ReactElement {
             key={t.turnIndex}
             turn={t}
             labels={labels}
+            latest={t.turnIndex === lastIndex}
             pending={busy?.kind === 'prose' && busy.turnIndex === t.turnIndex}
             actionsDisabled={actionsDisabled}
             animate={t.turnIndex >= fresh}

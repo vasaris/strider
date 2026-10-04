@@ -13,6 +13,7 @@ import {
   GATE_LIST_IDS,
   LABEL_GROUPS,
   REGION_IDS,
+  TRACKER_IDS,
   type DiceDto,
   type GateFindingDto,
   type GateListId,
@@ -23,7 +24,6 @@ import {
 import {
   blockReasons,
   canAdvance,
-  canRewrite,
   daysLine,
   deltaRows,
   diceModel,
@@ -40,10 +40,14 @@ import {
   plural,
   pollDelay,
   POLL_MS,
+  REWRITE_NOTICES,
+  rewriteControl,
+  rewriteNotice,
   sceneOf,
   shouldPoll,
   signed,
   turnUi,
+  type TurnUi,
 } from '../../src/ui/model';
 
 const LABELS: LabelsDto = {
@@ -51,6 +55,8 @@ const LABELS: LabelsDto = {
   skills: { hunting: 'SKILL-HUNTING' },
   conditions: { weary: 'COND-WEARY' },
   outcomes: { weak: 'OUT-WEAK', strong: 'OUT-STRONG', failure: 'failure' },
+  regions: { wild_lands: 'REGION-WILD' },
+  trackers: { fatigue: 'TRACKER-FATIGUE' },
 };
 
 function turn(over: Partial<TurnDto> = {}): TurnDto {
@@ -91,7 +97,7 @@ describe('turnUi', () => {
   it('ready: paragraphs and warn findings only', () => {
     const ui = turnUi(turn({ proseState: 'ready', prose: 'One.\n\n  Two.  \nThree.', gate: [warn('slop_ru', 'x')] }));
     expect(ui).toEqual({ kind: 'ready', paragraphs: ['One.', 'Two.', 'Three.'], rewriting: false, warnings: [warn('slop_ru', 'x')] });
-    expect(canRewrite(ui)).toBe(false);
+    expect(rewriteControl(ui, false)).toBeNull();
   });
 
   it('ready wins over generating: the accepted text stays, marked rewriting', () => {
@@ -104,20 +110,47 @@ describe('turnUi', () => {
       expect(turnUi(turn({ proseState, generating: true })).kind).toBe('generating');
       expect(turnUi(turn({ proseState }), true).kind).toBe('generating');
     }
-    expect(canRewrite({ kind: 'generating' })).toBe(false);
+    expect(rewriteControl({ kind: 'generating' }, true)).toBeNull();
   });
 
   it('blocked: reasons from the block findings; never any text', () => {
     const ui = turnUi(turn({ proseState: 'blocked', gate: [warn('slop_en', 'w'), block('calque', 'k')] }));
     expect(ui).toEqual({ kind: 'blocked', reasons: [{ sentence: GATE_REASONS['calque'], terms: ['k'] }] });
-    expect(canRewrite(ui)).toBe(true);
+    expect(rewriteControl(ui, false)).toBe('recover');
   });
 
   it('failed and missing offer a rewrite', () => {
     expect(turnUi(turn({ proseState: 'failed' }))).toEqual({ kind: 'failed' });
     expect(turnUi(turn({ proseState: 'missing' }))).toEqual({ kind: 'missing' });
-    expect(canRewrite({ kind: 'failed' })).toBe(true);
-    expect(canRewrite({ kind: 'missing' })).toBe(true);
+    expect(rewriteControl({ kind: 'failed' }, false)).toBe('recover');
+    expect(rewriteControl({ kind: 'missing' }, false)).toBe('recover');
+  });
+
+  it('rewriteControl matrix: quiet only for ready prose of the latest turn not being rewritten', () => {
+    const ready = (rewriting: boolean): TurnUi => ({ kind: 'ready', paragraphs: ['A.'], rewriting, warnings: [] });
+    expect(rewriteControl(ready(false), true)).toBe('quiet');
+    expect(rewriteControl(ready(false), false)).toBeNull();
+    expect(rewriteControl(ready(true), true)).toBeNull();
+    expect(rewriteControl(ready(true), false)).toBeNull();
+    for (const latest of [true, false]) {
+      expect(rewriteControl({ kind: 'blocked', reasons: [] }, latest)).toBe('recover');
+      expect(rewriteControl({ kind: 'failed' }, latest)).toBe('recover');
+      expect(rewriteControl({ kind: 'missing' }, latest)).toBe('recover');
+      expect(rewriteControl({ kind: 'generating' }, latest)).toBeNull();
+    }
+    // through turnUi: a ready turn whose rewrite is in flight (server lock or own request)
+    expect(rewriteControl(turnUi(turn({ proseState: 'ready', prose: 'A.' })), true)).toBe('quiet');
+    expect(rewriteControl(turnUi(turn({ proseState: 'ready', prose: 'A.', generating: true })), true)).toBeNull();
+    expect(rewriteControl(turnUi(turn({ proseState: 'ready', prose: 'A.' }), true), true)).toBeNull();
+  });
+
+  it('rewriteNotice: only a rewrite of ready prose whose new generation was not accepted', () => {
+    expect(rewriteNotice(true, 'blocked')).toBe(REWRITE_NOTICES.blocked);
+    expect(rewriteNotice(true, 'missing')).toBe(REWRITE_NOTICES.missing);
+    expect(rewriteNotice(true, 'ready')).toBeNull();
+    for (const outcome of ['ready', 'blocked', 'missing'] as const) expect(rewriteNotice(false, outcome)).toBeNull();
+    expect(REWRITE_NOTICES.blocked).not.toBe(REWRITE_NOTICES.missing);
+    for (const s of Object.values(REWRITE_NOTICES)) expect(s).toMatch(/\p{Script=Cyrillic}.*\.$/u);
   });
 
   it('ready without text is treated as missing', () => {
@@ -275,6 +308,14 @@ describe('mechanics helpers', () => {
       { id: 'eye', value: 1 },
     ]);
     expect(deltaRows(null)).toEqual([]);
+    expect(deltaRows({ endurance_delta: -1, fatigue_delta: 1, hope_delta: 1, shadow_delta: 1, eye_delta: 1 }).map((r) => r.id)).toEqual([...TRACKER_IDS]);
+  });
+
+  it('labelOf: tracker and region labels from the server, else the id', () => {
+    expect(labelOf(LABELS, 'trackers', 'fatigue')).toBe('TRACKER-FATIGUE');
+    expect(labelOf(LABELS, 'trackers', 'eye')).toBe('eye');
+    expect(labelOf(LABELS, 'regions', 'wild_lands')).toBe('REGION-WILD');
+    expect(labelOf(null, 'regions', 'wild_lands')).toBe('wild_lands');
   });
 
   it('days and arrival lines; plurals', () => {

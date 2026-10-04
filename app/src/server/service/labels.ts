@@ -1,8 +1,10 @@
-// Human labels for the ids a turn's package shows (K4): every label is pack data, resolved here on
-// the server from the verified pack -- no setting name is written in app source. An id without a
-// pack label is shown as the id itself.
+// Human labels for the ids the app shows (K4, K5.1): every label is pack data, resolved here on
+// the server from the verified pack -- no setting name is written in app source. Priority per
+// (category, id): the STRUCTURED pack name -> the UI labels sidecar (uiLabels.ts) -> the id itself
+// (the last step in labelsFor). A sidecar entry only fills a gap; it never overrides a structured
+// name.
 //
-// Sources (all in content-packs/kv, read through loadPack):
+// Structured sources (content-packs/kv, read through loadPack):
 //   scenes      journey scene types (oracle.result_ref of journey_scenes):
 //               kv.mechanics.journey.razygryvanie_stsen_puteshestviya
 //               payload.parameters.journey_scene_table.rows[<id>].name_ru
@@ -14,12 +16,21 @@
 //               kv.mechanics.checks.degree_of_success payload.parameters.tiers[i].label, tier i
 //               mapped to the contract outcome the way the engine and orchestrator map it
 //               (tier index -> success / great_success / extraordinary_success -> weak / strong /
-//               extraordinary). The pack has no label for 'failure': it is shown as the id.
+//               extraordinary).
+// The pack has no structured name for regions (session region), trackers (the patch's *_delta
+// keys), the 'failure' outcome or the 'dying' condition: those come from the sidecar
+// content-packs/kv/ui_labels.json (group region / tracker / outcome / condition). Every sidecar
+// entry is checked here against the loaded pack (the evidence gate): its source card exists, is
+// verified:true, and its evidence is a verbatim substring of the card's title or of an element of
+// its payload.source_text -- else the catalog fails to build.
 // Categories are separate maps because ids collide across them (a skill and an oracle table can
 // share an id).
 import 'server-only';
 
 import type { CheckOutcome, NarrativePackage } from '@brodyazhnik/orchestrator';
+
+import { TRACKER_IDS } from '../../shared/api';
+import type { UiLabelEntry, UiLabelGroup } from './uiLabels';
 
 /** The slice of a loaded pack this module reads (engine's Pack satisfies it). */
 export interface LabelPack {
@@ -27,7 +38,7 @@ export interface LabelPack {
   listByType(type: string): readonly { readonly id: string; readonly raw: unknown }[];
 }
 
-export const LABEL_CATEGORIES = ['scenes', 'skills', 'conditions', 'outcomes'] as const;
+export const LABEL_CATEGORIES = ['scenes', 'skills', 'conditions', 'outcomes', 'regions', 'trackers'] as const;
 export type LabelCategory = (typeof LABEL_CATEGORIES)[number];
 
 /** category -> id -> label. */
@@ -38,6 +49,17 @@ const SKILLS_CARD = 'kv.mechanics.traits.spisok_navykov';
 const CONDITION_PREFIX = 'kv.mechanics.conditions.';
 const DEGREES_CARD = 'kv.mechanics.checks.degree_of_success';
 const OUTCOME_BY_TIER: readonly CheckOutcome[] = ['weak', 'strong', 'extraordinary'];
+
+/** Sidecar group -> label category. */
+export const CATEGORY_OF_GROUP: Readonly<Record<UiLabelGroup, LabelCategory>> = {
+  region: 'regions',
+  outcome: 'outcomes',
+  condition: 'conditions',
+  tracker: 'trackers',
+};
+
+type MutableLabels = { [C in LabelCategory]: Record<string, string> };
+const emptyLabels = (): MutableLabels => Object.fromEntries(LABEL_CATEGORIES.map((c) => [c, {}])) as MutableLabels;
 
 const obj = (v: unknown): Record<string, unknown> | null =>
   typeof v === 'object' && v !== null && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
@@ -62,8 +84,29 @@ function nameRuMap(map: unknown, where: string): Record<string, string> {
   return out;
 }
 
-/** The full label catalog of a pack. Throws loudly when a source card is missing or misshapen. */
-export function packLabels(pack: LabelPack): Labels {
+/**
+ * The sidecar evidence gate: the entry's source card is in the pack, is verified:true, and the
+ * evidence is a verbatim substring (no normalization) of its raw top-level title or of an element
+ * of its raw payload.source_text (string[]; a single string is tolerated). Throws otherwise.
+ */
+export function checkEvidence(pack: LabelPack, e: UiLabelEntry): void {
+  const what = `sidecar ${e.group}:${e.id}`;
+  const card = pack.getById(e.source_card) ?? fail(`${what}: source card ${e.source_card} is not in the pack`);
+  const raw = obj(card.raw) ?? fail(`${what}: source card ${e.source_card} is not an object`);
+  if (raw['verified'] !== true) fail(`${what}: source card ${e.source_card} is not verified`);
+  const st = obj(raw['payload'])?.['source_text'];
+  const texts = [raw['title'], ...(Array.isArray(st) ? st : [st])].filter((t): t is string => typeof t === 'string');
+  if (!texts.some((t) => t.includes(e.evidence))) {
+    fail(`${what}: evidence is not a verbatim substring of the title or payload.source_text of ${e.source_card}`);
+  }
+}
+
+/**
+ * The full label catalog of a pack: structured pack names, gaps filled from the UI labels sidecar
+ * (each sidecar entry evidence-checked first). Throws loudly when a source card is missing or
+ * misshapen, or when a sidecar entry fails the evidence gate.
+ */
+export function packLabels(pack: LabelPack, uiLabels: readonly UiLabelEntry[]): Labels {
   const scenes = nameRuMap(obj(params(pack, SCENES_CARD)['journey_scene_table'])?.['rows'], `${SCENES_CARD} rows`);
   const skills = nameRuMap(params(pack, SKILLS_CARD)['skills'], `${SKILLS_CARD} skills`);
 
@@ -83,10 +126,17 @@ export function packLabels(pack: LabelPack): Labels {
     if (outcome !== undefined && typeof label === 'string' && label !== '') outcomes[outcome] = label;
   });
 
-  return { scenes, skills, conditions, outcomes };
+  const out: MutableLabels = { ...emptyLabels(), scenes, skills, conditions, outcomes };
+  for (const e of uiLabels) {
+    checkEvidence(pack, e);
+    const cat = out[CATEGORY_OF_GROUP[e.group]];
+    if (!Object.hasOwn(cat, e.id)) cat[e.id] = e.name_ru; // a structured name wins
+  }
+  return out;
 }
 
-/** The ids of each category that a package shows. */
+/** The ids of each category that a package shows (regions are not in packages: []). Trackers: the
+ *  non-zero numeric `<id>_delta` keys of the patch, id = the key without `_delta`. */
 export function packageIds(pkg: NarrativePackage): { readonly [C in LabelCategory]: readonly string[] } {
   const scenes: string[] = [];
   const skills: string[] = [];
@@ -96,17 +146,25 @@ export function packageIds(pkg: NarrativePackage): { readonly [C in LabelCategor
   if (typeof skill === 'string') skills.push(skill);
   for (const o of [pkg.dice?.outcome, pkg.journey?.travel_check.outcome]) if (o !== undefined) outcomes.push(o);
   const conditions = [...(pkg.patch?.conditions_gained ?? []), ...(pkg.patch?.conditions_cleared ?? [])];
-  return { scenes, skills, conditions, outcomes };
+  const patch = (pkg.patch ?? {}) as Readonly<Record<string, unknown>>;
+  const trackers = TRACKER_IDS.filter((id) => {
+    const v = patch[`${id}_delta`];
+    return typeof v === 'number' && v !== 0;
+  });
+  return { scenes, skills, conditions, outcomes, regions: [], trackers };
 }
 
-/** Labels for exactly the ids the packages show: the pack label, else the id itself. */
-export function labelsFor(catalog: Labels, pkgs: readonly NarrativePackage[]): Labels {
-  const out = { scenes: {}, skills: {}, conditions: {}, outcomes: {} } as { [C in LabelCategory]: Record<string, string> };
+/** Labels for exactly the ids the packages show, plus the given region ids: the catalog label,
+ *  else the id itself. */
+export function labelsFor(catalog: Labels, pkgs: readonly NarrativePackage[], regions: readonly string[] = []): Labels {
+  const out = emptyLabels();
+  const put = (c: LabelCategory, id: string) => {
+    out[c][id] = Object.hasOwn(catalog[c], id) ? (catalog[c][id] as string) : id;
+  };
   for (const pkg of pkgs) {
     const ids = packageIds(pkg);
-    for (const c of LABEL_CATEGORIES) {
-      for (const id of ids[c]) out[c][id] = Object.hasOwn(catalog[c], id) ? (catalog[c][id] as string) : id;
-    }
+    for (const c of LABEL_CATEGORIES) for (const id of ids[c]) put(c, id);
   }
+  for (const id of regions) put('regions', id);
   return out;
 }

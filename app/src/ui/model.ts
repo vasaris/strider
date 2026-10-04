@@ -14,9 +14,11 @@ import type {
   LabelsDto,
   PackageDto,
   PatchDto,
+  RegeneratedProseDto,
   SessionDetailDto,
   TurnDto,
 } from '../shared/api';
+import { TRACKER_IDS } from '../shared/api';
 
 // ---- labels ----
 
@@ -41,7 +43,7 @@ export type TurnUi =
  *      server's lock, or this client's own request) only marks it `rewriting`;
  *   2. else a generation in flight -> 'generating' (it supersedes blocked / failed / missing);
  *   3. else the server's proseState (blocked with the reasons of its block findings).
- * `canRewrite` (below) is true only for blocked / failed / missing.
+ * `rewriteControl` (below) says which rewrite control a turn shows.
  */
 export function turnUi(turn: TurnDto, pending = false): TurnUi {
   const busy = turn.generating || pending;
@@ -60,7 +62,37 @@ export function turnUi(turn: TurnDto, pending = false): TurnUi {
   }
 }
 
-export const canRewrite = (ui: TurnUi): boolean => ui.kind === 'blocked' || ui.kind === 'failed' || ui.kind === 'missing';
+/** 'recover': the F3 control of a blocked / failed / missing turn (any turn of the feed);
+ *  'quiet': the low-emphasis control under accepted prose (only the latest turn, not while a new
+ *  version is being written); null: none (also while generating). */
+export type RewriteControl = 'recover' | 'quiet' | null;
+
+export function rewriteControl(ui: TurnUi, latest: boolean): RewriteControl {
+  switch (ui.kind) {
+    case 'blocked':
+    case 'failed':
+    case 'missing':
+      return 'recover';
+    case 'ready':
+      return latest && !ui.rewriting ? 'quiet' : null;
+    default:
+      return null;
+  }
+}
+
+/** Our notices for a rewrite of ACCEPTED prose whose new generation was not accepted: the GET keeps
+ *  showing the previous text, so without a notice the click would look like a no-op. */
+export const REWRITE_NOTICES = {
+  blocked: 'Новый вариант не прошёл проверку — оставлен прежний текст.',
+  missing: 'Новый вариант не сохранился — оставлен прежний текст.',
+} as const;
+
+/** The notice after a successful (201) POST .../prose: only when the turn was 'ready' at the click
+ *  and THIS generation came back blocked or missing; else null (the GET shows the state). */
+export function rewriteNotice(wasReady: boolean, outcome: RegeneratedProseDto['proseState']): string | null {
+  if (!wasReady || outcome === 'ready') return null;
+  return REWRITE_NOTICES[outcome];
+}
 
 /** Prose split into paragraphs on line breaks; blank runs collapsed. */
 export function paragraphs(prose: string): string[] {
@@ -210,18 +242,16 @@ export function successAria(s: SuccessDie): string {
 // ---- turn mechanics ----
 
 export interface DeltaRow {
-  readonly id: string; // tracker id without the _delta suffix (no pack label exists for these)
+  readonly id: string; // tracker id without the _delta suffix (label group 'trackers')
   readonly value: number;
 }
 
-const DELTA_KEYS = ['endurance_delta', 'fatigue_delta', 'hope_delta', 'shadow_delta', 'eye_delta'] as const;
-
-/** Non-zero tracker deltas, in a fixed order. */
+/** Non-zero tracker deltas, in the order of TRACKER_IDS. */
 export function deltaRows(patch: PatchDto | null | undefined): DeltaRow[] {
   if (patch == null) return [];
-  return DELTA_KEYS.flatMap((k) => {
-    const v = patch[k];
-    return typeof v === 'number' && v !== 0 ? [{ id: k.replace(/_delta$/, ''), value: v }] : [];
+  return TRACKER_IDS.flatMap((id) => {
+    const v = patch[`${id}_delta`];
+    return typeof v === 'number' && v !== 0 ? [{ id, value: v }] : [];
   });
 }
 

@@ -1,5 +1,6 @@
 // Server-side environment: locates the repo root and loads the verified pack once (the journey
-// env, the VK addendum for the prose gate, the label catalog -- each memoized).
+// env, the VK addendum for the prose gate, the label catalog with the UI labels sidecar -- each
+// memoized).
 // Paths come from the process cwd (or BRODYAZHNIK_REPO_ROOT), never from
 // import.meta.url / __dirname: bundled module paths differ from source paths.
 import 'server-only';
@@ -12,6 +13,7 @@ import { loadJourneyEnv, type JourneyEnv } from '@brodyazhnik/orchestrator';
 import { loadVkAddendumFromPack, type StopEntry } from '@brodyazhnik/prose-gate';
 
 import { packLabels, type Labels } from './service/labels';
+import { loadUiLabelsFromPack } from './service/uiLabels';
 
 const PACK_REL = join('content-packs', 'kv');
 const MARKER = join(PACK_REL, 'manifest.json');
@@ -62,10 +64,12 @@ export function getVkAddendum(): readonly StopEntry[] {
 
 let labelsMemo: Labels | undefined;
 
-/** The label catalog over the verified pack (service/labels.ts). Memoized. */
+/** The label catalog over the verified pack and its UI labels sidecar (service/labels.ts,
+ *  service/uiLabels.ts). Memoized; throws if the pack, the sidecar or its evidence fails. */
 export function getPackLabels(): Labels {
   if (labelsMemo === undefined) {
-    labelsMemo = packLabels(loadPack(nodePackSource(join(repoRoot(), PACK_REL))));
+    const packRoot = join(repoRoot(), PACK_REL);
+    labelsMemo = packLabels(loadPack(nodePackSource(packRoot)), loadUiLabelsFromPack(packRoot));
   }
   return labelsMemo;
 }

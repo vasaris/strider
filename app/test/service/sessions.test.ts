@@ -15,7 +15,7 @@ import type { KeeperRunner } from '../../src/server/service/ports';
 import { SessionService } from '../../src/server/service/sessions';
 import { MemorySessionStore } from '../../src/server/store/memory';
 import type { SessionStore } from '../../src/server/store/types';
-import { ENV, FAKE_SECRET, REPO, TEST_MODEL, testDeps } from '../support/service';
+import { ENV, FAKE_SECRET, LABELS, REPO, TEST_MODEL, testDeps } from '../support/service';
 
 const ABSENT = '00000000-0000-4000-8000-000000000000';
 const setup = loadKeeperSetup({ repoRoot: REPO, keeperPrompt: KEEPER_PROMPT });
@@ -127,7 +127,7 @@ describe('a full journey through the service', () => {
     expect(await svc.getSession(session.id)).toEqual({
       session,
       turns: [],
-      labels: { scenes: {}, skills: {}, conditions: {}, outcomes: {} },
+      labels: { scenes: {}, skills: {}, conditions: {}, outcomes: {}, regions: { border_lands: LABELS.regions['border_lands'] }, trackers: {} },
       nextTurnIndex: 0,
       journeyComplete: false,
       packCurrent: true,

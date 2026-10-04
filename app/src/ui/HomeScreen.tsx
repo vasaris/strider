@@ -1,8 +1,9 @@
 'use client';
 
 // The start screen "/" (K5): pick a region -> POST /api/sessions -> /s/[id]; below, the recent
-// sessions (GET /api/sessions). Regions are shown by id: the pack has no structured region name,
-// and the app writes no setting names of its own.
+// sessions (GET /api/sessions). Region names come from the server's label catalog (the pack's UI
+// labels sidecar, K5.1), passed in by the server component app/page.tsx -- the app writes no
+// setting names of its own; a region without a label is shown as its id.
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactElement } from 'react';
@@ -11,7 +12,12 @@ import type { CreatedSessionDto, RegionId, SessionListDto } from '../shared/api'
 import { apiGet, apiPost } from './api-client';
 import { errorMessage, formatDate, turnsCount, type ClientErrorCode } from './model';
 
-export function HomeScreen({ regions }: { regions: readonly RegionId[] }): ReactElement {
+export interface RegionOption {
+  readonly id: RegionId;
+  readonly label: string;
+}
+
+export function HomeScreen({ regions }: { regions: readonly RegionOption[] }): ReactElement {
   const router = useRouter();
   const [list, setList] = useState<SessionListDto | null>(null);
   const [listError, setListError] = useState<ClientErrorCode | null>(null);
@@ -29,6 +35,9 @@ export function HomeScreen({ regions }: { regions: readonly RegionId[] }): React
       live = false;
     };
   }, []);
+
+  const regionName = (id: string): string => regions.find((r) => r.id === id)?.label ?? id;
+  const nameClass = (id: string): string | undefined => (regionName(id) === id ? 'mono' : undefined);
 
   const start = async (region: RegionId): Promise<void> => {
     if (creating !== null) return;
@@ -59,10 +68,10 @@ export function HomeScreen({ regions }: { regions: readonly RegionId[] }): React
         <h2 id="start-h">Новый путь</h2>
         <p className="dim">Выберите регион. Маршрут и герой готовы заранее.</p>
         <div className="regions">
-          {regions.map((r) => (
-            <button key={r} type="button" className="btn region-btn" onClick={() => void start(r)} disabled={creating !== null}>
-              <span className="mono">{r}</span>
-              <span className="dim small">{creating === r ? 'создаётся…' : 'начать'}</span>
+          {regions.map(({ id, label }) => (
+            <button key={id} type="button" className="btn region-btn" onClick={() => void start(id)} disabled={creating !== null}>
+              <span className={nameClass(id)}>{label}</span>
+              <span className="dim small">{creating === id ? 'создаётся…' : 'начать'}</span>
             </button>
           ))}
         </div>
@@ -91,7 +100,7 @@ export function HomeScreen({ regions }: { regions: readonly RegionId[] }): React
             {list.sessions.map(({ session, nextTurnIndex, journeyComplete }) => (
               <li key={session.id}>
                 <Link href={`/s/${encodeURIComponent(session.id)}`} className="session-link">
-                  <span className="mono">{session.region}</span>
+                  <span className={nameClass(session.region)}>{regionName(session.region)}</span>
                   <span className="num">{turnsCount(nextTurnIndex)}</span>
                   <span className={journeyComplete ? 'state-done' : 'state-open'}>{journeyComplete ? 'путь окончен' : 'в пути'}</span>
                   <time dateTime={session.createdAt} className="dim">

@@ -41,6 +41,11 @@ export interface OracleDto {
   readonly row?: OracleRowDto | null;
 }
 
+/** The trackers a patch can move, as `<id>_delta` keys (contract HeroPatch), in display order. The
+ *  server labels these ids (group 'trackers'); the UI lists the non-zero deltas in this order. */
+export const TRACKER_IDS = ['endurance', 'fatigue', 'hope', 'shadow', 'eye'] as const;
+export type TrackerId = (typeof TRACKER_IDS)[number];
+
 export interface PatchDto {
   readonly endurance_delta?: number;
   readonly fatigue_delta?: number;
@@ -104,7 +109,7 @@ export interface TurnDto {
   readonly generations: number;
 }
 
-export const LABEL_GROUPS = ['scenes', 'skills', 'conditions', 'outcomes'] as const;
+export const LABEL_GROUPS = ['scenes', 'skills', 'conditions', 'outcomes', 'regions', 'trackers'] as const;
 export type LabelGroup = (typeof LABEL_GROUPS)[number];
 export type LabelsDto = { readonly [G in LabelGroup]: Readonly<Record<string, string>> };
 

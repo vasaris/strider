@@ -6,6 +6,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ApiError, type ApiErrorCode } from '../../src/server/http/errors';
+import { LABEL_CATEGORIES } from '../../src/server/service/labels';
 import { InProcessGenerationLock } from '../../src/server/service/lock';
 import { RECENT_SESSIONS_LIMIT, SessionService } from '../../src/server/service/sessions';
 import { MemorySessionStore } from '../../src/server/store/memory';
@@ -298,10 +299,13 @@ describe('labels in responses', () => {
     expect(t0.labels.scenes).toEqual({ [scene0]: LABELS.scenes[scene0] });
     const detail = await svc.getSession(id);
     for (const t of [t0, t1]) {
-      for (const c of ['scenes', 'skills', 'conditions', 'outcomes'] as const) {
+      for (const c of LABEL_CATEGORIES) {
         for (const [k, v] of Object.entries(t.labels[c])) expect(detail.labels[c][k]).toBe(v);
       }
     }
+    const region = detail.session.region;
+    expect(detail.labels.regions).toEqual({ [region]: LABELS.regions[region] });
+    expect(t0.labels.regions).toEqual({ [region]: LABELS.regions[region] });
   });
 });
 

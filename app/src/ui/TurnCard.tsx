@@ -1,13 +1,16 @@
 // One turn of the feed (K5, 3.2.a/3.2.c): the mechanics inset (scene, detail row, detection, days,
 // tracker deltas), the dice panel of both rolls (the scene check and, separately, the travel roll)
-// and the prose area with its states.
+// and the prose area with its states. Rewrite controls (rewriteControl in model.ts): the F3 control
+// of a blocked / failed / missing turn on any turn; a quiet one under accepted prose on the latest
+// turn only.
 import type { ReactElement } from 'react';
 
 import type { LabelsDto, TurnDto } from '../shared/api';
 import { DicePanel } from './Dice';
-import { canRewrite, daysLine, gateReason, deltaRows, diceModel, labelOf, sceneOf, signed, turnUi, type TurnUi } from './model';
+import { daysLine, gateReason, deltaRows, diceModel, labelOf, rewriteControl, sceneOf, signed, turnUi, type TurnUi } from './model';
 
-function Prose({ ui, onRewrite, disabled }: { ui: TurnUi; onRewrite: () => void; disabled: boolean }): ReactElement {
+function Prose({ ui, latest, onRewrite, disabled }: { ui: TurnUi; latest: boolean; onRewrite: () => void; disabled: boolean }): ReactElement {
+  const control = rewriteControl(ui, latest);
   switch (ui.kind) {
     case 'ready':
       return (
@@ -29,6 +32,11 @@ function Prose({ ui, onRewrite, disabled }: { ui: TurnUi; onRewrite: () => void;
                 ))}
               </ul>
             </details>
+          ) : null}
+          {control === 'quiet' ? (
+            <button type="button" className="btn-link" onClick={onRewrite} disabled={disabled}>
+              Переписать
+            </button>
           ) : null}
         </>
       );
@@ -59,7 +67,7 @@ function Prose({ ui, onRewrite, disabled }: { ui: TurnUi; onRewrite: () => void;
               ))}
             </ul>
           ) : null}
-          {canRewrite(ui) ? (
+          {control === 'recover' ? (
             <button type="button" className="btn btn-quiet" onClick={onRewrite} disabled={disabled}>
               Переписать
             </button>
@@ -73,6 +81,7 @@ function Prose({ ui, onRewrite, disabled }: { ui: TurnUi; onRewrite: () => void;
 export function TurnCard({
   turn,
   labels,
+  latest,
   pending,
   actionsDisabled,
   animate,
@@ -80,6 +89,7 @@ export function TurnCard({
 }: {
   turn: TurnDto;
   labels: LabelsDto | null;
+  latest: boolean; // the last turn of the feed (the quiet rewrite of accepted prose)
   pending: boolean;
   actionsDisabled: boolean;
   animate: boolean;
@@ -134,11 +144,14 @@ export function TurnCard({
         {pkg.journey != null || deltas.length > 0 || gained.length > 0 || cleared.length > 0 ? (
           <ul className="facts">
             {pkg.journey != null ? <li className={pkg.journey.arrived === true ? 'fact-arrival' : undefined}>{daysLine(pkg.journey)}</li> : null}
-            {deltas.map((d) => (
-              <li key={d.id}>
-                <span className="mono">{d.id}</span> <span className="num">{signed(d.value)}</span>
-              </li>
-            ))}
+            {deltas.map((d) => {
+              const name = labelOf(labels, 'trackers', d.id);
+              return (
+                <li key={d.id}>
+                  <span className={name === d.id ? 'mono' : undefined}>{name}</span> <span className="num">{signed(d.value)}</span>
+                </li>
+              );
+            })}
             {gained.map((c) => (
               <li key={`g-${c}`}>+ {labelOf(labels, 'conditions', c)}</li>
             ))}
@@ -152,7 +165,7 @@ export function TurnCard({
       </div>
 
       <div className="prose" aria-live="polite" aria-busy={ui.kind === 'generating'}>
-        <Prose ui={ui} onRewrite={() => onRewrite(turn.turnIndex)} disabled={actionsDisabled} />
+        <Prose ui={ui} latest={latest} onRewrite={() => onRewrite(turn.turnIndex)} disabled={actionsDisabled} />
       </div>
     </article>
   );

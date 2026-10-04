@@ -22,3 +22,6 @@ brodyazhnik-*.zip
 
 # Local env (DATABASE_URL, API keys): never committed, at any depth.
 .env*
+
+# macOS Finder litter, at any depth.
+.DS_Store

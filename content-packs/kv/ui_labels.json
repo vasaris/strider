@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "id": "kv.ui_labels",
+  "type": "ui_labels",
+  "verified": true,
+  "locale": "ru",
+  "terminology": "pandora_box",
+  "notes": "UI labels sidecar (chat 3.2, K5.1). Russian names for ids the app shows that have no structured name in the pack (regions, trackers, the failure outcome, the dying condition): the pack names them only in rule text. A sidecar like tone.stoplist.json: NOT in manifest.content[], read by path by the app server, does not affect pack_version. Entry: name_ru is shown for (group, id); evidence is a verbatim substring of the title or of payload.source_text of the verified card source_card (checked at load and by app tests). Server label priority: structured pack name -> this sidecar -> the id itself. verified:true = Ivan's sign-off (reviewer block relayed by Ivan, chat 3.2, 2026-10-04; recorded in the chat 3.2 docs).",
+  "payload": {
+    "entries": [
+      { "group": "region", "id": "border_lands", "name_ru": "Пограничные земли", "source_card": "kv.mechanics.eye.presledovanie", "evidence": "Пограничные земли 18" },
+      { "group": "region", "id": "wild_lands", "name_ru": "Дикие земли", "source_card": "kv.mechanics.eye.presledovanie", "evidence": "Дикие земли 16" },
+      { "group": "region", "id": "dark_lands", "name_ru": "Тёмные земли", "source_card": "kv.mechanics.eye.presledovanie", "evidence": "Тёмные земли 14" },
+      { "group": "outcome", "id": "failure", "name_ru": "Провал", "source_card": "kv.mechanics.council.zavershenie_soveta", "evidence": "При провале проверки" },
+      { "group": "condition", "id": "dying", "name_ru": "Умирающий", "source_card": "kv.mechanics.combat.raneniya", "evidence": "считается умирающим" },
+      { "group": "tracker", "id": "fatigue", "name_ru": "Изнурение", "source_card": "kv.mechanics.journey.razygryvanie_stsen_puteshestviya", "evidence": "балл Изнурения" },
+      { "group": "tracker", "id": "eye", "name_ru": "Бдительность Ока", "source_card": "kv.mechanics.eye.bditelnost_oka", "evidence": "Бдительность Ока" },
+      { "group": "tracker", "id": "endurance", "name_ru": "Выносливость", "source_card": "kv.mechanics.endurance_hope.vynoslivost", "evidence": "Выносливость" },
+      { "group": "tracker", "id": "hope", "name_ru": "Надежда", "source_card": "kv.mechanics.endurance_hope.nadezhda", "evidence": "Надежда" },
+      { "group": "tracker", "id": "shadow", "name_ru": "Баллы Тени", "source_card": "kv.mechanics.shadow.bally_teni", "evidence": "Баллы Тени" }
+    ]
+  }
+}
