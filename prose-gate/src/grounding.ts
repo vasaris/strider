@@ -67,6 +67,7 @@
 
 import { renderNarrativePackage, type NarrativePackage } from '@brodyazhnik/orchestrator';
 import { scanProse, type StopEntry, type Violation } from './antislop.js';
+import { scanPluralAddress } from './sa1.js';
 
 const WORD = /[\p{L}\p{M}]+/gu;
 const CANDIDATE = /^\p{Lu}\p{Ll}/u;
@@ -258,7 +259,8 @@ export function scanRelativeBackstory(prose: string, pkg: NarrativePackage): Vio
 /**
  * The per-turn deterministic scan the judges run: scanProse (stop-lists + mixed_script) and,
  * ONLY when a package is given, NF1 on top -- ungrounded names against the rendered package,
- * then relative backstory. With `pkg === null` the result is exactly scanProse(prose, vkAddendum).
+ * then relative backstory -- and then SA1 (plural address in the authorial text, sa1.ts).
+ * With `pkg === null` the result is exactly scanProse(prose, vkAddendum).
  */
 export function scanTurnProse(
   prose: string,
@@ -269,6 +271,7 @@ export function scanTurnProse(
   if (pkg !== null) {
     violations.push(...scanUngroundedNames(prose, renderNarrativePackage(pkg)));
     violations.push(...scanRelativeBackstory(prose, pkg));
+    violations.push(...scanPluralAddress(prose));
   }
   return violations;
 }

@@ -1,6 +1,6 @@
 // NF1 grounding replay over the committed L4 records. OFFLINE: no API call, no key, no network --
 // it reads evals/l4-records/full-cycle-report.*.json and re-checks every recorded Keeper prose
-// against the package that Keeper received (src/grounding.ts via src/groundingReplay.ts).
+// against the package that Keeper received (prose-gate/src/grounding.ts via src/groundingReplay.ts).
 //
 //     cd evals && npx tsx grounding-replay.mts
 //

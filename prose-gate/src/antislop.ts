@@ -31,6 +31,8 @@
 //  - `nf1_name` / `nf1_backstory` (NF1) : PACKAGE-AWARE buckets produced ONLY by grounding.ts
 //                (scanTurnProse, when a package is given) -- never by scanProse, which has no
 //                package. Declared here so ListId and the default severities stay in one place.
+//  - `sa1_plural` (SA1) : PACKAGE-SCOPED like NF1, produced ONLY by sa1.ts via scanTurnProse
+//                (plural address "вы/вас/ваш*" in the authorial text; >= 2 block, 1 warn).
 //
 // SEVERITY is per-entry (StopEntry.severity), falling back to the list default. Severity is
 // thus a property of the term along the WHOLE path -- including the VK addendum loaded from
@@ -45,7 +47,8 @@ export type ListId =
   | 'vk_addendum'
   | 'mixed_script'
   | 'nf1_name'
-  | 'nf1_backstory';
+  | 'nf1_backstory'
+  | 'sa1_plural';
 
 export interface StopEntry {
   readonly term: string;
@@ -149,6 +152,7 @@ const LIST_DEFAULT_SEVERITY: Readonly<Record<ListId, Severity>> = {
   mixed_script: 'block',
   nf1_name: 'block', // grounding.ts only
   nf1_backstory: 'warn', // grounding.ts only
+  sa1_plural: 'block', // sa1.ts only; severity is set per finding (1 pronoun -> warn)
 };
 
 /** Unicode-aware loose word boundary: term not glued to another letter either side. */
