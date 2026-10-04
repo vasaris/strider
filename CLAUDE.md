@@ -24,7 +24,7 @@
 - **Механика не в LLM.** Броски/проверки/таблицы/состояние — детерминированный код; нарратив получает структурный результат и не выдумывает числа/исходы.
 - **Оракулы — механика движка.** Катит engine; LLM интерпретирует выпавшее, не подменяет.
 - **`engine/` без контента ВК.** Весь контент — в `content-packs/kv/` за манифестом. `engine/` юридически чист — единственная часть с возможным коммерческим будущим.
-- **`engine/src/**/*.ts` и `orchestrator/src/**/*.ts` — без кириллицы** (ASCII; `name_ru` и пр. в JSON-паке — можно; русские строки оркестратора — данные в `prompts/assembly.v1.json`). Скан — ниже.
+- **`engine/src/**/*.ts` и `orchestrator/src/**/*.ts` — без кириллицы** (ASCII; `name_ru` и пр. в JSON-паке — можно; русские строки оркестратора — данные в `prompts/assembly.v1.json`). Скан — ниже. В `prose-gate/src` и `evals/src` кириллица разрешена (данные сканеров). В `app/src` — русские строки интерфейса, но **ни одного имени сеттинга литералом**: имена — из пака через подписи сервера (структурное имя → `content-packs/kv/ui_labels.json` с evidence из verified-карт → id; sign-off — `docs/UI_LABELS_REVIEW.md`).
 - **Без книжных чисел в коде.** Всё число — из `parameters`/дескрипторов верифицированного пака; стаб-карты с другими числами в тестах доказывают pack-sourcing.
 - **RNG сидируемый** (sfc32+cyrb128); чистые функции `(state, action, rng) → (result, patch)`, RNG передаётся явно.
 - **`verified: true`** — без него таблицы в прод не грузятся.
@@ -64,13 +64,13 @@ TypeScript strict ESM, vitest 4; `engine/` — zero runtime deps. PWA: Next.js 1
 
 ## Команды
 ```bash
-npm run test:all && npm run typecheck:all      # из корня; на a51a13d — 394 / 84 / 201 / 425 (engine / orchestrator / evals / app); первым шагом — чекер lock
+npm run test:all && npm run typecheck:all      # из корня; на 51777dd — 402 / 103 / 129 / 101 / 554 (engine / orchestrator / prose-gate / evals / app); первым шагом — чекер lock
 npm run build:app                              # сборка app (next build --webpack)
 # app/БД (DATABASE_URL — только в шелле; роль и база — app/supabase/README.md):
 npm run db:migrate -w app                      # свой раннер миграций (П11); от суперпользователя откажется
 npm run test:pg -w app                         # опционально, вне test:all: TEST_DATABASE_URL на базу *_test
-npm run dev -w app                             # запускает ТОЛЬКО Иван, из keyed-шелла: set -a; source evals/.env; set +a; http://127.0.0.1:3000
-# test:all поднимает свой next dev для app/ — запущенного dev-сервера app в этот момент быть не должно
+npm run dev -w app                             # запускает ТОЛЬКО Иван, из keyed-шелла: set -a; source evals/.env; set +a; http://127.0.0.1:3000; строки keeper_call {...} в его stdout — латентность и токены Хранителя (K5.2)
+# test:all поднимает свой next dev для app/, build:app пишет в app/.next — запущенного dev-сервера app в этот момент быть не должно (lsof -i :3000 пуст)
 # golden-демо (из engine/):
 npm run combat ; npm run journey ; npm run council ; npm run progression ; npm run fellowship
 # скан кириллицы (из корня; engine/src и orchestrator/src должны быть CLEAN):
@@ -81,17 +81,42 @@ cd evals && npx tsx grounding-replay.mts | tail -1
 Keyed-скрипты (`calibrate.mts`, `full-cycle.mts`, `keeper-smoke.mts`) запускает **только Иван** в keyed-шелле; ключ — только `process.env`, `.env` не читать.
 
 ## Текущее состояние
-- **Stage 0–2 закрыты**; **Stage 3 (PWA) в работе.** Чат 3.1 закрыт целиком.
+- **Stage 0–2 закрыты**; **Stage 3 (PWA) в работе.** Чаты 3.1 и 3.2 закрыты.
   - Блок I: NF1 + RP1 `be08b85`, TP1 `6959977`, keeper v0.3 + judge v0.4 `877340d`, `ecad509`, шов Хранителя `5937e3a`; прогоны с ключом 27.09 — `evals/records/`.
   - Часть 2: lock `7610073`, `app/` `600c12f`, vitest 4 `e9e288f`, схема + хранилище `b687819`, API сессий и ходов `a51a13d`; живая проверка ревьюера и смоук Ивана пройдены; docs II.
-- Последний код-коммит `a51a13d`: `test:all` 394 / 84 / 201 / 425, typecheck чист, `build:app` зелёный, кириллицы нет в `engine/src` и `orchestrator/src`, 5 golden стабильны, pack 0.1.0, `npm audit` 0.
-- **Следующее:** `ROADMAP_SESSIONS.md` → **чат 3.2** (лента + кости + действия); вход — `docs/HANDOFF_STAGE3_2.md`. Первым — скелет 3.2 по процессу А.
+  - Чат 3.2:
+    - K1 `07b167a` — грани костей;
+    - K2 `b5dd431` — `prose-gate/`;
+    - K3 `e8ea868` — SA1;
+    - K4 `b2caef1` — живой гейт, устойчивость роута, список сессий, подписи;
+    - K5 `ea3c2e6` — UI ленты;
+    - K5.1 `f170450` — `ui_labels.json`, «Переписать» последнего хода;
+    - K5.2 `51777dd` — канон-термины, телеметрия Хранителя;
+    - K6 — docs.
+
+    Смоук Ивана на `f170450` пройден.
+  - Перепланировка этапа 3 (Иван, 04.10): 3.3 «Интерактивный ход» → 3.4 «Трекеры + лист героя» → 3.5 «Играбельная сцена + выход».
+- Последний код-коммит `51777dd`:
+  - `test:all` 402 / 103 / 129 / 101 / 554; typecheck чист, `build:app` зелёный;
+  - кириллицы нет в `engine/src` и `orchestrator/src`;
+  - 5 golden стабильны, фикстура Хранителя 11/11, NF1-реплей 2 / 10;
+  - живой гейт на корпусе 58 проз — 5 block / 2 SA1-warn;
+  - pack 0.1.0, `npm audit` 0.
+- **Следующее:** `ROADMAP_SESSIONS.md` → **чат 3.3** (интерактивный ход); вход — `docs/HANDOFF_STAGE3_3.md`. Первым — скелет 3.3 по процессу А (открытые вопросы — §6 handoff).
 
 ## Карта репо
 - `engine/` — чистый TS-движок (`src/` модули по подсистемам, `test/`, `cli/`).
-- `orchestrator/` — контракт движок→Хранитель, сборка и рендер пакета, цикл хода (`journeyTurn`), шов Хранителя (`AnthropicKeeper`, `loadKeeperSetup`; SDK-клиент только через `@brodyazhnik/orchestrator/anthropic`), pregen-герой.
-- `evals/` — анти-слоп, NF1, судьи, харнесс, keyed-скрипты; аудит-след `l4-records/` (Stage 2) и `records/` (с 3.1).
+- `orchestrator/` — контракт движок→Хранитель, сборка и рендер пакета, цикл хода (`journeyTurn`), шов Хранителя (`AnthropicKeeper`, `loadKeeperSetup`; SDK-клиент только через `@brodyazhnik/orchestrator/anthropic`, там же хук телеметрии `onCall`), pregen-герой.
+- `prose-gate/` — детерминированный гейт прозы (`@brodyazhnik/prose-gate`, с 3.2): стоп-листы (`antislop`), NF1 (`grounding`), SA1, загрузчики VK-стоп-листа; потребители — app (живой гейт) и evals.
+- `evals/` — судьи, харнесс, keyed-скрипты (сканеры — из `prose-gate`); аудит-след `l4-records/` (Stage 2) и `records/` (с 3.1).
 - `prompts/` — версионные промпты Хранителя и судьи (ранние версии заморожены sha256-пинами) + `assembly.v1.json`.
-- `app/` — Next.js 16 PWA (`@brodyazhnik/app`): маршруты `src/app/api/**` (тонкие), сервер только в `src/server/**` с `import 'server-only'` (`http/`, `service/`, `store/`, `db/`); миграции `supabase/migrations/` (раскладка Supabase CLI, применяет только свой раннер); `scripts/db-migrate.ts`; граница проверяется `test/boundary.test.ts`.
-- `content-packs/kv/` — верифицированный пак (mechanics/ tables/solo/ lifepaths/).
-- `brodyazhnik-architecture-v1.md` — архитектура+roadmap. `docs/` — ADR, HANDOFF_*, DEFERRED, ROADMAP_SESSIONS, STAGE1_COVERAGE; `tools/` — gate-инструменты извлечения и `check-lock-platforms.mjs` (lock несёт linux-x64 бинарники всех нативных семейств).
+- `app/` — Next.js 16 PWA (`@brodyazhnik/app`):
+  - маршруты `src/app/api/**` (тонкие);
+  - сервер только в `src/server/**` с `import 'server-only'` (`http/`, `service/`, `store/`, `db/`);
+  - UI — `src/ui/**` (клиент), типы провода — `src/shared/api.ts`; API — `docs/API.md`;
+  - миграции `supabase/migrations/` (раскладка Supabase CLI, применяет только свой раннер); `scripts/db-migrate.ts`;
+  - граница проверяется `test/boundary.test.ts`.
+- `content-packs/kv/` — верифицированный пак (mechanics/ tables/solo/ lifepaths/); сайдкары вне `manifest.content[]`, читаются по пути: `tone.md`, `tone.stoplist.json`, `ui_labels.json`.
+- `brodyazhnik-architecture-v1.md` — архитектура+roadmap.
+- `docs/` — ADR, HANDOFF_*, DEFERRED, ROADMAP_SESSIONS, STAGE1_COVERAGE, API, ревью-рекорды (`LT1_TONE_REVIEW.md`, `UI_LABELS_REVIEW.md`).
+- `tools/` — gate-инструменты извлечения и `check-lock-platforms.mjs` (lock несёт linux-x64 бинарники всех нативных семейств).

@@ -4,8 +4,10 @@
 > Тип: [`orchestrator/src/contract.ts`](../orchestrator/src/contract.ts) (ASCII,
 > content-clean). Промпт-потребитель: [`prompts/keeper.system.v0.3.md`](../prompts/keeper.system.v0.3.md)
 > (текущая версия; ранние заморожены sha256-пинами).
-> Машинная проверка запрещёнки: [`evals/src/antislop.ts`](../evals/src/antislop.ts) + имена и
-> предыстория против пакета — [`evals/src/grounding.ts`](../evals/src/grounding.ts) (NF1).
+> Машинная проверка запрещёнки: [`prose-gate/src/antislop.ts`](../prose-gate/src/antislop.ts) + имена и
+> предыстория против пакета — [`prose-gate/src/grounding.ts`](../prose-gate/src/grounding.ts) (NF1) +
+> обращение к герою во множественном числе — [`prose-gate/src/sa1.ts`](../prose-gate/src/sa1.ts) (SA1).
+> С 3.2 тот же гейт работает и живьём в роуте хода (`@brodyazhnik/prose-gate`; до 3.2-K2 — `evals/src/`).
 > Источник: `brodyazhnik-architecture-v1.md` sec 2.3.
 
 ## Идея
@@ -50,7 +52,7 @@
 
 Кальки чужих систем запрещены (TOR — не D&D): «хиты», «спасбросок», «очки жизни»,
 «класс брони», «мана», «прокачка» и т.п. Канон — термины Пандора Бокс. Детерминированный
-сид этих запретов и generic-клише — `evals/src/antislop.ts` (расширяется в 2.3).
+сид этих запретов и generic-клише — `prose-gate/src/antislop.ts` (до 3.2-K2 — `evals/src/antislop.ts`).
 ВК-пастиш (стоп-лист сеттинга) — pack-side, `tone.md` (**DEFERRED LT1**), не в коде.
 
 ## Карта пакета (поле → смысл)
@@ -59,7 +61,10 @@
   **отложено в чат 2.4** (open question Q1); поле классификатор-агностично.
 - `scene` / `length_target` — тип сцены + рамки длины (числовые диапазоны калибруются в
   `tone.md`/**LT1**, источник §2.3.4; контракт несёт только форму).
-- `dice` — Кость испытания (11=Око, 12=руна), Кости успеха, `outcome`.
+- `dice` — Кость испытания (11=Око, 12=руна), Кости успеха, `outcome`. Поля только для UI —
+  `feat_die`, `success_dice`, `feat_candidates`, `feat_modifier`, `success_counted` (3.2-K1, панель
+  костей; то же в `journey.travel_check`) — Хранителю и судье **не рендерятся**
+  (`UI_ONLY_DICE_KEYS` в `orchestrator/src/render.ts`); его вход байт-в-байт прежний.
 - `oracle.result_ref` + `oracle.detail` — верхний уровень + второй уровень (**SD1**,
   катится движком в 2.2.a; слот в контракте уже есть, переделки не будет).
 - `detection` — сцена обнаружения, которую движок выкатил в этом шаге (Око достигло порога

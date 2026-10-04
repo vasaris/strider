@@ -1,11 +1,11 @@
 # Анти-слоп чек-лист Хранителя
 
 > Чат 2.1.c — человекочитаемый чек-лист. Машинно-проверяемое ядро (стоп-листы как
-> regex/словари) — [`evals/src/antislop.ts`](../evals/src/antislop.ts), расширяется в
+> regex/словари) — [`prose-gate/src/antislop.ts`](../prose-gate/src/antislop.ts) (до 3.2-K2 — `evals/src/`), расширяется в
 > чате 2.3 вместе с LLM-судьёй и golden transcripts. Контракт — `docs/NARRATIVE_CONTRACT.md`.
 > Источник протокола: `brodyazhnik-architecture-v1.md` sec 0.2 / sec 2.5.
 
-Разделение: **deterministic** — ловится regex-ом в `evals/` (CI-гейт); **judge** —
+Разделение: **deterministic** — ловится regex-ом в `prose-gate/` (CI-гейт и, с 3.2, живой гейт роута хода); **judge** —
 оценивает LLM-судья по рубрике (чат 2.3); **human** — ручная вычитка транскриптов (Stage 5).
 
 ## A. Механика и контракт (deterministic + judge)
