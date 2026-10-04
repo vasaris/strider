@@ -38,18 +38,39 @@
 - **Анти-слоп** для любой прозы: Replacement Test, стоп-листы, вести звуком/запахом/осязанием (не зрением), голоса культур (хоббит ≠ гном ≠ дунэдайн), Хранитель не упоминает механику вне входного пакета. Детали — в Stage 2 доках.
 - Реконосценировка перед реализацией: typecheck чист, тесты зелёные, golden стабильны, нужные карты пака прочитаны.
 
+## Процесс (решение Ивана 03.10; Б и В — с C7, А — полностью с чата 3.2)
+- **А — одна проверка на чат.** Цикл чата: скелет → «го» ревьюера → все коммиты чата → один
+  `git archive` → ревью → push. Отдельные остановки — только для прогонов с ключом Ивана и
+  необратимых действий. Роли: claude.ai — ревьюер, CCD — исполнитель, Иван — реле.
+- **Б — строгость по риску.** Модель угроз: один пользователь, localhost, приватный контур; файлы
+  репо (миграции, промпты, пак, конфиги) — доверенный вход. Реальные угрозы: чужая страница в
+  браузере Ивана (CSRF / DNS-rebinding → трата кредитов Anthropic), утечка ключа или
+  `DATABASE_URL`, порча собственных данных багом. Независимый верификатор — **не больше 2
+  раундов на коммит**; в коммите чинятся только баги корректности и находки по реальным угрозам.
+  Всё остальное (усиление против враждебного доверенного входа, полировка, «на будущее») —
+  списком в отчёт под заголовком «В DEFERRED», без доработки.
+- **В — CCD пушит сам** `git push origin main`, только после явного «CONFIRMED» в вердикте,
+  переданном Иваном; в отчёт — вывод push и `git ls-remote origin refs/heads/main`.
+
 ## Стек (зафиксирован — не менять без явного запроса)
-TypeScript strict ESM, zero runtime deps, vitest. PWA: Next.js App Router, Tailwind, Postgres/Supabase, Anthropic API.
+TypeScript strict ESM, vitest 4; `engine/` — zero runtime deps. PWA: Next.js 16 App Router (webpack), Tailwind, Postgres (сейчас Postgres.app, Supabase позже — `DEFERRED.md#SUPA1`), Anthropic API.
 
 ## Коммиты
 - `git add` новых файлов **явно** (`commit -am` молча пропустит untracked); удаления — `git rm`.
 - Многострочные сообщения (и любые с бэктиками/кавычками) — **только `git commit -F <файл>`** (канон: zsh ломает `-m`); `-m` — лишь для однострочных. Команды — из КОРНЯ репо (не из `engine/`, иначе `engine/`-пути в add падают).
 - Сообщения — английский/ASCII; хвост `Co-Authored-By` по текущей инструкции харнесса.
-- Каждый код-коммит — зелёный и после **независимого верификатора**; docs-коммит — после вердикта ревьюера. Архив ревьюеру: `git archive --format=zip -o brodyazhnik-<sha>.zip HEAD`. Пуш — только после вердикта.
+- Каждый код-коммит — зелёный и после **независимого верификатора** (не больше 2 раундов, §«Процесс»); docs-коммит — в составе единой проверки чата (§«Процесс», А); исключение — docs II чата 3.1: независимый верификатор → push, ревьюер проверяет его при входе в 3.2. Архив ревьюеру: `git archive --format=zip -o brodyazhnik-<sha>.zip HEAD`. Пуш — CCD сам, только после явного «CONFIRMED», переданного Иваном (§«Процесс», В).
+- Пути Next с `[id]` / `[n]` — glob и для zsh, и для pathspec git: добавлять списком через `git --literal-pathspecs add --pathspec-from-file=<файл>` (или в кавычках с `:(literal)`).
 
 ## Команды
 ```bash
-npm run test:all && npm run typecheck:all      # из корня; на 5937e3a — 394 / 78 / 201, typecheck чист
+npm run test:all && npm run typecheck:all      # из корня; на a51a13d — 394 / 84 / 201 / 425 (engine / orchestrator / evals / app); первым шагом — чекер lock
+npm run build:app                              # сборка app (next build --webpack)
+# app/БД (DATABASE_URL — только в шелле; роль и база — app/supabase/README.md):
+npm run db:migrate -w app                      # свой раннер миграций (П11); от суперпользователя откажется
+npm run test:pg -w app                         # опционально, вне test:all: TEST_DATABASE_URL на базу *_test
+npm run dev -w app                             # запускает ТОЛЬКО Иван, из keyed-шелла: set -a; source evals/.env; set +a; http://127.0.0.1:3000
+# test:all поднимает свой next dev для app/ — запущенного dev-сервера app в этот момент быть не должно
 # golden-демо (из engine/):
 npm run combat ; npm run journey ; npm run council ; npm run progression ; npm run fellowship
 # скан кириллицы (из корня; engine/src и orchestrator/src должны быть CLEAN):
@@ -60,14 +81,17 @@ cd evals && npx tsx grounding-replay.mts | tail -1
 Keyed-скрипты (`calibrate.mts`, `full-cycle.mts`, `keeper-smoke.mts`) запускает **только Иван** в keyed-шелле; ключ — только `process.env`, `.env` не читать.
 
 ## Текущее состояние
-- **Stage 0–2 закрыты**; **Stage 3 (PWA) в работе.** Чат 3.1 **блок I закрыт** (docs-коммит блока I): NF1 + RP1 `be08b85`, TP1 `6959977`, keeper v0.3 + judge v0.4 `877340d`, `ecad509`, шов Хранителя в orchestrator `5937e3a`; прогоны с ключом 27.09 — `evals/records/`, запись — `docs/CALIBRATION_TONE_JUDGE.md` §«3.1, 27.09».
-- Последний код-коммит `5937e3a`: `test:all` 394 / 78 / 201, typecheck чист, кириллицы нет в `engine/src` и `orchestrator/src`, 5 golden стабильны, pack 0.1.0.
-- **Следующее:** `ROADMAP_SESSIONS.md` → **чат 3.1 часть 2** (C5.0 → C5 → C6 → C7 → docs II); вход — `docs/HANDOFF_STAGE3_1_PART2.md`. Нужны ответы Ивана Q1 (БД) и Q2 (модель снимков).
+- **Stage 0–2 закрыты**; **Stage 3 (PWA) в работе.** Чат 3.1 закрыт целиком.
+  - Блок I: NF1 + RP1 `be08b85`, TP1 `6959977`, keeper v0.3 + judge v0.4 `877340d`, `ecad509`, шов Хранителя `5937e3a`; прогоны с ключом 27.09 — `evals/records/`.
+  - Часть 2: lock `7610073`, `app/` `600c12f`, vitest 4 `e9e288f`, схема + хранилище `b687819`, API сессий и ходов `a51a13d`; живая проверка ревьюера и смоук Ивана пройдены; docs II.
+- Последний код-коммит `a51a13d`: `test:all` 394 / 84 / 201 / 425, typecheck чист, `build:app` зелёный, кириллицы нет в `engine/src` и `orchestrator/src`, 5 golden стабильны, pack 0.1.0, `npm audit` 0.
+- **Следующее:** `ROADMAP_SESSIONS.md` → **чат 3.2** (лента + кости + действия); вход — `docs/HANDOFF_STAGE3_2.md`. Первым — скелет 3.2 по процессу А.
 
 ## Карта репо
 - `engine/` — чистый TS-движок (`src/` модули по подсистемам, `test/`, `cli/`).
 - `orchestrator/` — контракт движок→Хранитель, сборка и рендер пакета, цикл хода (`journeyTurn`), шов Хранителя (`AnthropicKeeper`, `loadKeeperSetup`; SDK-клиент только через `@brodyazhnik/orchestrator/anthropic`), pregen-герой.
 - `evals/` — анти-слоп, NF1, судьи, харнесс, keyed-скрипты; аудит-след `l4-records/` (Stage 2) и `records/` (с 3.1).
 - `prompts/` — версионные промпты Хранителя и судьи (ранние версии заморожены sha256-пинами) + `assembly.v1.json`.
+- `app/` — Next.js 16 PWA (`@brodyazhnik/app`): маршруты `src/app/api/**` (тонкие), сервер только в `src/server/**` с `import 'server-only'` (`http/`, `service/`, `store/`, `db/`); миграции `supabase/migrations/` (раскладка Supabase CLI, применяет только свой раннер); `scripts/db-migrate.ts`; граница проверяется `test/boundary.test.ts`.
 - `content-packs/kv/` — верифицированный пак (mechanics/ tables/solo/ lifepaths/).
-- `brodyazhnik-architecture-v1.md` — архитектура+roadmap. `docs/` — ADR, HANDOFF_*, DEFERRED, ROADMAP_SESSIONS, STAGE1_COVERAGE, gate-инструменты в `tools/`.
+- `brodyazhnik-architecture-v1.md` — архитектура+roadmap. `docs/` — ADR, HANDOFF_*, DEFERRED, ROADMAP_SESSIONS, STAGE1_COVERAGE; `tools/` — gate-инструменты извлечения и `check-lock-platforms.mjs` (lock несёт linux-x64 бинарники всех нативных семейств).
