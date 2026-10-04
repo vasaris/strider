@@ -1,4 +1,5 @@
 import type { CheckResult } from "../checks/types.js";
+import type { DiceRoll } from "../dice/types.js";
 import type { HeroState } from "../hero/state.js";
 import type { Effect } from "../oracles/types.js";
 import type { Rng } from "../rng/rng.js";
@@ -84,4 +85,23 @@ export interface StepRecord {
   readonly events: readonly JourneyEvent[]; // exactly the events appended this step
   readonly travelCheck: CheckResult | null; // the travel check; null ONLY on the degenerate already-arrived no-op
   readonly sceneCheck: CheckResult | null; // the scene's skill check, or null (significant/none/arrival)
+  // Raw dice of those checks (DD-DICE-FACES, for the UI dice panel). Null EXACTLY when the
+  // matching check is null. The same roll the check was evaluated from -- never re-rolled.
+  readonly travelRoll: CheckRoll | null;
+  readonly sceneRoll: CheckRoll | null;
+}
+
+/**
+ * The raw dice behind one skill check (runSkillCheckWithRoll). `roll` is the DiceRoll the
+ * CheckResult was evaluated from (kept Feat die, every Feat candidate, Success dice faces).
+ * `successCounted[i]` says whether `roll.successDice[i].face` entered the total -- from
+ * successDiceCounted, the same function evaluateCheck sums with (false only for a face
+ * voided by weariness). So, when the check's total is not null:
+ *   total === roll.feat.numericValue + sum of successDice[i].face where successCounted[i].
+ * On a Gandalf-rune auto-success the total is null and not consulted; the flags are still
+ * reported as the rule would apply them.
+ */
+export interface CheckRoll {
+  readonly roll: DiceRoll;
+  readonly successCounted: readonly boolean[];
 }

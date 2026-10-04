@@ -4,7 +4,9 @@
 // reuses it: one rendering of the package for the harness and for production.
 //
 // Rules (narrative contract 2.1):
-//   - LOSSLESS: every PRESENT field appears with its value.
+//   - LOSSLESS: every PRESENT field appears with its value -- EXCEPT the UI-only dice faces
+//     (UI_ONLY_DICE_KEYS: feat_die, success_dice, feat_candidates, feat_modifier, success_counted;
+//     DD-DICE-FACES), which are never emitted: the Keeper and the judge do not see raw faces.
 //   - ABSENT -> OMITTED: a null/undefined field, an empty object (e.g. an unchanged-turn
 //     patch `{}`) or an empty list emits nothing -- no heading, no "none"/"-" placeholder --
 //     so the Keeper is never shown mechanics the package does not carry.
@@ -71,13 +73,19 @@ function section(heading: string, body: readonly string[]): string[] {
   return body.length === 0 ? [] : [heading, ...body];
 }
 
+/**
+ * DiceResult keys that are UI-only (DD-DICE-FACES): raw faces for the browser dice panel. They
+ * are NEVER rendered -- the Keeper and the judge narrate from feat_symbol / success_icons /
+ * total / target_number / outcome and must not see faces. This is the one deliberate exception
+ * to LOSSLESS; render.test.ts pins it (every other contract key still renders).
+ */
+export const UI_ONLY_DICE_KEYS = ['feat_die', 'success_dice', 'feat_candidates', 'feat_modifier', 'success_counted'] as const satisfies readonly (keyof DiceResult)[];
+
 /** Dice body; `prefix` namespaces every key (the journey section's travel roll uses
- *  'travel_check.'). */
+ *  'travel_check.'). UI_ONLY_DICE_KEYS are not emitted. */
 function renderDice(d: DiceResult, prefix = ''): string[] {
   return [
-    ...field(`${prefix}feat_die`, d.feat_die),
     ...field(`${prefix}feat_symbol`, d.feat_symbol),
-    ...listField(`${prefix}success_dice`, d.success_dice),
     ...field(`${prefix}success_icons`, d.success_icons),
     ...field(`${prefix}total`, d.total),
     ...field(`${prefix}target_number`, d.target_number),

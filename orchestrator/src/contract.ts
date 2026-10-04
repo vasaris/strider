@@ -56,15 +56,31 @@ export interface LengthTarget {
  * A die result already rolled by the engine. The Keeper renders it, never re-rolls.
  * Feat die: face 11 = Eye, face 12 = Gandalf rune (arch v1 sec2.2). Success dice are
  * d6; a 6 is a success icon.
+ *
+ * UI-ONLY FIELDS (DD-DICE-FACES): the raw faces -- feat_die, success_dice, feat_candidates,
+ * feat_modifier, success_counted -- are for the browser dice panel. renderNarrativePackage never emits them
+ * (render.ts UI_ONLY_DICE_KEYS), so the Keeper and the judge do not see faces; their request
+ * bytes are unchanged. The producer (provider.ts mapDice) fills them from the engine's
+ * StepRecord roll; nothing re-rolls.
  */
 export interface DiceResult {
-  readonly feat_die?: number; // d12 face, if a check was made
+  readonly feat_die?: number; // UI-only: physical d12 face of the KEPT Feat die
   readonly feat_symbol?: 'eye' | 'gandalf' | null;
-  readonly success_dice?: readonly number[]; // d6 faces
+  readonly success_dice?: readonly number[]; // UI-only: d6 faces, in roll order
   readonly success_icons?: number; // count of sixes
   readonly total?: number;
   readonly target_number?: number; // TN = 18 - attribute (solo formula)
   readonly outcome?: CheckOutcome;
+  // UI-only: every physical Feat die face rolled, in roll order -- present only when the roll was
+  // favoured / ill-favoured (more than one Feat die); feat_die is the one the engine kept.
+  readonly feat_candidates?: readonly number[];
+  // UI-only: the engine roll's Feat modifier, present exactly when feat_candidates is (copied from
+  // DiceRoll.featModifier, never inferred from the faces).
+  readonly feat_modifier?: 'favoured' | 'ill_favoured';
+  // UI-only: index-aligned with success_dice -- true when that face entered `total` (false only
+  // for a face voided by weariness). From the engine's successDiceCounted, the same rule the
+  // engine sums with; when total is present, total = kept Feat value + sum of counted faces.
+  readonly success_counted?: readonly boolean[];
 }
 
 export type CheckOutcome = 'failure' | 'weak' | 'strong' | 'extraordinary';

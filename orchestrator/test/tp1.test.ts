@@ -18,6 +18,7 @@ import {
   pursuitThreshold,
   stepJourney,
   type CheckResult,
+  type CheckRoll,
   type HeroState,
   type JourneyConfigs,
   type JourneyState,
@@ -76,8 +77,10 @@ function start(seed: string, region: Route['region'], hero: HeroState = HERO, ro
 }
 
 // Test-side mapping of an engine CheckResult to the contract DiceResult, written independently of
-// provider.ts (feat symbol, icons, TN, 4-value outcome from the pack-derived degree, total if any).
-function expectedDice(c: CheckResult): DiceResult {
+// provider.ts (feat symbol, icons, TN, 4-value outcome from the pack-derived degree, total if any)
+// plus the UI-only faces off the roll (DD-DICE-FACES).
+function expectedDice(c: CheckResult, r: CheckRoll | null): DiceResult {
+  if (r === null) throw new Error('expectedDice: a check always has its roll');
   const outcome =
     c.outcome === 'failure'
       ? 'failure'
@@ -92,6 +95,12 @@ function expectedDice(c: CheckResult): DiceResult {
     target_number: c.targetNumber,
     outcome,
     ...(c.total === null ? {} : { total: c.total }),
+    feat_die: r.roll.feat.physicalFace,
+    success_dice: r.roll.successDice.map((d) => d.face),
+    success_counted: [...r.successCounted],
+    ...(r.roll.featModifier === 'normal'
+      ? {}
+      : { feat_candidates: r.roll.featCandidates.map((f) => f.physicalFace), feat_modifier: r.roll.featModifier }),
   };
 }
 
@@ -117,7 +126,7 @@ describe('TP1: journey days / arrival / detection reach the package', () => {
       days_delta: 0,
       arrived: true,
       days_total: 6,
-      travel_check: expectedDice(travel as CheckResult),
+      travel_check: expectedDice(travel as CheckResult, t1.record.travelRoll),
     });
     expect(arrival?.kind === 'arrival' ? arrival.durationDays : null).toBe(t1.pkg.journey?.days_total);
     expect(t1.next.journey.durationDays).toBe(t1.pkg.journey?.days_total);
@@ -193,13 +202,14 @@ describe('TP1: journey days / arrival / detection reach the package', () => {
           const pkg: NarrativePackage = t.pkg;
           expect(pkg.dice === null, label).toBe(t.record.sceneCheck === null);
           if (t.record.sceneCheck !== null) {
-            const want = expectedDice(t.record.sceneCheck);
+            const want = expectedDice(t.record.sceneCheck, t.record.sceneRoll);
             expect(pkg.dice?.target_number, label).toBe(want.target_number);
             expect(pkg.dice?.outcome, label).toBe(want.outcome);
             expect(pkg.dice?.success_icons, label).toBe(want.success_icons);
             expect(pkg.dice?.feat_symbol, label).toBe(want.feat_symbol);
+            expect(pkg.dice, label).toEqual(want); // incl. the UI-only faces (DD-DICE-FACES)
           }
-          expect(pkg.journey?.travel_check, label).toEqual(expectedDice(t.record.travelCheck as CheckResult));
+          expect(pkg.journey?.travel_check, label).toEqual(expectedDice(t.record.travelCheck as CheckResult, t.record.travelRoll));
 
           const out = renderNarrativePackage(pkg);
           const dice = sectionBody(out, 'dice');

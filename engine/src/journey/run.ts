@@ -2,12 +2,12 @@ import type { CheckResult } from "../checks/types.js";
 import { applyEyeAwarenessDelta, growthFromFeatDie } from "../eye/growth.js";
 import { isDetected, pursuitThreshold, resetEye } from "../eye/pursuit.js";
 import { rollFeatDieEvent } from "../oracles/featEvent.js";
-import { runSkillCheck } from "./check.js";
+import { runSkillCheckWithRoll } from "./check.js";
 import type { JourneyConfigs } from "./config.js";
 import { runDangerZone } from "./danger.js";
 import { applyEffects } from "./effects.js";
-import { resolveScene } from "./scene.js";
-import type { JourneyEvent, JourneyState, StepRecord } from "./state.js";
+import { resolveSceneWithRoll } from "./scene.js";
+import type { CheckRoll, JourneyEvent, JourneyState, StepRecord } from "./state.js";
 
 const TRAVEL_SKILL = "travel";
 
@@ -39,11 +39,11 @@ function maybeDetection(state: JourneyState, cfg: JourneyConfigs): JourneyState 
  */
 export function stepJourney(state: JourneyState, cfg: JourneyConfigs): readonly [JourneyState, StepRecord] {
   if (state.journey.arrived) {
-    return [state, { events: [], travelCheck: null, sceneCheck: null }] as const; // degenerate no-op
+    return [state, { events: [], travelCheck: null, sceneCheck: null, travelRoll: null, sceneRoll: null }] as const; // degenerate no-op
   }
   const beforeLen = state.log.length;
 
-  const [travel, rng] = runSkillCheck(state.hero, TRAVEL_SKILL, cfg, state.rng);
+  const [travel, travelRoll, rng] = runSkillCheckWithRoll(state.hero, TRAVEL_SKILL, cfg, state.rng);
   const eyeDelta = travel.isEyeOnFeat ? growthFromFeatDie(true, false, cfg.eye) : 0;
   let s: JourneyState = { ...state, rng, hero: { ...state.hero, eye: applyEyeAwarenessDelta(state.hero.eye, eyeDelta) } };
 
@@ -53,7 +53,7 @@ export function stepJourney(state: JourneyState, cfg: JourneyConfigs): readonly 
     const travelEvent: JourneyEvent = { kind: "travel_check", outcome: travel.outcome, advance, remainingAfter: 0, eyeDelta };
     const arrival: JourneyEvent = { kind: "arrival", durationDays: s.journey.durationDays };
     s = { ...s, journey: { ...s.journey, remainingHexes: 0, arrived: true }, log: [...s.log, travelEvent, arrival] };
-    return [s, { events: s.log.slice(beforeLen), travelCheck: travel, sceneCheck: null }] as const;
+    return [s, { events: s.log.slice(beforeLen), travelCheck: travel, sceneCheck: null, travelRoll, sceneRoll: null }] as const;
   }
 
   const remainingAfter = s.journey.remainingHexes - advance;
@@ -61,11 +61,12 @@ export function stepJourney(state: JourneyState, cfg: JourneyConfigs): readonly 
   s = { ...s, journey: { ...s.journey, remainingHexes: remainingAfter }, log: [...s.log, travelEvent] };
 
   let sceneCheck: CheckResult | null;
-  [s, sceneCheck] = resolveScene(s, cfg);
+  let sceneRoll: CheckRoll | null;
+  [s, sceneCheck, sceneRoll] = resolveSceneWithRoll(s, cfg);
   s = maybeDetection(s, cfg);
   // events: the exact slice appended this step (single source of truth -- sliced from the log,
   // not recomputed), so a consumer reading sceneDetail from record.events matches the log.
-  return [s, { events: s.log.slice(beforeLen), travelCheck: travel, sceneCheck }] as const;
+  return [s, { events: s.log.slice(beforeLen), travelCheck: travel, sceneCheck, travelRoll, sceneRoll }] as const;
 }
 
 /**

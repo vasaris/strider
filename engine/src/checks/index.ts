@@ -13,7 +13,7 @@ export type {
 } from "./types.js";
 
 export { targetNumber } from "./targetNumber.js";
-export { degreeFromIcons, evaluateCheck } from "./evaluate.js";
+export { degreeFromIcons, evaluateCheck, successDiceCounted } from "./evaluate.js";
 export { specialSuccessOptions, spendableIcons } from "./special.js";
 export { failureOutcome } from "./risk.js";
 export type { HopeSpendInput, HopeSpendResult } from "./hope.js";

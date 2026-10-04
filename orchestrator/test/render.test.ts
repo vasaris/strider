@@ -12,7 +12,7 @@ import type {
   StatePatchSummary,
 } from '../src/contract.js';
 import { buildNarrativePackage, type EngineTurnResult } from '../src/provider.js';
-import { renderNarrativePackage } from '../src/render.js';
+import { UI_ONLY_DICE_KEYS, renderNarrativePackage } from '../src/render.js';
 
 // FULL fixture: every field of every contract record type populated. Drift guard for
 // "lossless" over all 10 record types (NarrativePackage, LengthTarget, DiceResult, OracleResult,
@@ -21,9 +21,19 @@ import { renderNarrativePackage } from '../src/render.js';
 // fails typecheck at the `satisfies Required<...>` fixture below AND at the MARKERS map
 // (`satisfies Record<keyof T, string>`) until it gets a value and a render marker; the marker
 // test then fails until render.ts actually emits that marker for FULL.
+//
+// DD-DICE-FACES (deliberate, documented change of the lossless invariant): the DiceResult keys in
+// UI_ONLY below are raw faces for the browser dice panel and must NOT render (the Keeper and the
+// judge never see faces). Every other key still must. FULL keeps the UI-only keys populated so the
+// suppression is proven, and a new DiceResult key fails typecheck until it is placed either in
+// UI_ONLY or in the DiceResult MARKERS map.
+const UI_ONLY = ['feat_die', 'success_dice', 'feat_candidates', 'feat_modifier', 'success_counted'] as const satisfies readonly (keyof DiceResult)[];
+type UiOnlyKey = (typeof UI_ONLY)[number];
+
 const LENGTH = { min_chars: 400, max_chars: 800 } satisfies Required<LengthTarget>;
 
 // Mechanically coherent: the Eye counts 0, so total = 6+6+5 = 17 >= TN 16; 2 icons -> extraordinary.
+// Ill-favoured: candidates 4 and the Eye, the Eye (worse) kept.
 const DICE = {
   feat_die: 11,
   feat_symbol: 'eye',
@@ -32,6 +42,9 @@ const DICE = {
   total: 17,
   target_number: 16,
   outcome: 'extraordinary',
+  feat_candidates: [4, 11],
+  feat_modifier: 'ill_favoured',
+  success_counted: [true, true, true],
 } satisfies Required<DiceResult>;
 
 const DETAIL = {
@@ -79,6 +92,9 @@ const TRAVEL = {
   total: 18,
   target_number: 13,
   outcome: 'weak',
+  feat_candidates: [3, 12],
+  feat_modifier: 'favoured',
+  success_counted: [false, true],
 } satisfies Required<DiceResult>;
 
 const JOURNEY = {
@@ -125,14 +141,12 @@ const MARKERS = [
     max_chars: 'length_target: 400..800 chars',
   } satisfies Record<keyof LengthTarget, string>,
   {
-    feat_die: 'feat_die: ',
     feat_symbol: 'feat_symbol: ',
-    success_dice: 'success_dice: ',
     success_icons: 'success_icons: ',
     total: 'total: ',
     target_number: 'target_number: ',
     outcome: 'outcome: ',
-  } satisfies Record<keyof DiceResult, string>,
+  } satisfies Record<Exclude<keyof DiceResult, UiOnlyKey>, string>,
   {
     table: 'table: ',
     result_ref: 'result_ref: ',
@@ -197,9 +211,7 @@ describe('renderNarrativePackage (Keeper user-message body)', () => {
         'scene: journey',
         'length_target: 400..800 chars',
         '## dice',
-        'feat_die: 11',
         'feat_symbol: eye',
-        'success_dice: 6, 6, 5',
         'success_icons: 2',
         'total: 17',
         'target_number: 16',
@@ -233,9 +245,7 @@ describe('renderNarrativePackage (Keeper user-message body)', () => {
         'days_delta: -1',
         'arrived: true',
         'days_total: 6',
-        'travel_check.feat_die: 12',
         'travel_check.feat_symbol: gandalf',
-        'travel_check.success_dice: 2, 4',
         'travel_check.success_icons: 0',
         'travel_check.total: 18',
         'travel_check.target_number: 13',
@@ -317,7 +327,7 @@ describe('renderNarrativePackage (Keeper user-message body)', () => {
   });
 
   it('null renders as `null`; undefined fields are omitted', () => {
-    // Shaped like the real producer's mapDice output: no raw faces (DD-DICE-FACES).
+    // A dice result without the UI-only faces.
     const dice: DiceResult = { feat_symbol: null, success_icons: 1, total: 17, target_number: 14, outcome: 'strong' };
     const out = lines(
       renderNarrativePackage({
@@ -393,6 +403,9 @@ describe('renderNarrativePackage (Keeper user-message body)', () => {
 
     const reversedJourney: JourneyStepSummary = {
       travel_check: {
+        success_counted: TRAVEL.success_counted,
+        feat_candidates: TRAVEL.feat_candidates,
+        feat_modifier: TRAVEL.feat_modifier,
         outcome: TRAVEL.outcome,
         target_number: TRAVEL.target_number,
         total: TRAVEL.total,
@@ -421,13 +434,31 @@ describe('renderNarrativePackage (Keeper user-message body)', () => {
     expect(renderNarrativePackage(reversedPkg)).toBe(renderNarrativePackage(FULL));
   });
 
-  it('lossless: every field of every contract type emits its marker for FULL', () => {
+  it('lossless: every field of every contract type except UI_ONLY emits its marker for FULL', () => {
     const out = lines(renderNarrativePackage(FULL));
     for (const group of MARKERS) {
       for (const m of Object.values(group)) {
         expect(out.some((l) => l.startsWith(m)), m).toBe(true);
       }
     }
+  });
+
+  it('DD-DICE-FACES: UI-only dice keys never render (## dice and travel_check alike), even when populated', () => {
+    expect([...UI_ONLY_DICE_KEYS].sort()).toEqual([...UI_ONLY].sort()); // render.ts suppresses exactly this set
+    for (const k of UI_ONLY) {
+      expect(DICE[k], k).toBeDefined(); // FULL carries them ...
+      expect(TRAVEL[k], k).toBeDefined();
+    }
+    const out = renderNarrativePackage(FULL);
+    for (const k of UI_ONLY) {
+      expect(out, k).not.toContain(`${k}:`); // ... and the rendered body does not
+    }
+    // Removing them changes nothing: the rendering is independent of the faces.
+    const strip = (d: DiceResult): DiceResult => {
+      const { feat_die: _a, success_dice: _b, feat_candidates: _c, feat_modifier: _m, success_counted: _d, ...rest } = d;
+      return rest;
+    };
+    expect(renderNarrativePackage({ ...FULL, dice: strip(DICE), journey: { ...JOURNEY, travel_check: strip(TRAVEL) } })).toBe(out);
   });
 
   it('falsy-but-present values render (0, false, empty string)', () => {

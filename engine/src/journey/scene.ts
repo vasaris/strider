@@ -4,9 +4,9 @@ import { rollSuccessDie } from "../dice/successDie.js";
 import { applyEyeAwarenessDelta, growthFromFeatDie } from "../eye/growth.js";
 import { featFaceKey, type FaceKey } from "../oracles/types.js";
 import type { JourneyConfigs, JourneySceneRow, SceneBias } from "./config.js";
-import { runSkillCheck } from "./check.js";
+import { runSkillCheckWithRoll } from "./check.js";
 import { applyEffects, fatigueWaived } from "./effects.js";
-import type { Consequence, JourneyEvent, JourneyState } from "./state.js";
+import type { CheckRoll, Consequence, JourneyEvent, JourneyState } from "./state.js";
 
 function biasToModifier(bias: SceneBias): "normal" | "favoured" | "ill_favoured" {
   return bias === "plain" ? "normal" : bias;
@@ -35,6 +35,19 @@ function consequenceFires(c: Consequence, outcome: "success" | "failure"): boole
  *      showed the Eye (out of combat).
  */
 export function resolveScene(state: JourneyState, cfg: JourneyConfigs): readonly [JourneyState, CheckResult | null] {
+  const [next, check] = resolveSceneWithRoll(state, cfg);
+  return [next, check] as const;
+}
+
+/**
+ * resolveScene that also returns the raw dice of the scene's skill check (CheckRoll; null
+ * exactly when the check is null). One code path: resolveScene delegates here, so the RNG
+ * draws and the resulting state are identical.
+ */
+export function resolveSceneWithRoll(
+  state: JourneyState,
+  cfg: JourneyConfigs,
+): readonly [JourneyState, CheckResult | null, CheckRoll | null] {
   const modifier = biasToModifier(cfg.scenes.bias[state.journey.route.region]);
   const [{ chosen }, rng1] = rollFeatWithModifier(cfg.dice.feat, modifier, state.rng);
   const sceneRow = matchSceneRow(cfg.scenes.rows, featFaceKey(chosen));
@@ -51,12 +64,14 @@ export function resolveScene(state: JourneyState, cfg: JourneyConfigs): readonly
   let rng = rng2;
   let checkOutcome: "success" | "failure" | null = null;
   let sceneCheck: CheckResult | null = null;
+  let sceneRoll: CheckRoll | null = null;
   let applied: Consequence["effects"] = [];
 
   if (!significant && detailRow.skill !== null) {
-    const [result, rngAfter] = runSkillCheck(state.hero, detailRow.skill, cfg, rng2);
+    const [result, checkRoll, rngAfter] = runSkillCheckWithRoll(state.hero, detailRow.skill, cfg, rng2);
     rng = rngAfter;
     sceneCheck = result;
+    sceneRoll = checkRoll;
     checkOutcome = result.outcome;
     if (result.isEyeOnFeat) eyeDelta += growthFromFeatDie(true, false, cfg.eye);
     if (consequenceFires(sceneRow.consequence, result.outcome)) applied = sceneRow.consequence.effects;
@@ -83,5 +98,5 @@ export function resolveScene(state: JourneyState, cfg: JourneyConfigs): readonly
     appliedOps: applied.map((e) => e.op),
     eyeDelta,
   };
-  return [{ ...next, log: [...next.log, event] }, sceneCheck] as const;
+  return [{ ...next, log: [...next.log, event] }, sceneCheck, sceneRoll] as const;
 }

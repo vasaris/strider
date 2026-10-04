@@ -15,6 +15,26 @@ export function degreeFromIcons(icons: number, cfg: CheckConfig): SuccessDegree 
 }
 
 /**
+ * Per-Success-die "counted in the total" flags, index-aligned with `roll.successDice`:
+ * false when the hero is weary and the face is listed in `wearyVoidedFaces`
+ * (conditions.weariness), true otherwise. This is the ONE place that decides which
+ * Success die faces enter the sum -- evaluateCheck forms its total from it, and the
+ * journey side record (CheckRoll.successCounted) exposes the same flags to the UI, so a
+ * consumer never re-derives the weariness rule. The success icon is unaffected.
+ *
+ * Throws when `weary` is set without `wearyVoidedFaces` (the caller supplies them from
+ * ConditionsConfig; no book numbers baked here). Pure: no RNG.
+ */
+export function successDiceCounted(roll: DiceRoll, conditions?: CheckConditions): readonly boolean[] {
+  const weary = conditions?.weary === true;
+  if (weary && conditions?.wearyVoidedFaces === undefined) {
+    throw new Error("evaluateCheck: weary requires wearyVoidedFaces (from ConditionsConfig)");
+  }
+  const voided = conditions?.wearyVoidedFaces ?? [];
+  return roll.successDice.map((d) => !(weary && voided.includes(d.face)));
+}
+
+/**
  * Evaluate an already-rolled DiceRoll against a target number.
  *
  * - Gandalf rune (feat.isAutoSuccess) -> success regardless of the sum
@@ -23,7 +43,8 @@ export function degreeFromIcons(icons: number, cfg: CheckConfig): SuccessDegree 
  *   (conditions.miserable); the rune still wins over this.
  * - Otherwise total = feat.numericValue (Eye contributes 0) + sum of Success
  *   die faces; success iff total >= TN (checks.procedure). When weary, Success
- *   die faces listed in `wearyVoidedFaces` contribute 0 (conditions.weariness);
+ *   die faces listed in `wearyVoidedFaces` contribute 0 (conditions.weariness;
+ *   decided by successDiceCounted, the shared source of the per-die flags);
  *   the success icon (and thus degree) is unaffected.
  *
  * Pure: no RNG, deterministic in its inputs.
@@ -49,12 +70,8 @@ export function evaluateCheck(
     };
   }
 
-  const weary = conditions?.weary === true;
-  if (weary && conditions?.wearyVoidedFaces === undefined) {
-    throw new Error("evaluateCheck: weary requires wearyVoidedFaces (from ConditionsConfig)");
-  }
-  const voided = conditions?.wearyVoidedFaces ?? [];
-  const successSum = roll.successDice.reduce((acc, d) => acc + (weary && voided.includes(d.face) ? 0 : d.face), 0);
+  const counted = successDiceCounted(roll, conditions);
+  const successSum = roll.successDice.reduce((acc, d, i) => acc + (counted[i] === true ? d.face : 0), 0);
   const total = roll.feat.numericValue + successSum;
 
   const miserableFailure = conditions?.miserable === true && isEyeOnFeat;

@@ -12,8 +12,9 @@
 //     producer -- dice via mapDice (engine CheckResult -> contract DiceResult), patch via
 //     diffHeroState (prev/next hero diff), SD1 row off the scene event, and (TP1) journey days /
 //     arrival / travel check plus the detection scene. journalFacts stays [] (arch sec 2.4
-//     context-compression, Stage 3+). Raw dice faces (feat_die/success_dice) were re-homed to
-//     docs/DEFERRED.md#DD-DICE-FACES (a UI/dice-panel concern, DUE Stage 3.2.b), not the Keeper's.
+//     context-compression, Stage 3+). Raw dice faces (DD-DICE-FACES, 3.2.b): mapDice fills the
+//     UI-only feat_die / success_dice / feat_candidates / feat_modifier / success_counted from the roll;
+//     render.ts never emits them, so the Keeper/judge bytes are unchanged.
 //     (R-WS1-RESIDUE moved to DEFERRED "Closed".)
 //   R-workspace-2: CLOSED at ws-b -- evals imports this real buildNarrativePackage (mirrors
 //     harness types.ts RECONCILE 1/4).
@@ -21,7 +22,7 @@
 //     arch sec 2.3.4 numbers are provisional in code now; tone.md owns them at activation).
 //     Still OPEN: blocked on 2.3.c (length relocation into tone.md).
 
-import type { CheckResult, HeroState, JourneyState, SceneDetailRow, StepRecord } from '@brodyazhnik/engine';
+import type { CheckResult, CheckRoll, HeroState, JourneyState, SceneDetailRow, StepRecord } from '@brodyazhnik/engine';
 import type {
   CheckOutcome as ContractCheckOutcome,
   DetectionScene,
@@ -128,9 +129,10 @@ export function buildNarrativePackage(turn: EngineTurnResult): NarrativePackage 
 //
 // Scope: journey turns only (F-turn-source: journey-step is the Stage-2-exit source;
 // combat/council producers are later). journalFacts stays [] (F-journal: arch sec 2.4
-// context-compression is Stage 3+). Raw dice faces (feat_die/success_dice) are intentionally
-// left undefined here -- they are a UI concern (DD-DICE-FACES, DUE Stage 3.2.b dice panel),
-// not the Keeper's; the contract leaves them optional.
+// context-compression is Stage 3+). Raw dice faces (DD-DICE-FACES, 3.2.b dice panel) come from
+// the step's CheckRoll (StepRecord.travelRoll / sceneRoll -- the very roll the check was
+// evaluated from) into UI-only DiceResult fields; renderNarrativePackage suppresses them, so
+// they never reach the Keeper or the judge.
 // ============================================================================
 
 /** Map the engine's binary outcome+degree to the contract's 4-value CheckOutcome. Reads the
@@ -150,17 +152,34 @@ function mapOutcome(check: CheckResult): ContractCheckOutcome {
   }
 }
 
-/** Map an already-rolled engine CheckResult to the contract DiceResult. Raw faces
- *  (feat_die/success_dice) are omitted on purpose (DD-DICE-FACES / UI). */
-function mapDice(check: CheckResult): DiceResult {
+/** Map an already-rolled engine CheckResult + its CheckRoll to the contract DiceResult. The
+ *  UI-only faces (DD-DICE-FACES) are copied off the roll verbatim: feat_die = the KEPT Feat
+ *  die's physical face, success_dice = the d6 faces, success_counted = the engine's per-die
+ *  counted flags (never re-derived here); on a favoured / ill-favoured roll (the engine's
+ *  featModifier, not inferred from faces) feat_candidates = every Feat face rolled and
+ *  feat_modifier = that modifier -- both present or both absent. */
+function mapDice(check: CheckResult, checkRoll: CheckRoll): DiceResult {
+  const { roll, successCounted } = checkRoll;
   const base: DiceResult = {
+    feat_die: roll.feat.physicalFace,
     feat_symbol: check.isEyeOnFeat ? 'eye' : check.autoSuccess ? 'gandalf' : null,
+    success_dice: roll.successDice.map((d) => d.face),
     success_icons: check.successIcons,
     target_number: check.targetNumber,
     outcome: mapOutcome(check),
+    success_counted: [...successCounted],
+    ...(roll.featModifier === 'normal'
+      ? {}
+      : { feat_candidates: roll.featCandidates.map((f) => f.physicalFace), feat_modifier: roll.featModifier }),
   };
   // total is number|null in the engine but number-only in the contract -> include only when present.
   return check.total === null ? base : { ...base, total: check.total };
+}
+
+/** A non-null check always has its roll (the engine nulls both or neither). */
+function requireRoll(roll: CheckRoll | null, which: string): CheckRoll {
+  if (roll === null) throw new Error(`extractJourneyTurn: ${which} check without its roll (engine invariant)`);
+  return roll;
 }
 
 /** Derive the contract StatePatchSummary from a prev/next hero diff. Includes only what
@@ -213,7 +232,7 @@ function projectStep(prev: HeroState, next: HeroState, record: StepRecord): Engi
   const base: EngineTurnResult = {
     intent: 'journey',
     scene: 'journey',
-    dice: record.sceneCheck === null ? null : mapDice(record.sceneCheck),
+    dice: record.sceneCheck === null ? null : mapDice(record.sceneCheck, requireRoll(record.sceneRoll, 'scene')),
     patch: diffHeroState(prev, next, eyeBeforeReset),
     journalFacts: [], // F-journal: context-compression is Stage 3+ (arch sec 2.4)
   };
@@ -247,7 +266,7 @@ export function extractJourneyTurn(prev: JourneyState, next: JourneyState, recor
     ...(arrivalEvent !== undefined && arrivalEvent.kind === 'arrival'
       ? { arrived: true as const, days_total: arrivalEvent.durationDays }
       : {}),
-    travel_check: mapDice(record.travelCheck),
+    travel_check: mapDice(record.travelCheck, requireRoll(record.travelRoll, 'travel')),
   };
   const detection: DetectionScene | null =
     detectionEvent !== undefined && detectionEvent.kind === 'detection'
