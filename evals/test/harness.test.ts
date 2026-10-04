@@ -1,6 +1,6 @@
 import { buildNarrativePackage, type EngineTurnResult, type NarrativePackage } from '@brodyazhnik/orchestrator';
 import { describe, expect, it } from 'vitest';
-import type { StopEntry } from '../src/antislop.js';
+import type { StopEntry } from '@brodyazhnik/prose-gate';
 import { DeterministicJudge } from '../src/harness/judge.js';
 import { StubKeeper } from '../src/harness/keeper.js';
 import { fixtureProvider, runScenario } from '../src/harness/run.js';

@@ -1,6 +1,6 @@
 import { renderNarrativePackage, type NarrativePackage } from '@brodyazhnik/orchestrator';
 import { z } from 'zod';
-import { scanTurnProse } from '../grounding.js';
+import { scanTurnProse } from '@brodyazhnik/prose-gate';
 import { aggregateMean } from './aggregate.js';
 import type {
   AggregateFn,

@@ -3,7 +3,7 @@
 // orchestrator contract (NarrativePackage) resolves via @brodyazhnik/orchestrator.
 
 import type { Keeper, KeeperOutput, NarrativePackage } from '@brodyazhnik/orchestrator';
-import type { StopEntry, Violation } from '../antislop.js';
+import type { StopEntry, Violation } from '@brodyazhnik/prose-gate';
 
 // ============================================================================
 // RECONCILE -- mechanical checklist, not a drift hunt. Cross-package items 1/4

@@ -13,49 +13,12 @@
 // NOT here (process/human gates): tone.md register/voice human review, lore fidelity vs
 // the licensed TOR 2e books (Ivan), legal originality check. Those are recorded reviews.
 //
+// The VK addendum loaders (loadVkAddendum / loadVkAddendumFromPack) live in
+// @brodyazhnik/prose-gate since chat 3.2 (K2): the live app gate needs them without evals.
+//
 // Cyrillic is allowed in this file (evals/ is outside engine/); identifiers stay English.
 
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { scanProse, type StopEntry, type Violation } from './antislop.js';
-
-// ---- tone stop-list -> VK addendum loader ----
-
-/** Parse a loaded tone.stoplist.json document into StopEntry[] for the VK addendum.
- *  Structural validation only; throws loudly on shape error (a gate, not a guess). */
-export function loadVkAddendum(doc: unknown): StopEntry[] {
-  if (typeof doc !== 'object' || doc === null) throw new Error('tone stoplist: not an object');
-  const o = doc as Record<string, unknown>;
-  if (o['type'] !== 'tone_stoplist') throw new Error('tone stoplist: type must be "tone_stoplist"');
-  const payload = o['payload'];
-  if (typeof payload !== 'object' || payload === null) throw new Error('tone stoplist: missing payload');
-  const entries = (payload as Record<string, unknown>)['entries'];
-  if (!Array.isArray(entries) || entries.length === 0) throw new Error('tone stoplist: payload.entries must be a non-empty array');
-  return entries.map((e, i) => {
-    if (typeof e !== 'object' || e === null) throw new Error(`tone stoplist: entries[${i}] not an object`);
-    const eo = e as Record<string, unknown>;
-    const term = eo['term'];
-    const reason = eo['reason'];
-    const severity = eo['severity'];
-    if (typeof term !== 'string' || term.length === 0) throw new Error(`tone stoplist: entries[${i}].term`);
-    if (typeof reason !== 'string' || reason.length === 0) throw new Error(`tone stoplist: entries[${i}].reason`);
-    if (severity !== undefined && severity !== 'block' && severity !== 'warn') {
-      throw new Error(`tone stoplist: entries[${i}].severity must be 'block' | 'warn'`);
-    }
-    // Preserve curated per-entry severity (e.g. избранный=warn) -- scanProse honors it.
-    return severity === undefined ? { term, reason } : { term, reason, severity };
-  });
-}
-
-/**
- * Load the VK addendum from the LIVE pack sidecar (`<packRoot>/tone.stoplist.json`),
- * activated in LT1. Path-based on purpose: the sidecar is NOT in manifest.content[], so
- * loadPack never indexes or gates it -- evals reads it directly. This is the activated
- * source (the kv-pending draft is superseded once Ivan signs off and it moves to kv/).
- */
-export function loadVkAddendumFromPack(packRoot: string): StopEntry[] {
-  return loadVkAddendum(JSON.parse(readFileSync(join(packRoot, 'tone.stoplist.json'), 'utf8')));
-}
+import { scanProse, type StopEntry, type Violation } from '@brodyazhnik/prose-gate';
 
 // ---- length budget via a deterministic char proxy ----
 //

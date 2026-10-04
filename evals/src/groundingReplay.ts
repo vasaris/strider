@@ -3,7 +3,7 @@
 // against the package its Keeper actually received; the stop-lists are NOT re-run here (their
 // verdicts are already in the records) -- only the NF1 buckets are reported.
 import { renderNarrativePackage, type NarrativePackage } from '@brodyazhnik/orchestrator';
-import { scanRelativeBackstory, scanUngroundedNames } from './grounding.js';
+import { scanRelativeBackstory, scanUngroundedNames } from '@brodyazhnik/prose-gate';
 
 export interface ReplayTranscript {
   readonly scenarioId: string;

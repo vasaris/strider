@@ -25,7 +25,7 @@ import { buildJudgeSystem } from './src/harness/judgeSystem.js';
 import { LlmJudge } from './src/harness/llmJudge.js';
 import { formatSuite, runSuite } from './src/harness/suite.js';
 import { SUITE_JOURNEYS, toEngineSeeds } from './src/harness/suiteSeeds.js';
-import { loadVkAddendumFromPack } from './src/lt1gate.js';
+import { loadVkAddendumFromPack } from '@brodyazhnik/prose-gate';
 import { reportFileName, writeReportExclusive } from './src/reports.js';
 
 if (!process.env.ANTHROPIC_API_KEY) {

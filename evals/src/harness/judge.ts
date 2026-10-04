@@ -1,4 +1,4 @@
-import { scanTurnProse } from '../grounding.js';
+import { scanTurnProse } from '@brodyazhnik/prose-gate';
 import type { AxisScore, Judge, JudgeContext, RubricAxis, Verdict } from './types.js';
 
 function pending(): AxisScore {

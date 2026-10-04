@@ -1,7 +1,7 @@
 {
-  "name": "@brodyazhnik/evals",
+  "name": "@brodyazhnik/prose-gate",
   "version": "0.1.0",
-  "description": "Brodyazhnik narrative eval harness: deterministic anti-slop stop-lists + (Stage 2.3) LLM judge and golden transcripts. Seed stub; grows in chats 2.3/2.4.",
+  "description": "Brodyazhnik deterministic prose gate: anti-slop stop-lists (+ VK addendum loader) and NF1 grounding scanners. Shared by evals and the live app gate.",
   "private": true,
   "type": "module",
   "license": "UNLICENSED",
@@ -12,14 +12,10 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@brodyazhnik/engine": "*",
-    "@brodyazhnik/orchestrator": "*",
-    "@brodyazhnik/prose-gate": "*",
-    "zod": "^3.23.8"
+    "@brodyazhnik/orchestrator": "*"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",
-    "tsx": "^4.22.4",
     "typescript": "^5.5.4",
     "vitest": "^4.1.11"
   }

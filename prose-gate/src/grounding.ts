@@ -50,7 +50,7 @@
 //      sentence-initial -> a MISS (an aside dash is indistinguishable from a dialogue dash here).
 //  (c) Polite 'Вы' and canon terms absent from the package (Око, Враг, ...) BLOCK. An allowlist
 //      is added only if a real corpus requires it, and then SOURCED FROM THE PACK -- never as
-//      literals in evals/src.
+//      literals in prose-gate/src.
 //  (d) WARN false positives: comparisons ("будто дождь тут шёл вчера") and NPC speech about the
 //      past trip the backstory lexicon -- hence warn, not block.
 //  (e) A name AT a sentence start is never checked -- inherent to the rule (a sentence-initial

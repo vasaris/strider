@@ -4,7 +4,6 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { NarrativePackage } from '@brodyazhnik/orchestrator';
 import { describe, expect, it } from 'vitest';
-import { scanProse } from '../src/antislop.js';
 import {
   groundingWords,
   isGrounded,
@@ -13,8 +12,7 @@ import {
   scanTurnProse,
   scanUngroundedNames,
 } from '../src/grounding.js';
-import { CALIBRATION_CASES } from '../src/harness/cases.js';
-import { loadVkAddendumFromPack } from '../src/lt1gate.js';
+import { loadVkAddendumFromPack } from '../src/vkAddendum.js';
 
 const packRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..', 'content-packs/kv');
 
@@ -311,12 +309,6 @@ describe('NF1 relative backstory (warn)', () => {
 
 describe('NF1 scanTurnProse', () => {
   const vk = loadVkAddendumFromPack(packRoot);
-
-  it('without a package it deep-equals scanProse for every calibration case (live VK addendum)', () => {
-    for (const c of CALIBRATION_CASES) {
-      expect(scanTurnProse(c.prose, vk, null)).toEqual(scanProse(c.prose, vk));
-    }
-  });
 
   it('with a package: scanProse first, then nf1_name, then nf1_backstory', () => {
     const prose = 'Второй день от Пригорья; герой теряет хиты.';

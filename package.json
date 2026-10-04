@@ -1,19 +1,20 @@
 {
   "name": "@brodyazhnik/root",
   "version": "0.1.0",
-  "description": "Brodyazhnik root workspace. Aggregates four packages: engine -> orchestrator -> evals, and app (Next.js PWA over engine + orchestrator).",
+  "description": "Brodyazhnik root workspace. Aggregates five packages: engine -> orchestrator -> prose-gate -> evals, and app (Next.js PWA over engine + orchestrator).",
   "private": true,
   "type": "module",
   "license": "UNLICENSED",
   "workspaces": [
     "engine",
     "orchestrator",
+    "prose-gate",
     "evals",
     "app"
   ],
   "scripts": {
-    "typecheck:all": "npm run typecheck -w engine && npm run typecheck -w orchestrator && npm run typecheck -w evals && npm run typecheck -w app",
-    "test:all": "node tools/check-lock-platforms.mjs && npm run test -w engine && npm run test -w orchestrator && npm run test -w evals && npm run test -w app",
+    "typecheck:all": "npm run typecheck -w engine && npm run typecheck -w orchestrator && npm run typecheck -w prose-gate && npm run typecheck -w evals && npm run typecheck -w app",
+    "test:all": "node tools/check-lock-platforms.mjs && npm run test -w engine && npm run test -w orchestrator && npm run test -w prose-gate && npm run test -w evals && npm run test -w app",
     "build:app": "npm run build -w app"
   }
 }

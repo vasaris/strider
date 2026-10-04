@@ -21,7 +21,7 @@ import { AnthropicLlmClient } from '@brodyazhnik/orchestrator/anthropic';
 import { CALIBRATION_CASES } from './src/harness/cases.js';
 import { formatReport, runCalibration } from './src/harness/calibrationRunner.js';
 import { buildJudgeSystem } from './src/harness/judgeSystem.js';
-import { loadVkAddendumFromPack } from './src/lt1gate.js';
+import { loadVkAddendumFromPack } from '@brodyazhnik/prose-gate';
 import { reportFileName, writeReportExclusive } from './src/reports.js';
 
 if (!process.env.ANTHROPIC_API_KEY) {

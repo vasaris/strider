@@ -2,13 +2,12 @@ import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import type { StopEntry } from '../src/antislop.js';
+import { loadVkAddendumFromPack, type StopEntry } from '@brodyazhnik/prose-gate';
 import { formatReport, runCalibration } from '../src/harness/calibrationRunner.js';
 import type { CalibrationReport, CalibrationRow } from '../src/harness/calibrationRunner.js';
 import type { CalibrationCase } from '../src/harness/cases.js';
 import { CALIBRATION_CASES } from '../src/harness/cases.js';
 import type { LlmClient, RubricAxis } from '../src/harness/types.js';
-import { loadVkAddendumFromPack } from '../src/lt1gate.js';
 
 const NULL_SCORES = {
   specificity: null,

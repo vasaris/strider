@@ -8,10 +8,8 @@ import {
   checkBudget,
   gateLoreChunkText,
   gateToneExamples,
-  loadVkAddendum,
-  loadVkAddendumFromPack,
 } from '../src/lt1gate.js';
-import { scanProse, type StopEntry } from '../src/antislop.js';
+import { loadVkAddendum, loadVkAddendumFromPack, scanProse, type StopEntry } from '@brodyazhnik/prose-gate';
 
 const packRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..', 'content-packs/kv');
 
