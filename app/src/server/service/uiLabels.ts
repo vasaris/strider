@@ -1,6 +1,7 @@
 // The pack's UI labels sidecar (K5.1): content-packs/kv/ui_labels.json. Russian names for ids the
 // app shows that have no STRUCTURED name in the pack (the pack names them only inside rule text):
-// regions, trackers, the failure outcome, the dying condition. Each entry carries verbatim evidence
+// regions, trackers, the failure outcome, the dying condition (K5.1), the favoured / ill-favoured
+// roll modifiers and the keeper role (K5.2). Each entry carries verbatim evidence
 // from a verified card; labels.ts checks that evidence against the loaded pack when it builds the
 // catalog, and a structured pack name always wins over a sidecar entry.
 //
@@ -14,7 +15,7 @@ import { join } from 'node:path';
 
 export const UI_LABELS_FILE = 'ui_labels.json';
 
-export const UI_LABEL_GROUPS = ['region', 'outcome', 'condition', 'tracker'] as const;
+export const UI_LABEL_GROUPS = ['region', 'outcome', 'condition', 'tracker', 'roll', 'role'] as const;
 export type UiLabelGroup = (typeof UI_LABEL_GROUPS)[number];
 
 export interface UiLabelEntry {

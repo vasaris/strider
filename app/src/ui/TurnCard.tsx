@@ -7,9 +7,21 @@ import type { ReactElement } from 'react';
 
 import type { LabelsDto, TurnDto } from '../shared/api';
 import { DicePanel } from './Dice';
-import { daysLine, gateReason, deltaRows, diceModel, labelOf, rewriteControl, sceneOf, signed, turnUi, type TurnUi } from './model';
+import { daysLine, gateReason, deltaRows, diceModel, keeperName, labelOf, rewriteControl, sceneOf, signed, turnUi, type TurnUi } from './model';
 
-function Prose({ ui, latest, onRewrite, disabled }: { ui: TurnUi; latest: boolean; onRewrite: () => void; disabled: boolean }): ReactElement {
+function Prose({
+  ui,
+  keeper,
+  latest,
+  onRewrite,
+  disabled,
+}: {
+  ui: TurnUi;
+  keeper: string; // the keeper's name (server label)
+  latest: boolean;
+  onRewrite: () => void;
+  disabled: boolean;
+}): ReactElement {
   const control = rewriteControl(ui, latest);
   switch (ui.kind) {
     case 'ready':
@@ -53,7 +65,7 @@ function Prose({ ui, latest, onRewrite, disabled }: { ui: TurnUi; latest: boolea
       );
     default: {
       const head =
-        ui.kind === 'blocked' ? 'Текст скрыт: он не прошёл проверку.' : ui.kind === 'failed' ? 'Рассказчик не ответил.' : 'Текста для этого хода нет.';
+        ui.kind === 'blocked' ? 'Текст скрыт: он не прошёл проверку.' : ui.kind === 'failed' ? `${keeper} не ответил.` : 'Текста для этого хода нет.';
       return (
         <div className="prose-problem">
           <p>{head}</p>
@@ -165,7 +177,7 @@ export function TurnCard({
       </div>
 
       <div className="prose" aria-live="polite" aria-busy={ui.kind === 'generating'}>
-        <Prose ui={ui} latest={latest} onRewrite={() => onRewrite(turn.turnIndex)} disabled={actionsDisabled} />
+        <Prose ui={ui} keeper={keeperName(labels)} latest={latest} onRewrite={() => onRewrite(turn.turnIndex)} disabled={actionsDisabled} />
       </div>
     </article>
   );

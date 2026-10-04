@@ -1,6 +1,8 @@
 // The dice panel (K5, 3.2.b): one d12 (face numbers, the eye at 11, the rune at 12) and the pool
 // of d6. All glyphs are our own abstract drawings. Colour is never the only signal: the kept /
 // dropped d12, the success icon and a voided d6 each carry a text or shape cue and an aria name.
+// A favoured / ill-favoured roll shows its pack name (labels group 'rolls') with our plain
+// explanation as visible secondary text (no tooltip: readable on touch); the id is never shown.
 import type { ReactElement } from 'react';
 
 import { featAria, successAria, type DiceModel, type FeatGlyph, type SuccessDie } from './model';
@@ -117,8 +119,8 @@ export function DicePanel({
               ? <FeatDie glyph={model.feat} />
               : null}
           {model.modifier !== null ? (
-            <span className="modifier" title={model.modifier.id}>
-              {model.modifier.label}
+            <span className="modifier">
+              {model.modifier.label} <span className="modifier-note">({model.modifier.note})</span>
             </span>
           ) : null}
         </div>

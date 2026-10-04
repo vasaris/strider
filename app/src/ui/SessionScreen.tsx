@@ -72,7 +72,7 @@ export function SessionScreen({ id }: { id: string }): ReactElement {
     } else if (!loaded.current) {
       setLoadError(r.code);
     } else {
-      setPollError(errorMessage(r.code)); // keep the last good detail
+      setPollError(errorMessage(r.code, null)); // keep the last good detail (a GET never fails with a keeper code)
     }
   }, [base]);
 
@@ -103,8 +103,9 @@ export function SessionScreen({ id }: { id: string }): ReactElement {
   const afterPost = async (r: { ok: true } | { ok: false; code: ClientErrorCode }): Promise<void> => {
     await refresh();
     if (r.ok) return;
-    if (isQuietConflict(r.code)) setNotice(errorMessage(r.code));
-    else setError(errorMessage(r.code));
+    const labels = detail?.labels ?? null; // names the keeper (every labels object carries the roles)
+    if (isQuietConflict(r.code)) setNotice(errorMessage(r.code, labels));
+    else setError(errorMessage(r.code, labels));
   };
 
   const advance = async (): Promise<void> => {
@@ -144,7 +145,7 @@ export function SessionScreen({ id }: { id: string }): ReactElement {
         </p>
         {loadError !== null ? (
           <p className="alert" role="alert">
-            {errorMessage(loadError)}
+            {errorMessage(loadError, null)}
           </p>
         ) : (
           <p className="dim" role="status">

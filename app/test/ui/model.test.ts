@@ -29,12 +29,14 @@ import {
   diceModel,
   ERROR_MESSAGES,
   errorMessage,
+  keeperName,
   featGlyph,
   GATE_REASON_UNKNOWN,
   GATE_REASONS,
   gateReason,
   isQuietConflict,
   journeyDaysTotal,
+  MODIFIER_NOTES,
   labelOf,
   paragraphs,
   plural,
@@ -57,6 +59,8 @@ const LABELS: LabelsDto = {
   outcomes: { weak: 'OUT-WEAK', strong: 'OUT-STRONG', failure: 'failure' },
   regions: { wild_lands: 'REGION-WILD' },
   trackers: { fatigue: 'TRACKER-FATIGUE' },
+  rolls: { favoured: 'ROLL-FAVOURED', ill_favoured: 'ROLL-ILL' },
+  roles: { keeper: 'ROLE-KEEPER' },
 };
 
 function turn(over: Partial<TurnDto> = {}): TurnDto {
@@ -246,7 +250,7 @@ describe('diceModel', () => {
       { glyph: { kind: 'number', face: 3 }, kept: false },
       { glyph: { kind: 'rune', face: 12 }, kept: true },
     ]);
-    expect(m.modifier).toEqual({ id: 'favoured', label: 'лучшая из двух' });
+    expect(m.modifier).toEqual({ id: 'favoured', label: 'ROLL-FAVOURED', note: MODIFIER_NOTES.favoured });
     expect(m.feat).toEqual({ kind: 'rune', face: 12 });
   });
 
@@ -254,7 +258,16 @@ describe('diceModel', () => {
     const m = diceModel({ feat_die: 11, feat_candidates: [11, 11], feat_modifier: 'ill_favoured' }, LABELS);
     expect(m.candidates.map((c) => c.kept)).toEqual([true, false]);
     expect(m.candidates.every((c) => c.glyph.kind === 'eye')).toBe(true);
-    expect(m.modifier?.label).toBe('худшая из двух');
+    expect(m.modifier).toEqual({ id: 'ill_favoured', label: 'ROLL-ILL', note: MODIFIER_NOTES.ill_favoured });
+  });
+
+  it('the modifier name is the pack label (rolls); without a label it falls back to the id, the note is ours', () => {
+    expect(diceModel({ feat_die: 3, feat_candidates: [3, 5], feat_modifier: 'favoured' }, null).modifier).toEqual({
+      id: 'favoured',
+      label: 'favoured',
+      note: MODIFIER_NOTES.favoured,
+    });
+    for (const note of Object.values(MODIFIER_NOTES)) expect(note).toMatch(/\p{Script=Cyrillic}/u);
   });
 
   it('voided d6 faces are not counted', () => {
@@ -391,9 +404,23 @@ describe('session flow rules', () => {
 describe('error messages', () => {
   it('every API code and the two client codes has a Russian message', () => {
     for (const code of [...API_ERROR_CODES, 'network', 'bad_response'] as const) {
-      expect(errorMessage(code), code).toMatch(/\p{Script=Cyrillic}/u);
+      expect(errorMessage(code, LABELS), code).toMatch(/\p{Script=Cyrillic}/u);
+      expect(errorMessage(code, null), code).toMatch(/\p{Script=Cyrillic}/u);
     }
     expect(Object.keys(ERROR_MESSAGES).sort()).toEqual([...API_ERROR_CODES, 'network', 'bad_response'].sort());
+  });
+
+  it('keeper messages name the keeper from the labels (roles), else the id; no other message does', () => {
+    expect(errorMessage('keeper_failed', LABELS)).toBe('ROLE-KEEPER не ответил. Ход сохранён, текст можно переписать.');
+    expect(errorMessage('keeper_not_configured', LABELS)).toBe('ROLE-KEEPER не настроен на сервере.');
+    expect(errorMessage('keeper_failed', null)).toMatch(/^keeper не ответил\./);
+    expect(errorMessage('keeper_not_configured', null)).toMatch(/^keeper не настроен/);
+    expect(keeperName(LABELS)).toBe('ROLE-KEEPER');
+    expect(keeperName(null)).toBe('keeper');
+    for (const code of [...API_ERROR_CODES, 'network', 'bad_response'] as const) {
+      if (code === 'keeper_failed' || code === 'keeper_not_configured') continue;
+      expect(errorMessage(code, LABELS), code).not.toContain('ROLE-KEEPER');
+    }
   });
 
   it('quiet conflicts: turn_conflict and generation_in_progress only', () => {

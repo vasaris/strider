@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { getPackLabels } from '../../src/server/env';
 import { CATEGORY_OF_GROUP, labelsFor, packLabels, type LabelPack } from '../../src/server/service/labels';
 import { loadUiLabels, loadUiLabelsFromPack, UI_LABEL_GROUPS, type UiLabelEntry } from '../../src/server/service/uiLabels';
-import { REGION_IDS, TRACKER_IDS, type CheckOutcome } from '../../src/shared/api';
+import { REGION_IDS, ROLE_IDS, TRACKER_IDS, type CheckOutcome, type DiceDto } from '../../src/shared/api';
 import { LABELS, PACK, PACK_DIR, REPO, UI_LABELS } from '../support/service';
 
 type Json = Record<string, unknown>;
@@ -75,6 +75,12 @@ describe('B: loader negatives', () => {
     expect(() => loadUiLabels([])).toThrow(/ui labels: not an object/);
     expect(() => loadUiLabels(doc({}, []))).toThrow(/payload\.entries must be a non-empty array/);
     expect(() => loadUiLabels(doc({ payload: {} }))).toThrow(/payload\.entries must be a non-empty array/);
+  });
+
+  it('the K5.2 groups roll and role load', () => {
+    for (const group of ['roll', 'role']) {
+      expect(loadUiLabels(doc({}, [{ ...entry(), group }]))[0]?.group).toBe(group);
+    }
   });
 
   it('unknown group', () => {
@@ -199,17 +205,20 @@ describe('E: every sidecar entry fills a real gap of the real pack', () => {
 
 describe('F: coverage over the real pack', () => {
   const OUTCOMES = ['failure', 'weak', 'strong', 'extraordinary'] as const satisfies readonly CheckOutcome[];
+  const MODIFIERS = ['favoured', 'ill_favoured'] as const satisfies readonly NonNullable<DiceDto['feat_modifier']>[];
   // the conditions the orchestrator emits (diffHeroState), read from its source
   const provider = readFileSync(join(REPO, 'orchestrator', 'src', 'provider.ts'), 'utf8');
   const EMITTED = [...new Set([...provider.matchAll(/(?:gained|cleared)\.push\('([a-z_]+)'\)/g)].map((m) => m[1] as string))];
 
-  it('regions, trackers, outcomes and emitted conditions all have a label that is not the id', () => {
+  it('regions, trackers, outcomes, emitted conditions, roll modifiers and roles all have a label that is not the id', () => {
     expect(EMITTED.sort()).toEqual(['dying', 'wounded']);
     const want: [keyof typeof LABELS, readonly string[]][] = [
       ['regions', REGION_IDS],
       ['trackers', TRACKER_IDS],
       ['outcomes', OUTCOMES],
       ['conditions', EMITTED],
+      ['rolls', MODIFIERS],
+      ['roles', ROLE_IDS],
     ];
     for (const [c, ids] of want) {
       for (const id of ids) {

@@ -8,10 +8,15 @@
 // from orchestrator's buildMessageParams (inside AnthropicLlmClient); the transport is bounded by
 // KEEPER_TIMEOUT_MS per attempt and KEEPER_MAX_RETRIES (API-RES1 (2)), forwarded to the SDK
 // constructor -- never part of the request body.
+//
+// Telemetry (3.2-K5.2): every Keeper call writes exactly ONE server log line, `keeper_call ` plus
+// a JSON object: model, duration_ms, ok, and usage + stop_reason (success) or error { name,
+// status? } (failure). Built field by field from the orchestrator's LlmCallTelemetry -- never
+// prose, request content, headers, the key or an error message.
 import 'server-only';
 
 import { AnthropicKeeper, loadKeeperSetup, type LlmClient } from '@brodyazhnik/orchestrator';
-import { AnthropicLlmClient, type MessagesClientFactory } from '@brodyazhnik/orchestrator/anthropic';
+import { AnthropicLlmClient, type LlmCallTelemetry, type MessagesClientFactory } from '@brodyazhnik/orchestrator/anthropic';
 
 import type { KeeperRunner } from './ports';
 
@@ -22,13 +27,26 @@ const ERROR_TEXT_MAX = 500;
 export const KEEPER_TIMEOUT_MS = 90_000;
 export const KEEPER_MAX_RETRIES = 1;
 
-/** The app's model client: AnthropicLlmClient with the Keeper transport bounds. `sdk` replaces the
- *  SDK constructor (tests only). */
-export function keeperLlmClient(sdk?: MessagesClientFactory): AnthropicLlmClient {
+export const KEEPER_CALL_LOG_PREFIX = 'keeper_call ';
+
+/** The one log line of a Keeper call: the prefix and a JSON object of the telemetry fields only. */
+export function keeperCallLine(t: LlmCallTelemetry): string {
+  const record = t.ok
+    ? { model: t.model, duration_ms: t.duration_ms, ok: true, usage: t.usage, stop_reason: t.stop_reason }
+    : { model: t.model, duration_ms: t.duration_ms, ok: false, error: t.error.status === undefined ? { name: t.error.name } : { name: t.error.name, status: t.error.status } };
+  return KEEPER_CALL_LOG_PREFIX + JSON.stringify(record);
+}
+
+const consoleSink = (line: string): void => console.info(line);
+
+/** The app's model client: AnthropicLlmClient with the Keeper transport bounds and the one-line
+ *  call log. `sdk` replaces the SDK constructor and `log` the console sink (tests only). */
+export function keeperLlmClient(sdk?: MessagesClientFactory, log: (line: string) => void = consoleSink): AnthropicLlmClient {
   return new AnthropicLlmClient(undefined, {
     timeout: KEEPER_TIMEOUT_MS,
     maxRetries: KEEPER_MAX_RETRIES,
     ...(sdk === undefined ? {} : { sdk }),
+    onCall: (t) => log(keeperCallLine(t)),
   });
 }
 

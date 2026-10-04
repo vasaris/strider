@@ -48,7 +48,7 @@ export function HomeScreen({ regions }: { regions: readonly RegionOption[] }): R
       router.push(`/s/${encodeURIComponent(r.data.session.id)}`);
       return; // keep the buttons disabled while navigating
     }
-    setError(errorMessage(r.code));
+    setError(errorMessage(r.code, null));
     setCreating(null);
   };
 
@@ -91,7 +91,7 @@ export function HomeScreen({ regions }: { regions: readonly RegionOption[] }): R
         ) : null}
         {listError !== null ? (
           <p className="alert" role="alert">
-            {errorMessage(listError)}
+            {errorMessage(listError, null)}
           </p>
         ) : null}
         {list !== null && list.sessions.length === 0 ? <p className="dim">Сессий пока нет.</p> : null}

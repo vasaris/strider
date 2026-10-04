@@ -1,4 +1,4 @@
-// Human labels for the ids the app shows (K4, K5.1): every label is pack data, resolved here on
+// Human labels for the ids the app shows (K4, K5.1, K5.2): every label is pack data, resolved here on
 // the server from the verified pack -- no setting name is written in app source. Priority per
 // (category, id): the STRUCTURED pack name -> the UI labels sidecar (uiLabels.ts) -> the id itself
 // (the last step in labelsFor). A sidecar entry only fills a gap; it never overrides a structured
@@ -18,8 +18,10 @@
 //               (tier index -> success / great_success / extraordinary_success -> weak / strong /
 //               extraordinary).
 // The pack has no structured name for regions (session region), trackers (the patch's *_delta
-// keys), the 'failure' outcome or the 'dying' condition: those come from the sidecar
-// content-packs/kv/ui_labels.json (group region / tracker / outcome / condition). Every sidecar
+// keys), the 'failure' outcome, the 'dying' condition, the roll modifiers (rolls: the dice's
+// feat_modifier, favoured / ill_favoured) or the keeper role (roles: ROLE_IDS, named in UI text):
+// those come from the sidecar content-packs/kv/ui_labels.json (group region / tracker / outcome /
+// condition / roll / role). Every sidecar
 // entry is checked here against the loaded pack (the evidence gate): its source card exists, is
 // verified:true, and its evidence is a verbatim substring of the card's title or of an element of
 // its payload.source_text -- else the catalog fails to build.
@@ -29,7 +31,7 @@ import 'server-only';
 
 import type { CheckOutcome, NarrativePackage } from '@brodyazhnik/orchestrator';
 
-import { TRACKER_IDS } from '../../shared/api';
+import { ROLE_IDS, TRACKER_IDS } from '../../shared/api';
 import type { UiLabelEntry, UiLabelGroup } from './uiLabels';
 
 /** The slice of a loaded pack this module reads (engine's Pack satisfies it). */
@@ -38,7 +40,7 @@ export interface LabelPack {
   listByType(type: string): readonly { readonly id: string; readonly raw: unknown }[];
 }
 
-export const LABEL_CATEGORIES = ['scenes', 'skills', 'conditions', 'outcomes', 'regions', 'trackers'] as const;
+export const LABEL_CATEGORIES = ['scenes', 'skills', 'conditions', 'outcomes', 'regions', 'trackers', 'rolls', 'roles'] as const;
 export type LabelCategory = (typeof LABEL_CATEGORIES)[number];
 
 /** category -> id -> label. */
@@ -56,6 +58,8 @@ export const CATEGORY_OF_GROUP: Readonly<Record<UiLabelGroup, LabelCategory>> = 
   outcome: 'outcomes',
   condition: 'conditions',
   tracker: 'trackers',
+  roll: 'rolls',
+  role: 'roles',
 };
 
 type MutableLabels = { [C in LabelCategory]: Record<string, string> };
@@ -135,8 +139,9 @@ export function packLabels(pack: LabelPack, uiLabels: readonly UiLabelEntry[]): 
   return out;
 }
 
-/** The ids of each category that a package shows (regions are not in packages: []). Trackers: the
- *  non-zero numeric `<id>_delta` keys of the patch, id = the key without `_delta`. */
+/** The ids of each category that a package shows (regions and roles are not in packages: []).
+ *  Trackers: the non-zero numeric `<id>_delta` keys of the patch, id = the key without `_delta`.
+ *  Rolls: the feat_modifier of the scene check and of the travel roll (deduplicated). */
 export function packageIds(pkg: NarrativePackage): { readonly [C in LabelCategory]: readonly string[] } {
   const scenes: string[] = [];
   const skills: string[] = [];
@@ -151,11 +156,14 @@ export function packageIds(pkg: NarrativePackage): { readonly [C in LabelCategor
     const v = patch[`${id}_delta`];
     return typeof v === 'number' && v !== 0;
   });
-  return { scenes, skills, conditions, outcomes, regions: [], trackers };
+  const rolls: string[] = [];
+  for (const m of [pkg.dice?.feat_modifier, pkg.journey?.travel_check.feat_modifier]) if (m !== undefined && !rolls.includes(m)) rolls.push(m);
+  return { scenes, skills, conditions, outcomes, regions: [], trackers, rolls, roles: [] };
 }
 
-/** Labels for exactly the ids the packages show, plus the given region ids: the catalog label,
- *  else the id itself. */
+/** Labels for exactly the ids the packages show, plus the given region ids, plus EVERY role of
+ *  ROLE_IDS (so every response that carries labels names the keeper): the catalog label, else the
+ *  id itself. */
 export function labelsFor(catalog: Labels, pkgs: readonly NarrativePackage[], regions: readonly string[] = []): Labels {
   const out = emptyLabels();
   const put = (c: LabelCategory, id: string) => {
@@ -166,5 +174,6 @@ export function labelsFor(catalog: Labels, pkgs: readonly NarrativePackage[], re
     for (const c of LABEL_CATEGORIES) for (const id of ids[c]) put(c, id);
   }
   for (const id of regions) put('regions', id);
+  for (const id of ROLE_IDS) put('roles', id);
   return out;
 }

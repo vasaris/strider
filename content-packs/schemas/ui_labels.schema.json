@@ -31,7 +31,7 @@
             "type": "object",
             "required": ["group", "id", "name_ru", "source_card", "evidence"],
             "properties": {
-              "group": { "enum": ["region", "outcome", "condition", "tracker"] },
+              "group": { "enum": ["region", "outcome", "condition", "tracker", "roll", "role"] },
               "id": { "type": "string", "minLength": 1 },
               "name_ru": { "type": "string", "minLength": 1 },
               "source_card": { "type": "string", "minLength": 1 },

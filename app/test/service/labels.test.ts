@@ -1,4 +1,4 @@
-// Pack labels (K4, K5.1): every label shown for a package id is pack data. Expected names are read
+// Pack labels (K4, K5.1, K5.2): every label shown for a package id is pack data. Expected names are read
 // from the pack JSON files here (an independent path from loadPack), never written as literals; a
 // stub pack with other names proves the labels are pack-sourced; unknown ids fall back to the id.
 // The UI labels sidecar (loader, evidence gate, priority, coverage) is tested in uiLabels.test.ts.
@@ -9,7 +9,7 @@ import { isJourneyOver, journeyTurn, startJourney, type NarrativePackage } from 
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { LABEL_CATEGORIES, labelsFor, packageIds, packLabels, type LabelPack } from '../../src/server/service/labels';
-import type { TrackerId } from '../../src/shared/api';
+import { ROLE_IDS, type TrackerId } from '../../src/shared/api';
 import { ENV, LABELS, PACK_DIR } from '../support/service';
 
 const SIDECAR = (JSON.parse(readFileSync(join(PACK_DIR, 'ui_labels.json'), 'utf8')) as { payload: { entries: { group: string; id: string; name_ru: string }[] } }).payload.entries;
@@ -83,8 +83,37 @@ describe('labelsFor', () => {
       outcomes: { weak: TIERS[0]?.label, failure: sidecarName('outcome', 'failure') },
       regions: { wild_lands: sidecarName('region', 'wild_lands'), no_such_region: 'no_such_region' },
       trackers: { fatigue: sidecarName('tracker', 'fatigue'), eye: sidecarName('tracker', 'eye') },
+      rolls: {},
+      roles: { keeper: sidecarName('role', 'keeper') },
     });
-    expect(labelsFor(LABELS, [])).toEqual({ scenes: {}, skills: {}, conditions: {}, outcomes: {}, regions: {}, trackers: {} });
+    expect(labelsFor(LABELS, [])).toEqual({
+      scenes: {},
+      skills: {},
+      conditions: {},
+      outcomes: {},
+      regions: {},
+      trackers: {},
+      rolls: {},
+      roles: { keeper: sidecarName('role', 'keeper') },
+    });
+  });
+
+  it('rolls: the feat_modifier of the scene check and of the travel roll, deduplicated', () => {
+    const base = { intent: 'journey', scene: 'journey', length_target: { min_chars: 1, max_chars: 2 } };
+    const both = { ...base, dice: { feat_modifier: 'favoured' }, journey: { days_delta: 0, travel_check: { feat_modifier: 'ill_favoured' } } } as NarrativePackage;
+    const same = { ...base, dice: { feat_modifier: 'favoured' }, journey: { days_delta: 0, travel_check: { feat_modifier: 'favoured' } } } as NarrativePackage;
+    expect(packageIds(both).rolls).toEqual(['favoured', 'ill_favoured']);
+    expect(packageIds(same).rolls).toEqual(['favoured']);
+    expect(packageIds({ ...base, dice: { outcome: 'weak' } } as NarrativePackage).rolls).toEqual([]);
+    expect(labelsFor(LABELS, [both]).rolls).toEqual({ favoured: sidecarName('roll', 'favoured'), ill_favoured: sidecarName('roll', 'ill_favoured') });
+  });
+
+  it('roles: never from packages; labelsFor always names every ROLE_IDS id (catalog label, else the id)', () => {
+    const pkg = { intent: 'journey', scene: 'journey', length_target: { min_chars: 1, max_chars: 2 } } as NarrativePackage;
+    expect(packageIds(pkg).roles).toEqual([]);
+    for (const id of ROLE_IDS) expect(labelsFor(LABELS, [pkg]).roles[id]).toBe(sidecarName('role', id));
+    const noRoles = { ...LABELS, roles: {} };
+    expect(labelsFor(noRoles, []).roles).toEqual(Object.fromEntries(ROLE_IDS.map((id) => [id, id])));
   });
 
   it('TRACKER_IDS are exactly the contract patch *_delta keys', () => {
@@ -142,6 +171,8 @@ describe('pack-sourcing (stub pack)', () => {
       outcomes: { weak: 'T0', strong: 'T1', extraordinary: 'T2' },
       regions: {},
       trackers: {},
+      rolls: {},
+      roles: {},
     });
   });
 

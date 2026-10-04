@@ -3,8 +3,9 @@
 //   keyPresent  non-empty ANTHROPIC_API_KEY (read from process.env only; never logged, never
 //               copied into app/.env*; Ivan starts dev from a keyed shell)
 //   keeper      keeperFactory over keeperLlmClient (AnthropicLlmClient, timeout 90 s, 1 retry; the
-//               SDK reads the key itself), model from KEEPER_MODEL or the default; setup loaded
-//               per request
+//               SDK reads the key itself; one `keeper_call {json}` console.info line per call:
+//               model, duration, token usage, stop reason or error name / status -- no text, no
+//               key), model from KEEPER_MODEL or the default; setup loaded per request
 //   store       getStore (db/ready.ts: DATABASE_URL pool, role check memoized on success)
 //   env         getJourneyEnv (memoized pack load); vk / labels: getVkAddendum / getPackLabels
 //               (memoized next to it)

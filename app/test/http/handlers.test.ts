@@ -403,6 +403,6 @@ describe('K4: session list, generation lock, the gate in response bodies', () =>
     expect(played.gate.some((f) => f.severity === 'block')).toBe(true);
     const detail = JSON.parse(bodies[2]!) as { turns: { proseState: string; prose: unknown }[]; labels: Record<string, unknown> };
     expect(detail.turns[0]).toMatchObject({ proseState: 'blocked', prose: null });
-    expect(Object.keys(detail.labels).sort()).toEqual(['conditions', 'outcomes', 'regions', 'scenes', 'skills', 'trackers']);
+    expect(Object.keys(detail.labels).sort()).toEqual(['conditions', 'outcomes', 'regions', 'roles', 'rolls', 'scenes', 'skills', 'trackers']);
   });
 });

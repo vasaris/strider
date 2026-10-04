@@ -127,7 +127,16 @@ describe('a full journey through the service', () => {
     expect(await svc.getSession(session.id)).toEqual({
       session,
       turns: [],
-      labels: { scenes: {}, skills: {}, conditions: {}, outcomes: {}, regions: { border_lands: LABELS.regions['border_lands'] }, trackers: {} },
+      labels: {
+        scenes: {},
+        skills: {},
+        conditions: {},
+        outcomes: {},
+        regions: { border_lands: LABELS.regions['border_lands'] },
+        trackers: {},
+        rolls: {},
+        roles: { keeper: LABELS.roles['keeper'] }, // every labels object names the keeper (K5.2)
+      },
       nextTurnIndex: 0,
       journeyComplete: false,
       packCurrent: true,

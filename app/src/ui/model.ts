@@ -3,7 +3,8 @@
 // unit-tested in test/ui/model.test.ts and shared by the client components.
 //
 // Labels: every setting name comes from the server's labels (pack name_ru); an id without a label
-// is shown as the id itself. The Russian sentences below are our own UI text, never setting terms.
+// is shown as the id itself. The Russian sentences below are our own UI text, never setting terms;
+// where a sentence names the keeper, the name is the server's label (group 'roles', id 'keeper').
 
 import type {
   ApiErrorCode,
@@ -175,7 +176,9 @@ export interface DiceModel {
   readonly feat: FeatGlyph | null;
   /** Favoured / ill-favoured rolls: every d12 rolled, the kept one marked; [] otherwise. */
   readonly candidates: readonly FeatCandidate[];
-  readonly modifier: { readonly id: 'favoured' | 'ill_favoured'; readonly label: string } | null;
+  /** Favoured / ill-favoured: `label` is the pack name of the roll (group 'rolls'), `note` our
+   *  plain explanation shown beside it; the id is for logic only and is never rendered. */
+  readonly modifier: { readonly id: 'favoured' | 'ill_favoured'; readonly label: string; readonly note: string } | null;
   readonly success: readonly SuccessDie[];
   readonly successIcons: number | null;
   readonly tn: number | null;
@@ -184,8 +187,9 @@ export interface DiceModel {
   readonly tone: DiceTone;
 }
 
-/** Our descriptions of the two-d12 modifiers (not setting terms; the id is kept for a tooltip). */
-export const MODIFIER_LABELS: Readonly<Record<'favoured' | 'ill_favoured', string>> = {
+/** Our plain explanations of the two-d12 modifiers (not setting terms): the secondary text beside
+ *  the pack name of the roll. */
+export const MODIFIER_NOTES: Readonly<Record<'favoured' | 'ill_favoured', string>> = {
   favoured: 'лучшая из двух',
   ill_favoured: 'худшая из двух',
 };
@@ -205,7 +209,10 @@ export function diceModel(d: DiceDto, labels: LabelsDto | null): DiceModel {
     const keptAt = d.feat_candidates.indexOf(d.feat_die as number); // first equal face; -1 marks none
     candidates = d.feat_candidates.map((face, i) => ({ glyph: featGlyph(face), kept: i === keptAt }));
   }
-  const modifier = d.feat_modifier !== undefined ? { id: d.feat_modifier, label: MODIFIER_LABELS[d.feat_modifier] } : null;
+  const modifier =
+    d.feat_modifier !== undefined
+      ? { id: d.feat_modifier, label: labelOf(labels, 'rolls', d.feat_modifier), note: MODIFIER_NOTES[d.feat_modifier] }
+      : null;
 
   const success: SuccessDie[] = (d.success_dice ?? []).map((face, i) => ({
     face,
@@ -323,8 +330,9 @@ export function canAdvance(detail: SessionDetailDto | null, inFlight: boolean): 
 
 export type ClientErrorCode = ApiErrorCode | 'network' | 'bad_response';
 
-/** One short Russian message per API error code (and the client's own two). */
-export const ERROR_MESSAGES: Readonly<Record<ClientErrorCode, string>> = {
+/** One short Russian message per API error code (and the client's own two). A message that names
+ *  the keeper is a function of the keeper's name (errorMessage passes the label). */
+export const ERROR_MESSAGES: Readonly<Record<ClientErrorCode, string | ((keeper: string) => string)>> = {
   invalid_request: 'Запрос не принят: неверный формат.',
   forbidden_host: 'Доступ закрыт: приложение работает только на этом компьютере.',
   forbidden_origin: 'Доступ закрыт: запрос пришёл с чужой страницы.',
@@ -339,8 +347,8 @@ export const ERROR_MESSAGES: Readonly<Record<ClientErrorCode, string>> = {
   unsupported_media_type: 'Запрос не принят: неверный тип данных.',
   unsupported_route: 'Этот маршрут пока не поддерживается.',
   internal_error: 'Внутренняя ошибка сервера.',
-  keeper_failed: 'Рассказчик не ответил. Ход сохранён, текст можно переписать.',
-  keeper_not_configured: 'Рассказчик не настроен на сервере.',
+  keeper_failed: (keeper) => `${keeper} не ответил. Ход сохранён, текст можно переписать.`,
+  keeper_not_configured: (keeper) => `${keeper} не настроен на сервере.`,
   database_not_configured: 'База данных не настроена.',
   database_unavailable: 'База данных недоступна.',
   database_misconfigured: 'База данных настроена неверно.',
@@ -348,7 +356,15 @@ export const ERROR_MESSAGES: Readonly<Record<ClientErrorCode, string>> = {
   bad_response: 'Сервер ответил непонятно.',
 };
 
-export const errorMessage = (code: ClientErrorCode): string => ERROR_MESSAGES[code];
+/** The keeper's name for UI text: the server label (group 'roles'), else the id. */
+export const keeperName = (labels: LabelsDto | null): string => labelOf(labels, 'roles', 'keeper');
+
+/** The message of an error code. `labels` names the keeper; callers without labels (the home
+ *  screen) pass null and a keeper message falls back to the id. */
+export function errorMessage(code: ClientErrorCode, labels: LabelsDto | null): string {
+  const m = ERROR_MESSAGES[code];
+  return typeof m === 'string' ? m : m(keeperName(labels));
+}
 
 /** Codes that mean "someone else is already on it": re-GET and show a quiet notice. */
 export const isQuietConflict = (code: ClientErrorCode): boolean => code === 'turn_conflict' || code === 'generation_in_progress';

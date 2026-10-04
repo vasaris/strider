@@ -109,7 +109,12 @@ export interface TurnDto {
   readonly generations: number;
 }
 
-export const LABEL_GROUPS = ['scenes', 'skills', 'conditions', 'outcomes', 'regions', 'trackers'] as const;
+/** The roles the UI names (K5.2): not in packages, so the server labels every one of them in every
+ *  labels object it sends (group 'roles'). */
+export const ROLE_IDS = ['keeper'] as const;
+export type RoleId = (typeof ROLE_IDS)[number];
+
+export const LABEL_GROUPS = ['scenes', 'skills', 'conditions', 'outcomes', 'regions', 'trackers', 'rolls', 'roles'] as const;
 export type LabelGroup = (typeof LABEL_GROUPS)[number];
 export type LabelsDto = { readonly [G in LabelGroup]: Readonly<Record<string, string>> };
 
