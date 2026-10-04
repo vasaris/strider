@@ -60,7 +60,7 @@ export interface JourneyStepDto {
   readonly days_delta: number;
   readonly arrived?: true;
   readonly days_total?: number;
-  readonly travel_check: DiceDto;
+  readonly travel_check?: DiceDto;
 }
 
 export interface DetectionDto {

@@ -149,7 +149,7 @@ export function packageIds(pkg: NarrativePackage): { readonly [C in LabelCategor
   if (pkg.oracle?.table === 'journey_scenes') scenes.push(pkg.oracle.result_ref);
   const skill = pkg.oracle?.detail?.row?.skill ?? pkg.oracle?.row?.skill;
   if (typeof skill === 'string') skills.push(skill);
-  for (const o of [pkg.dice?.outcome, pkg.journey?.travel_check.outcome]) if (o !== undefined) outcomes.push(o);
+  for (const o of [pkg.dice?.outcome, pkg.journey?.travel_check?.outcome]) if (o !== undefined) outcomes.push(o);
   const conditions = [...(pkg.patch?.conditions_gained ?? []), ...(pkg.patch?.conditions_cleared ?? [])];
   const patch = (pkg.patch ?? {}) as Readonly<Record<string, unknown>>;
   const trackers = TRACKER_IDS.filter((id) => {
@@ -157,7 +157,7 @@ export function packageIds(pkg: NarrativePackage): { readonly [C in LabelCategor
     return typeof v === 'number' && v !== 0;
   });
   const rolls: string[] = [];
-  for (const m of [pkg.dice?.feat_modifier, pkg.journey?.travel_check.feat_modifier]) if (m !== undefined && !rolls.includes(m)) rolls.push(m);
+  for (const m of [pkg.dice?.feat_modifier, pkg.journey?.travel_check?.feat_modifier]) if (m !== undefined && !rolls.includes(m)) rolls.push(m);
   return { scenes, skills, conditions, outcomes, regions: [], trackers, rolls, roles: [] };
 }
 

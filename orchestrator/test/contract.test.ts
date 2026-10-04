@@ -80,7 +80,7 @@ describe('narrative contract', () => {
   it('TP1: journey progress (days_delta 0 included, arrival fields optional) and detection slots', () => {
     expect(FIXTURE.journey?.days_delta).toBe(0);
     expect(FIXTURE.journey?.arrived).toBeUndefined();
-    expect(FIXTURE.journey?.travel_check.outcome).toBe('failure');
+    expect(FIXTURE.journey?.travel_check?.outcome).toBe('failure');
     expect(FIXTURE.detection?.table).toBe('detection_scenes');
     const arrival: NarrativePackage = {
       ...FIXTURE,

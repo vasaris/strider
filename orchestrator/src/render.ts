@@ -6,7 +6,8 @@
 // Rules (narrative contract 2.1):
 //   - LOSSLESS: every PRESENT field appears with its value -- EXCEPT the UI-only dice faces
 //     (UI_ONLY_DICE_KEYS: feat_die, success_dice, feat_candidates, feat_modifier, success_counted;
-//     DD-DICE-FACES), which are never emitted: the Keeper and the judge do not see raw faces.
+//     DD-DICE-FACES) and the UI-only package keys (UI_ONLY_PACKAGE_KEYS: rolls, eye_sources; 3.3a
+//     TRANS1), which are never emitted: the Keeper and the judge do not see raw faces.
 //   - ABSENT -> OMITTED: a null/undefined field, an empty object (e.g. an unchanged-turn
 //     patch `{}`) or an empty list emits nothing -- no heading, no "none"/"-" placeholder --
 //     so the Keeper is never shown mechanics the package does not carry.
@@ -21,8 +22,13 @@
 //     (strip the 4-space indent, join with '\n') returns the source with its terminators
 //     normalized to '\n': the terminator KIND is the only reversibility loss.
 //   - DETERMINISTIC: sections and fields follow a fixed order declared in code (contract
-//     declaration order), never Object.keys of the input. Sections: `## turn`, `## dice`,
-//     `## oracle`, `## detection`, `## patch`, `## journey`, `## lore`, `## journal`.
+//     declaration order), never Object.keys of the input. Sections: `## turn`, `## player`,
+//     `## dice`, `## oracle`, `## questions`, `## detection`, `## patch`, `## journey`, `## lore`,
+//     `## journal`, `## previous` -- the 3.3a sections (player / questions / previous) are absent on
+//     a whole-step package, so a v0.3 package renders byte-identically. `## previous` is LAST:
+//     the mechanical facts first, the continuity text right before the Keeper writes.
+//   - PREVIOUS PROSE ALWAYS A BLOCK (3.3a): `prose: |` + every line at BLOCK_INDENT, even for a
+//     single-line value, so the free text of the last beat can never sit at column 0.
 //   - TRAVEL ROLL LABELED (TP1): `## dice` is the SCENE check only (A4.1); the guide's Travel roll
 //     renders only inside `## journey`, next to the day count, as `travel_check.*` fields (the
 //     same dice renderer with a prefix), so it can never be read as the scene's outcome.
@@ -34,7 +40,9 @@ import type {
   DiceResult,
   JourneyStepSummary,
   NarrativePackage,
+  OracleQuestion,
   OracleResult,
+  PlayerInput,
   StatePatchSummary,
 } from './contract.js';
 
@@ -54,6 +62,12 @@ function scalar(prefix: string, value: string): string[] {
   return LINE_TERMINATOR.test(value)
     ? [`${prefix} |`, ...value.split(LINE_TERMINATOR).map((l) => BLOCK_INDENT + l)]
     : [`${prefix} ${value}`];
+}
+
+/** The always-block form (3.3a `## previous`): `<prefix> |` followed by each value line (same
+ *  LINE_TERMINATOR split as scalar) indented by BLOCK_INDENT -- even when the value is one line. */
+function block(prefix: string, value: string): string[] {
+  return [`${prefix} |`, ...value.split(LINE_TERMINATOR).map((l) => BLOCK_INDENT + l)];
 }
 
 /** A `key: value` field (via scalar), or nothing when the value is undefined. null renders as `null`. */
@@ -81,6 +95,12 @@ function section(heading: string, body: readonly string[]): string[] {
  */
 export const UI_ONLY_DICE_KEYS = ['feat_die', 'success_dice', 'feat_candidates', 'feat_modifier', 'success_counted'] as const satisfies readonly (keyof DiceResult)[];
 
+/**
+ * NarrativePackage keys that are UI-only (3.3a TRANS1): the beat's table / detail / bonus dice and
+ * the Eye sources, for the browser roll panel. NEVER rendered, like UI_ONLY_DICE_KEYS.
+ */
+export const UI_ONLY_PACKAGE_KEYS = ['rolls', 'eye_sources'] as const satisfies readonly (keyof NarrativePackage)[];
+
 /** Dice body; `prefix` namespaces every key (the journey section's travel roll uses
  *  'travel_check.'). UI_ONLY_DICE_KEYS are not emitted. */
 function renderDice(d: DiceResult, prefix = ''): string[] {
@@ -102,8 +122,23 @@ function renderJourney(j: JourneyStepSummary): string[] {
     ...field('days_delta', j.days_delta),
     ...field('arrived', j.arrived),
     ...field('days_total', j.days_total),
-    ...renderDice(j.travel_check, 'travel_check.'),
+    ...(j.travel_check ? renderDice(j.travel_check, 'travel_check.') : []),
   ];
+}
+
+function renderPlayer(p: PlayerInput): string[] {
+  return [...field('hope_spent', p.hope_spent), ...field('approach', p.approach)];
+}
+
+/** Question i (1-based) as `q<i>.*` fields; note only when present. */
+function renderQuestions(qs: readonly OracleQuestion[]): string[] {
+  return qs.flatMap((q, i) => [
+    ...field(`q${i + 1}.question`, q.question),
+    ...field(`q${i + 1}.likelihood`, q.likelihood),
+    ...field(`q${i + 1}.answer`, q.answer),
+    ...field(`q${i + 1}.extreme`, q.extreme),
+    ...field(`q${i + 1}.note`, q.note),
+  ]);
 }
 
 /** Oracle body at a given nesting depth (0 = top level). The row comes before any detail
@@ -142,9 +177,9 @@ function renderPatch(p: StatePatchSummary): string[] {
 }
 
 /**
- * Render a NarrativePackage as sectioned text: `## turn`, `## dice`, `## oracle`, `## detection`,
- * `## patch`, `## journey`, `## lore`, `## journal` in that fixed order, each emitted only when it
- * has a body line.
+ * Render a NarrativePackage as sectioned text: `## turn`, `## player`, `## dice`, `## oracle`,
+ * `## questions`, `## detection`, `## patch`, `## journey`, `## lore`, `## journal`, `## previous`
+ * in that fixed order, each emitted only when it has a body line.
  * Lines are joined with '\n'; no blank lines (an empty line inside a block value is exactly
  * BLOCK_INDENT), no trailing newline. Pure and deterministic.
  */
@@ -154,10 +189,13 @@ export function renderNarrativePackage(pkg: NarrativePackage): string {
     ...section('## turn', [
       ...field('intent', pkg.intent),
       ...field('scene', pkg.scene),
+      ...field('beat', pkg.beat),
       `length_target: ${lt.min_chars}..${lt.max_chars} chars`,
     ]),
+    ...section('## player', pkg.player ? renderPlayer(pkg.player) : []),
     ...section('## dice', pkg.dice ? renderDice(pkg.dice) : []),
     ...section('## oracle', pkg.oracle ? renderOracle(pkg.oracle, 0) : []),
+    ...section('## questions', renderQuestions(pkg.questions ?? [])),
     ...section('## detection', pkg.detection ? renderDetection(pkg.detection) : []),
     ...section('## patch', pkg.patch ? renderPatch(pkg.patch) : []),
     ...section('## journey', pkg.journey ? renderJourney(pkg.journey) : []),
@@ -166,6 +204,7 @@ export function renderNarrativePackage(pkg: NarrativePackage): string {
       (pkg.lore_chunks ?? []).flatMap((c) => [...field('chunk_id', c.chunk_id), ...field('text', c.text)]),
     ),
     ...section('## journal', (pkg.journal_facts ?? []).flatMap((f) => field(f.kind, f.text))),
+    ...section('## previous', typeof pkg.previous_prose === 'string' ? block('prose:', pkg.previous_prose) : []),
   ];
   return lines.join('\n');
 }

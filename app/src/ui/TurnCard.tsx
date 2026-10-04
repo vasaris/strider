@@ -143,7 +143,7 @@ export function TurnCard({
           {pkg.dice != null ? (
             <DicePanel model={diceModel(pkg.dice, labels)} title="Проверка сцены" caption={scene.skill} animate={animate} />
           ) : null}
-          {pkg.journey != null ? (
+          {pkg.journey?.travel_check != null ? (
             <DicePanel
               model={diceModel(pkg.journey.travel_check, labels)}
               title="Бросок пути"

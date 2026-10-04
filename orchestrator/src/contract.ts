@@ -155,7 +155,10 @@ export interface JourneyStepSummary {
   readonly days_delta: number;
   readonly arrived?: true; // present only on the arrival step
   readonly days_total?: number; // present only on the arrival step: the final journey duration in days
-  readonly travel_check: DiceResult; // the guide's Travel roll of this step -- NOT the scene outcome (that is `dice`)
+  // The guide's Travel roll of this step -- NOT the scene outcome (that is `dice`). Optional since
+  // 3.3a: a resolution beat (the player's scene check) has no travel roll; every whole step and
+  // every travel beat (setup / arrival / encounter) carries it.
+  readonly travel_check?: DiceResult;
 }
 
 /**
@@ -184,6 +187,61 @@ export interface JournalFact {
   readonly text: string;
 }
 
+// ---- 3.3a: per-beat prose (the interactive journey step) ----
+
+/**
+ * Which beat of an interactive journey step the Keeper writes (3.3a). A step with a scene check is
+ * two prose beats: 'setup' (the travel roll and the drawn scene, BEFORE the player rolls the scene
+ * check -- no outcome yet) and 'resolution' (the scene check's outcome). A step that ends in
+ * 'arrival' or in a significant 'encounter' (no check) is one prose beat. Absent on a whole-step
+ * (v0.3) package.
+ */
+export type BeatKind = 'setup' | 'resolution' | 'arrival' | 'encounter';
+
+/**
+ * The player's input to the roll this beat narrates. `hope_spent` is engine-applied (the hero's
+ * Hope already left in `patch`). `approach` is the player's own words about HOW the hero goes at
+ * it -- an INTENT, never a fact: the outcome stays the engine's (`dice`), and nothing the approach
+ * claims happened is true unless the package says so. Opaque runtime text, rendered verbatim.
+ */
+export interface PlayerInput {
+  readonly hope_spent: 0 | 1;
+  readonly approach?: string;
+}
+
+/**
+ * A yes/no oracle question the player asked since the last prose beat, answered by the ENGINE
+ * (kv.solo.answers): a world fact the Keeper weaves in, never re-asks or overturns.
+ */
+export interface OracleQuestion {
+  readonly question: string; // the player's words, verbatim (opaque runtime text)
+  readonly likelihood: string; // the PACK LABEL of the likelihood (kv.solo.answers likelihoods[].label), not the key
+  readonly answer: 'yes' | 'no';
+  readonly extreme: boolean; // the rune ("yes, and ...") or the Eye ("no, and ...")
+  readonly note?: string; // pack text of the rune / Eye face, present only when extreme
+}
+
+/**
+ * UI-ONLY (never rendered; render.ts UI_ONLY_PACKAGE_KEYS): the scene-table and detail rolls of the
+ * beat (TRANS1: the player sees the table dice) and the bonus Success dice a Hope spend gave.
+ * scene_table mirrors DiceResult: feat_candidates + feat_modifier only on a modified roll.
+ */
+export interface BeatRolls {
+  readonly scene_table?: {
+    readonly feat_die: number; // physical face of the KEPT Feat die
+    readonly feat_candidates?: readonly number[]; // every Feat face rolled, only when favoured / ill-favoured
+    readonly feat_modifier?: 'favoured' | 'ill_favoured'; // present exactly when feat_candidates is
+  };
+  readonly scene_detail_die?: number; // the d6 face that picked the detail row
+  readonly bonus_dice?: number; // bonus Success dice from the Hope spend of this beat's roll
+}
+
+/** UI-ONLY (never rendered): one source of Eye growth this beat (TRANS1), from the engine's EyeSource. */
+export interface EyeSourceSummary {
+  readonly source: 'travel_check' | 'scene_check' | 'shadow';
+  readonly delta: number;
+}
+
 /**
  * The full package the orchestrator hands to the Keeper (arch v1 sec2.3 input).
  *
@@ -203,6 +261,13 @@ export interface NarrativePackage {
   readonly journey?: JourneyStepSummary | null; // TP1: days / arrival / travel check of this step
   readonly lore_chunks?: readonly LoreChunk[];
   readonly journal_facts?: readonly JournalFact[];
+  // 3.3a (all optional, absent on a whole-step v0.3 package, which renders byte-identically):
+  readonly beat?: BeatKind; // which prose beat of the step this is
+  readonly player?: PlayerInput | null; // the player's input to this beat's roll
+  readonly questions?: readonly OracleQuestion[]; // engine-answered oracle questions since the last prose beat
+  readonly previous_prose?: string | null; // accepted prose of the previous prose beat (continuity, CT1)
+  readonly rolls?: BeatRolls | null; // UI-only: table / detail / bonus dice
+  readonly eye_sources?: readonly EyeSourceSummary[]; // UI-only: what grew the Eye this beat
 }
 
 // ---- Keeper output side: what we ask the narrative layer to return ----

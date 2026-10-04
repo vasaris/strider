@@ -22,8 +22,9 @@
 //     arch sec 2.3.4 numbers are provisional in code now; tone.md owns them at activation).
 //     Still OPEN: blocked on 2.3.c (length relocation into tone.md).
 
-import type { CheckResult, CheckRoll, HeroState, JourneyState, SceneDetailRow, StepRecord } from '@brodyazhnik/engine';
+import type { CheckResult, CheckRoll, HeroState, JourneyEvent, JourneyState, SceneDetailRow, StepRecord } from '@brodyazhnik/engine';
 import type {
+  BeatKind,
   CheckOutcome as ContractCheckOutcome,
   DetectionScene,
   DiceResult,
@@ -72,6 +73,20 @@ const PROVISIONAL_LENGTH: Readonly<Record<SceneKind, LengthTarget>> = {
 
 export function provisionalLengthFor(scene: SceneKind): LengthTarget {
   return PROVISIONAL_LENGTH[scene];
+}
+
+// PROVISIONAL (3.3a, same status as PROVISIONAL_LENGTH): prose length per journey beat. The setup
+// is the shortest (the scene opens, no outcome yet); the encounter the longest (the whole scene in
+// one beat). Owner of the calibration: C2 / tone.md -- these numbers move there at activation.
+const PROVISIONAL_BEAT_LENGTH: Readonly<Record<BeatKind, LengthTarget>> = {
+  setup: { min_chars: 200, max_chars: 400 },
+  resolution: { min_chars: 300, max_chars: 600 },
+  arrival: { min_chars: 300, max_chars: 600 },
+  encounter: { min_chars: 400, max_chars: 800 },
+};
+
+export function provisionalBeatLengthFor(beat: BeatKind): LengthTarget {
+  return PROVISIONAL_BEAT_LENGTH[beat];
 }
 
 /** Assemble the second-level oracle (SD1): surface the already-rolled row opaquely into
@@ -133,6 +148,9 @@ export function buildNarrativePackage(turn: EngineTurnResult): NarrativePackage 
 // the step's CheckRoll (StepRecord.travelRoll / sceneRoll -- the very roll the check was
 // evaluated from) into UI-only DiceResult fields; renderNarrativePackage suppresses them, so
 // they never reach the Keeper or the judge.
+// 3.3a: mapDice / diffHeroState / eyeBeforeResetOf / detectionOf are exported for the
+// beat producers (beats.ts), so a beat package maps the engine exactly like a whole step. They are
+// INTERNAL: src/index.ts re-exports only the public names of this module, not these helpers.
 // ============================================================================
 
 /** Map the engine's binary outcome+degree to the contract's 4-value CheckOutcome. Reads the
@@ -158,7 +176,7 @@ function mapOutcome(check: CheckResult): ContractCheckOutcome {
  *  counted flags (never re-derived here); on a favoured / ill-favoured roll (the engine's
  *  featModifier, not inferred from faces) feat_candidates = every Feat face rolled and
  *  feat_modifier = that modifier -- both present or both absent. */
-function mapDice(check: CheckResult, checkRoll: CheckRoll): DiceResult {
+export function mapDice(check: CheckResult, checkRoll: CheckRoll): DiceResult {
   const { roll, successCounted } = checkRoll;
   const base: DiceResult = {
     feat_die: roll.feat.physicalFace,
@@ -186,7 +204,7 @@ function requireRoll(roll: CheckRoll | null, which: string): CheckRoll {
  *  changed (summary, not a full dump). `eyeBeforeReset` is the awareness the engine recorded on
  *  a detection event (BEFORE it reset to the initial rating): eye_delta is growth up to the
  *  detection, the reset itself is implied by `detection`, not folded into the delta. */
-function diffHeroState(prev: HeroState, next: HeroState, eyeBeforeReset: number | null): StatePatchSummary {
+export function diffHeroState(prev: HeroState, next: HeroState, eyeBeforeReset: number | null): StatePatchSummary {
   const patch: {
     endurance_delta?: number;
     fatigue_delta?: number;
@@ -218,6 +236,19 @@ function diffHeroState(prev: HeroState, next: HeroState, eyeBeforeReset: number 
   return patch;
 }
 
+/** The awareness the engine recorded on this slice's detection event (BEFORE the reset), or null
+ *  when no detection was rolled -- the diffHeroState `eyeBeforeReset` argument. */
+export function eyeBeforeResetOf(events: readonly JourneyEvent[]): number | null {
+  const e = events.find((x) => x.kind === 'detection');
+  return e !== undefined && e.kind === 'detection' ? e.awareness : null;
+}
+
+/** The detection scene of this slice (opaque pack text off the detection event, verbatim), or null. */
+export function detectionOf(events: readonly JourneyEvent[]): DetectionScene | null {
+  const e = events.find((x) => x.kind === 'detection');
+  return e !== undefined && e.kind === 'detection' ? { table: 'detection_scenes', scene: e.sceneText } : null;
+}
+
 /**
  * INTERNAL hero-level projection of one journey step (not exported from the package: a public
  * journey package must also carry days / arrival / detection -- see extractJourneyTurn).
@@ -227,13 +258,11 @@ function diffHeroState(prev: HeroState, next: HeroState, eyeBeforeReset: number 
  */
 function projectStep(prev: HeroState, next: HeroState, record: StepRecord): EngineTurnResult {
   const sceneEvent = record.events.find((e) => e.kind === 'scene');
-  const detectionEvent = record.events.find((e) => e.kind === 'detection');
-  const eyeBeforeReset = detectionEvent !== undefined && detectionEvent.kind === 'detection' ? detectionEvent.awareness : null;
   const base: EngineTurnResult = {
     intent: 'journey',
     scene: 'journey',
     dice: record.sceneCheck === null ? null : mapDice(record.sceneCheck, requireRoll(record.sceneRoll, 'scene')),
-    patch: diffHeroState(prev, next, eyeBeforeReset),
+    patch: diffHeroState(prev, next, eyeBeforeResetOf(record.events)),
     journalFacts: [], // F-journal: context-compression is Stage 3+ (arch sec 2.4)
   };
   if (sceneEvent === undefined || sceneEvent.kind !== 'scene') return base;
@@ -260,7 +289,6 @@ export function extractJourneyTurn(prev: JourneyState, next: JourneyState, recor
     throw new Error('extractJourneyTurn: no travel check -- the already-arrived no-op is not a turn');
   }
   const arrivalEvent = record.events.find((e) => e.kind === 'arrival');
-  const detectionEvent = record.events.find((e) => e.kind === 'detection');
   const journey: JourneyStepSummary = {
     days_delta: next.journey.durationDays - prev.journey.durationDays,
     ...(arrivalEvent !== undefined && arrivalEvent.kind === 'arrival'
@@ -268,9 +296,5 @@ export function extractJourneyTurn(prev: JourneyState, next: JourneyState, recor
       : {}),
     travel_check: mapDice(record.travelCheck, requireRoll(record.travelRoll, 'travel')),
   };
-  const detection: DetectionScene | null =
-    detectionEvent !== undefined && detectionEvent.kind === 'detection'
-      ? { table: 'detection_scenes', scene: detectionEvent.sceneText }
-      : null;
-  return { ...projectStep(prev.hero, next.hero, record), journey, detection };
+  return { ...projectStep(prev.hero, next.hero, record), journey, detection: detectionOf(record.events) };
 }
