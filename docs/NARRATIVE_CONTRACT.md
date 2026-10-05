@@ -2,8 +2,11 @@
 
 > Чат 2.1.a. Канон контракта между детерминированным движком и нарративным слоем.
 > Тип: [`orchestrator/src/contract.ts`](../orchestrator/src/contract.ts) (ASCII,
-> content-clean). Промпт-потребитель: [`prompts/keeper.system.v0.3.md`](../prompts/keeper.system.v0.3.md)
-> (текущая версия; ранние заморожены sha256-пинами).
+> content-clean). Промпт-потребитель: [`prompts/keeper.system.v0.4.md`](../prompts/keeper.system.v0.4.md)
+> — такты (3.3a, §8 «Такты»); целый шаг в app до 3.3b — [`prompts/keeper.system.v0.3.md`](../prompts/keeper.system.v0.3.md);
+> ранние версии заморожены sha256-пинами.
+> С 3.3a гейт также стоит за выдачей прозы по предложениям при стриминге —
+> [`prose-gate/src/release.ts`](../prose-gate/src/release.ts).
 > Машинная проверка запрещёнки: [`prose-gate/src/antislop.ts`](../prose-gate/src/antislop.ts) + имена и
 > предыстория против пакета — [`prose-gate/src/grounding.ts`](../prose-gate/src/grounding.ts) (NF1) +
 > обращение к герою во множественном числе — [`prose-gate/src/sa1.ts`](../prose-gate/src/sa1.ts) (SA1).

@@ -64,7 +64,7 @@ TypeScript strict ESM, vitest 4; `engine/` — zero runtime deps. PWA: Next.js 1
 
 ## Команды
 ```bash
-npm run test:all && npm run typecheck:all      # из корня; на 51777dd — 402 / 103 / 129 / 101 / 554 (engine / orchestrator / prose-gate / evals / app); первым шагом — чекер lock
+npm run test:all && npm run typecheck:all      # из корня; на 98cb553 — 431 / 145 / 160 / 128 / 554 (engine / orchestrator / prose-gate / evals / app); первым шагом — чекер lock
 npm run build:app                              # сборка app (next build --webpack)
 # app/БД (DATABASE_URL — только в шелле; роль и база — app/supabase/README.md):
 npm run db:migrate -w app                      # свой раннер миграций (П11); от суперпользователя откажется
@@ -78,10 +78,10 @@ find engine/src orchestrator/src -name '*.ts' -exec perl -CSD -ne 'exit 1 if /\p
 # NF1-реплей по L4 (офлайн, без ключа): 2 блока / 10 warn
 cd evals && npx tsx grounding-replay.mts | tail -1
 ```
-Keyed-скрипты (`calibrate.mts`, `full-cycle.mts`, `keeper-smoke.mts`) запускает **только Иван** в keyed-шелле; ключ — только `process.env`, `.env` не читать.
+Keyed-скрипты (`calibrate.mts`, `full-cycle.mts` и `full-cycle.mts --beats`, `keeper-smoke.mts`) запускает **только Иван** в keyed-шелле; ключ — только `process.env`, `.env` не читать. Долгий прогон — с `caffeinate -i`: Mac засыпает, и прогоны (тесты и keyed) обрываются.
 
 ## Текущее состояние
-- **Stage 0–2 закрыты**; **Stage 3 (PWA) в работе.** Чаты 3.1 и 3.2 закрыты.
+- **Stage 0–2 закрыты**; **Stage 3 (PWA) в работе.** Чаты 3.1, 3.2 и 3.3a закрыты.
   - Блок I: NF1 + RP1 `be08b85`, TP1 `6959977`, keeper v0.3 + judge v0.4 `877340d`, `ecad509`, шов Хранителя `5937e3a`; прогоны с ключом 27.09 — `evals/records/`.
   - Часть 2: lock `7610073`, `app/` `600c12f`, vitest 4 `e9e288f`, схема + хранилище `b687819`, API сессий и ходов `a51a13d`; живая проверка ревьюера и смоук Ивана пройдены; docs II.
   - Чат 3.2:
@@ -96,20 +96,28 @@ Keyed-скрипты (`calibrate.mts`, `full-cycle.mts`, `keeper-smoke.mts`) з�
 
     Смоук Ивана на `f170450` пройден.
   - Перепланировка этапа 3 (Иван, 04.10): 3.3 «Интерактивный ход» → 3.4 «Трекеры + лист героя» → 3.5 «Играбельная сцена + выход».
-- Последний код-коммит `51777dd`:
-  - `test:all` 402 / 103 / 129 / 101 / 554; typecheck чист, `build:app` зелёный;
+  - Чат 3.3a (движок, оркестратор, prose-gate, промпт, evals; `app/src` — только типы под опциональный `travel_check`):
+    - K1 `4224402` — такты в движке (`travelBeat` / `checkBeat`), Надежда, `previewCheck`, `askOracle`; R2; Изнурение КВ 111;
+    - K2 `e757d3e` — пакеты тактов (`beat`, `## player`, `## questions`, `## previous`);
+    - K3 `5eabff5` — стриминг Хранителя и выдача по предложениям за гейтом; граница SA2;
+    - K4 `98cb553` — keeper v0.4 («Такты»), фикстура запросов v0.4, `full-cycle.mts --beats`;
+    - K5 — docs.
+
+    Прогон тактов Ивана 05.10 (`claude-sonnet-5`): setup 86.9, resolution 84.1, arrival 86, encounter 88; 1 блок из 20; TTFT — почти всё размышление модели (`LAT1`). Запись — `docs/CALIBRATION_TONE_JUDGE.md` §«3.3a».
+- Последний код-коммит `98cb553`:
+  - `test:all` 431 / 145 / 160 / 128 / 554; typecheck чист, `build:app` зелёный;
   - кириллицы нет в `engine/src` и `orchestrator/src`;
-  - 5 golden стабильны, фикстура Хранителя 11/11, NF1-реплей 2 / 10;
-  - живой гейт на корпусе 58 проз — 5 block / 2 SA1-warn;
+  - 5 golden стабильны, снимок 900 прогонов пути (`engine/test/journey/snapshot900*`), фикстуры запросов Хранителя v0.3 (11) и v0.4 (20), NF1-реплей 2 / 10;
+  - живой гейт на корпусе 58 проз — 5 block / 2 SA1-warn (такты v0.4 в корпус не входят);
   - pack 0.1.0, `npm audit` 0.
-- **Следующее:** `ROADMAP_SESSIONS.md` → **чат 3.3** (интерактивный ход); вход — `docs/HANDOFF_STAGE3_3.md`. Первым — скелет 3.3 по процессу А (открытые вопросы — §6 handoff).
+- **Следующее:** `ROADMAP_SESSIONS.md` → **чат 3.3b** (интерактивный ход в app); вход — `docs/HANDOFF_STAGE3_3B.md`. Первым — скелет 3.3b по процессу А.
 
 ## Карта репо
 - `engine/` — чистый TS-движок (`src/` модули по подсистемам, `test/`, `cli/`).
-- `orchestrator/` — контракт движок→Хранитель, сборка и рендер пакета, цикл хода (`journeyTurn`), шов Хранителя (`AnthropicKeeper`, `loadKeeperSetup`; SDK-клиент только через `@brodyazhnik/orchestrator/anthropic`, там же хук телеметрии `onCall`), pregen-герой.
-- `prose-gate/` — детерминированный гейт прозы (`@brodyazhnik/prose-gate`, с 3.2): стоп-листы (`antislop`), NF1 (`grounding`), SA1, загрузчики VK-стоп-листа; потребители — app (живой гейт) и evals.
-- `evals/` — судьи, харнесс, keyed-скрипты (сканеры — из `prose-gate`); аудит-след `l4-records/` (Stage 2) и `records/` (с 3.1).
-- `prompts/` — версионные промпты Хранителя и судьи (ранние версии заморожены sha256-пинами) + `assembly.v1.json`.
+- `orchestrator/` — контракт движок→Хранитель, сборка и рендер пакета, цикл хода (`journeyTurn`), такты (`beats.ts`: `travelBeatTurn` / `checkBeatTurn` / `oracleAnswer`, с 3.3a), шов Хранителя (`AnthropicKeeper` с `run` / `runStream`, `loadKeeperSetup`; SDK-клиент только через `@brodyazhnik/orchestrator/anthropic`, там же хук телеметрии `onCall` с `ttft_ms`), pregen-герой.
+- `prose-gate/` — детерминированный гейт прозы (`@brodyazhnik/prose-gate`, с 3.2): стоп-листы (`antislop`), NF1 (`grounding`), SA1, выдача по предложениям за гейтом (`release`, с 3.3a), загрузчики VK-стоп-листа; потребители — app (живой гейт) и evals.
+- `evals/` — судьи, харнесс, keyed-скрипты (сканеры — из `prose-gate`), скриптовый игрок и цикл тактов (`beatScript.ts`, `beatCycle.ts`, с 3.3a); аудит-след `l4-records/` (Stage 2) и `records/` (с 3.1; отчёты тактов `beats-cycle-report.*` в корпус 58 не входят).
+- `prompts/` — версионные промпты Хранителя и судьи (ранние версии заморожены sha256-пинами; keeper v0.4 — такты, app до 3.3b — на v0.3) + `assembly.v1.json`.
 - `app/` — Next.js 16 PWA (`@brodyazhnik/app`):
   - маршруты `src/app/api/**` (тонкие);
   - сервер только в `src/server/**` с `import 'server-only'` (`http/`, `service/`, `store/`, `db/`);

@@ -27,3 +27,16 @@ section «3.1, 27.09: keeper v0.3 + judge v0.4».
   11 suite seeds, Keeper `claude-sonnet-5`, judge `claude-opus-4-8`.
 - `full-cycle-report.keeper-v0.3.judge-v0.4.claude-opus-4-8.20260927T223309Z.json` — full cycle,
   11 suite seeds, Keeper `claude-opus-4-8`, judge `claude-opus-4-8` (`sameModel: true`).
+
+## 3.3a, 2026-10-05 — keeper v0.4 (такты) + judge v0.4 (code HEAD `98cb553`)
+
+Run by Ivan in his keyed shell after 3.3a-K4 (the command given at the K4 stop:
+`cd evals && KEEPER_MODEL=claude-sonnet-5 caffeinate -i npx tsx full-cycle.mts --beats`); verdict:
+`docs/CALIBRATION_TONE_JUDGE.md`, section «3.3a, 05.10: keeper v0.4 (такты) + judge v0.4».
+
+- `beats-cycle-report.keeper-v0.4.judge-v0.4.claude-sonnet-5.20261005T105324Z.json` — beat cycle:
+  the 11 suite journeys played by the scripted player (`evals/src/harness/beatScript.ts`) = 20
+  prose beats, Keeper `claude-sonnet-5` (streamed through the sentence release), judge
+  `claude-opus-4-8`. Carries per-beat telemetry (`ttft_ms`, `duration_ms`, `usage`,
+  `stop_reason`). The name stem `beats-cycle-report.*` is deliberate: it is NOT part of the
+  58-prose live-gate corpus (the loaders read `full-cycle-report.*` only).
