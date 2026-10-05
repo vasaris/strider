@@ -3,7 +3,7 @@
 
 import type { KeeperOutput } from '../contract.js';
 import { buildKeeperUser, type PromptAssembly } from './assembly.js';
-import type { Keeper, KeeperInput, LlmClient } from './seam.js';
+import type { Keeper, KeeperInput, LlmClient, LlmRequest } from './seam.js';
 
 export interface AnthropicKeeperConfig {
   readonly llm: LlmClient;
@@ -28,13 +28,36 @@ export class AnthropicKeeper implements Keeper {
   constructor(private readonly cfg: AnthropicKeeperConfig) {}
 
   async run(input: KeeperInput): Promise<KeeperOutput> {
-    const raw = await this.cfg.llm.complete({
+    return proseOf(await this.cfg.llm.complete(this.request(input)));
+  }
+
+  /**
+   * Streamed run (3.3a-K3, DEFERRED LAT1): the SAME request as run(); `onText` receives the raw
+   * text deltas as they arrive (untrimmed -- the caller's release decides what reaches the player).
+   * With an LlmClient that has no stream(), falls back to complete() and emits the whole raw text
+   * as one onText call (none when it is empty). The output is trimmed and an empty reply throws,
+   * exactly like run().
+   */
+  async runStream(input: KeeperInput, onText: (delta: string) => void): Promise<KeeperOutput> {
+    const req = this.request(input);
+    const llm = this.cfg.llm;
+    if (llm.stream !== undefined) return proseOf(await llm.stream(req, onText));
+    const raw = await llm.complete(req);
+    if (raw.length > 0) onText(raw);
+    return proseOf(raw);
+  }
+
+  private request(input: KeeperInput): LlmRequest {
+    return {
       model: this.cfg.model,
       system: input.systemPrompt,
       user: buildKeeperUser(this.cfg.assembly, input.package),
-    });
-    const prose = raw.trim();
-    if (prose.length === 0) throw new Error('AnthropicKeeper: empty prose');
-    return { prose };
+    };
   }
+}
+
+function proseOf(raw: string): KeeperOutput {
+  const prose = raw.trim();
+  if (prose.length === 0) throw new Error('AnthropicKeeper: empty prose');
+  return { prose };
 }

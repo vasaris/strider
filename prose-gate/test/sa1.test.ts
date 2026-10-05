@@ -1,18 +1,14 @@
 // SA1 plural address (sa1.ts): authorial-text extraction, pronoun boundaries, thresholds, the
 // package-only scope in scanTurnProse, and a corpus check over the recorded Keeper proses
-// (evals/l4-records + evals/records, read as DATA with fs -- no evals code is imported). Offline.
-import { readdirSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+// (evals/l4-records + evals/records, read as DATA via ./corpus.ts -- no evals code is imported).
+// Offline.
 import type { NarrativePackage } from '@brodyazhnik/orchestrator';
 import { describe, expect, it } from 'vitest';
 import type { Violation } from '../src/antislop.js';
 import { scanTurnProse } from '../src/grounding.js';
 import { authorialText, scanPluralAddress } from '../src/sa1.js';
 import { loadVkAddendumFromPack } from '../src/vkAddendum.js';
-
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const packRoot = resolve(repoRoot, 'content-packs/kv');
+import { loadCorpus, packRoot } from './corpus.js';
 const PKG: NarrativePackage = { intent: 'journey', scene: 'journey', length_target: { min_chars: 400, max_chars: 800 } };
 
 const sa1 = (prose: string): Violation[] => scanPluralAddress(prose);
@@ -52,6 +48,22 @@ describe('SA1 pronoun boundaries', () => {
     ['ВЫ upper', 'ВЫ НЕ ПРОЙДЁТЕ, думаешь ты.'],
   ])('%s counts', (_label, prose) => {
     expect(severities(prose)).toEqual(['warn']);
+  });
+
+  // SA2 (3.3a-K3): a combining mark is a word character. The acute is built from its escape so no
+  // invisible character sits in this file.
+  const ACUTE = '\u0301';
+  it.each([
+    ['выход with an acute right after вы', `вы${ACUTE}ход`],
+    ['увы with an acute right before вы', `у${ACUTE}вы`],
+  ])('%s does not count', (_label, w) => {
+    expect(/(?<!\p{L})вы(?!\p{L})/iu.test(w)).toBe(true); // the pre-SA2 letter-only boundary matched here
+    expect(sa1(`Ты видишь ${w}.`)).toEqual([]);
+    expect(sa1(`${w} ${w} ${w}.`)).toEqual([]);
+  });
+
+  it('a mark elsewhere in the sentence does not hide a real pronoun', () => {
+    expect(severities(`За${ACUTE}мок. Вас ждут.`)).toEqual(['warn']);
   });
 
   it('punctuation is a boundary', () => {
@@ -109,29 +121,6 @@ describe('SA1 scope in scanTurnProse', () => {
     expect(lists).toEqual(['nf1_backstory', 'sa1_plural']);
   });
 });
-
-interface CorpusProse {
-  readonly id: string;
-  readonly prose: string;
-  readonly pkg: NarrativePackage;
-}
-
-/** Every recorded Keeper prose: full-cycle-report.*.json in evals/l4-records and evals/records. */
-function loadCorpus(): CorpusProse[] {
-  const out: CorpusProse[] = [];
-  for (const dir of ['evals/l4-records', 'evals/records']) {
-    const abs = resolve(repoRoot, dir);
-    for (const f of readdirSync(abs).filter((n) => n.startsWith('full-cycle-report.') && n.endsWith('.json')).sort()) {
-      const json = JSON.parse(readFileSync(resolve(abs, f), 'utf8')) as {
-        report: { transcripts: { scenarioId: string; package: NarrativePackage; output: { prose: string } }[] };
-      };
-      for (const t of json.report.transcripts) {
-        out.push({ id: `${dir}/${f}#${t.scenarioId}`, prose: t.output.prose, pkg: t.package });
-      }
-    }
-  }
-  return out;
-}
 
 describe('SA1 corpus (recorded proses as data)', () => {
   const corpus = loadCorpus();

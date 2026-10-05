@@ -102,3 +102,59 @@ describe('AnthropicKeeper plumbing (mock client; no key/network)', () => {
     expect(llm.calls[0]?.user).toBe('P:' + renderNarrativePackage(PKG));
   });
 });
+
+describe('AnthropicKeeper.runStream (3.3a-K3; mock client; no key/network)', () => {
+  class StreamingLlm implements LlmClient {
+    readonly calls: LlmRequest[] = [];
+    readonly completeCalls: LlmRequest[] = [];
+    constructor(private readonly deltas: readonly string[]) {}
+    complete(req: LlmRequest): Promise<string> {
+      this.completeCalls.push(req);
+      return Promise.resolve(this.deltas.join(''));
+    }
+    stream(req: LlmRequest, onText: (d: string) => void): Promise<string> {
+      this.calls.push(req);
+      for (const d of this.deltas) if (d.length > 0) onText(d);
+      return Promise.resolve(this.deltas.join(''));
+    }
+  }
+
+  it('issues the SAME request as run() through llm.stream and forwards the deltas untrimmed', async () => {
+    const llm = new StreamingLlm(['  \nПоперёк тропы ', 'лёг ствол.', '\n ']);
+    const keeper = new AnthropicKeeper({ llm, model: 'test-model', assembly: ASM });
+    const deltas: string[] = [];
+    const out = await keeper.runStream(INPUT, (d) => deltas.push(d));
+    expect(deltas).toEqual(['  \nПоперёк тропы ', 'лёг ствол.', '\n ']);
+    expect(out).toEqual({ prose: 'Поперёк тропы лёг ствол.' });
+    expect(llm.completeCalls).toEqual([]);
+    const plain = new MockLlm(() => MOCK_PROSE);
+    await new AnthropicKeeper({ llm: plain, model: 'test-model', assembly: ASM }).run(INPUT);
+    expect(llm.calls).toStrictEqual(plain.calls);
+  });
+
+  it('falls back to complete() without llm.stream: one onText with the whole raw text', async () => {
+    const llm = new MockLlm(() => ` ${MOCK_PROSE}\n`);
+    const deltas: string[] = [];
+    const out = await new AnthropicKeeper({ llm, model: 'test-model', assembly: ASM }).runStream(INPUT, (d) => deltas.push(d));
+    expect(deltas).toEqual([` ${MOCK_PROSE}\n`]);
+    expect(out).toEqual({ prose: MOCK_PROSE });
+    expect(llm.calls).toEqual([{ model: 'test-model', system: SYSTEM, user: buildKeeperUser(ASM, PKG) }]);
+  });
+
+  it('throws on an empty or whitespace-only reply, streamed or not (no onText for an empty fallback reply)', async () => {
+    await expect(new AnthropicKeeper({ llm: new StreamingLlm([' ', '\n']), model: 'm', assembly: ASM }).runStream(INPUT, () => {})).rejects.toThrow(
+      'AnthropicKeeper: empty prose',
+    );
+    const deltas: string[] = [];
+    await expect(new AnthropicKeeper({ llm: new MockLlm(() => ''), model: 'm', assembly: ASM }).runStream(INPUT, (d) => deltas.push(d))).rejects.toThrow(
+      'AnthropicKeeper: empty prose',
+    );
+    expect(deltas).toEqual([]);
+  });
+
+  it('propagates an llm.stream rejection unchanged', async () => {
+    const boom = new Error('boom');
+    const llm: LlmClient = { complete: () => Promise.resolve('x'), stream: () => Promise.reject(boom) };
+    await expect(new AnthropicKeeper({ llm, model: 'm', assembly: ASM }).runStream(INPUT, () => {})).rejects.toBe(boom);
+  });
+});

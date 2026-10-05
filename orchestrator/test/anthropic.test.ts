@@ -3,7 +3,7 @@
 // no network, no API key (the default `new Anthropic()` is never constructed here; the options
 // tests inject a fake SDK constructor).
 import { APIConnectionTimeoutError, APIUserAbortError, APIConnectionError, NotFoundError } from '@anthropic-ai/sdk';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   AnthropicLlmClient,
   LLM_MAX_TOKENS,
@@ -11,6 +11,9 @@ import {
   type AnthropicClientOptions,
   type LlmCallTelemetry,
   type MessageParams,
+  type MessageResult,
+  type MessageStreamEventLike,
+  type MessageStreamLike,
   type MessagesClient,
   type MessagesClientFactory,
 } from '../src/llm/anthropic.js';
@@ -216,5 +219,145 @@ describe('AnthropicLlmClient onCall telemetry (3.2-K5.2)', () => {
     const c = new AnthropicLlmClient(undefined, { timeout: 1, sdk: () => client, onCall: (t) => records.push(t) });
     await c.complete(REQ);
     expect(records).toHaveLength(1);
+  });
+});
+
+describe('AnthropicLlmClient.stream (3.3a-K3; scripted fake stream, no network)', () => {
+  const USAGE = { input_tokens: 900, output_tokens: 120, cache_creation_input_tokens: 0, cache_read_input_tokens: 800 };
+  const text = (t: string): MessageStreamEventLike => ({ type: 'content_block_delta', delta: { type: 'text_delta', text: t } });
+  const EVENTS: MessageStreamEventLike[] = [
+    { type: 'message_start' },
+    { type: 'content_block_start' },
+    { type: 'content_block_delta', delta: { type: 'thinking_delta', thinking: 'hmm' } },
+    text('Ветер '),
+    text(''),
+    { type: 'content_block_delta', delta: { type: 'input_json_delta', partial_json: '{' } },
+    text('гонит пыль.'),
+    { type: 'content_block_stop' },
+    { type: 'message_delta', delta: { stop_reason: 'end_turn' } },
+    text(' Ты идёшь.'),
+    { type: 'message_stop' },
+  ];
+  const FINAL: MessageResult = {
+    content: [{ type: 'thinking' }, { type: 'text', text: 'Ветер гонит пыль.' }, { type: 'text', text: ' Ты идёшь.' }],
+    usage: USAGE,
+    stop_reason: 'end_turn',
+  };
+
+  /** A fake client whose stream() yields `events` (throwing `failAt`'s error before that index)
+   *  and whose finalMessage() resolves `final` (or rejects with `finalError`). */
+  function fakeStream(opts: { events?: MessageStreamEventLike[]; final?: MessageResult; failAt?: { index: number; error: unknown }; finalError?: unknown } = {}) {
+    const seen: MessageParams[] = [];
+    const events = opts.events ?? EVENTS;
+    const client: MessagesClient = {
+      messages: {
+        create: () => Promise.reject(new Error('create must not be called')),
+        stream: (params): MessageStreamLike => {
+          seen.push(params);
+          return {
+            async *[Symbol.asyncIterator]() {
+              for (let i = 0; i < events.length; i++) {
+                if (opts.failAt !== undefined && opts.failAt.index === i) throw opts.failAt.error;
+                yield events[i] as MessageStreamEventLike;
+              }
+            },
+            finalMessage: () => (opts.finalError !== undefined ? Promise.reject(opts.finalError) : Promise.resolve(opts.final ?? FINAL)),
+          };
+        },
+      },
+    };
+    return { seen, client };
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('sends buildMessageParams(req), forwards the non-empty text deltas in order (thinking ignored), returns the final text', async () => {
+    const { seen, client } = fakeStream();
+    const deltas: string[] = [];
+    const out = await new AnthropicLlmClient(client).stream(REQ, (d) => deltas.push(d));
+    expect(seen).toStrictEqual([buildMessageParams(REQ)]);
+    expect(deltas).toEqual(['Ветер ', 'гонит пыль.', ' Ты идёшь.']);
+    expect(out).toBe('Ветер гонит пыль. Ты идёшь.');
+    expect(out).toBe(deltas.join(''));
+  });
+
+  it('success telemetry: one record with usage, stop_reason and integer ttft_ms (fake clock)', async () => {
+    // Clock reads: call start 1000; first text delta 1250.4; finalMessage resolved 3999.6.
+    const clock = [1000, 1250.4, 3999.6];
+    vi.spyOn(performance, 'now').mockImplementation(() => clock.shift() ?? 9999);
+    const records: LlmCallTelemetry[] = [];
+    await new AnthropicLlmClient(fakeStream().client, { onCall: (t) => records.push(t) }).stream(REQ, () => {});
+    expect(records).toStrictEqual([{ model: 'model-x', duration_ms: 3000, ok: true, usage: USAGE, stop_reason: 'end_turn', ttft_ms: 250 }]);
+    expect(JSON.stringify(records)).not.toMatch(/Ветер|пыль/u);
+  });
+
+  it('success with no text at all: ttft_ms null', async () => {
+    const records: LlmCallTelemetry[] = [];
+    const { client } = fakeStream({ events: [{ type: 'message_start' }], final: { content: [] } });
+    const out = await new AnthropicLlmClient(client, { onCall: (t) => records.push(t) }).stream(REQ, () => {});
+    expect(out).toBe('');
+    expect(records).toMatchObject([{ ok: true, usage: null, stop_reason: null, ttft_ms: null }]);
+  });
+
+  it('failure mid-stream: one failure record with ttft_ms, the same error rethrown, deltas before it forwarded', async () => {
+    const boom = Object.assign(new Error('secret sk-XYZ'), { name: 'OverloadedError', status: 529 });
+    const records: LlmCallTelemetry[] = [];
+    const deltas: string[] = [];
+    const { client } = fakeStream({ failAt: { index: 7, error: boom } });
+    await expect(new AnthropicLlmClient(client, { onCall: (t) => records.push(t) }).stream(REQ, (d) => deltas.push(d))).rejects.toBe(boom);
+    expect(deltas).toEqual(['Ветер ', 'гонит пыль.']);
+    expect(records).toHaveLength(1);
+    const r = records[0] as Extract<LlmCallTelemetry, { ok: false }>;
+    expect(Object.keys(r).sort()).toEqual(['duration_ms', 'error', 'model', 'ok', 'ttft_ms']);
+    expect(r).toMatchObject({ model: 'model-x', ok: false, error: { name: 'OverloadedError', status: 529 } });
+    expect(typeof r.ttft_ms === 'number' && Number.isInteger(r.ttft_ms) && r.ttft_ms <= r.duration_ms).toBe(true);
+    expect(JSON.stringify(r)).not.toContain('secret');
+  });
+
+  it('failure before any text (a real SDK error): ttft_ms null, the error rethrown', async () => {
+    const conn = new APIConnectionError({ message: 'refused' });
+    const records: LlmCallTelemetry[] = [];
+    const { client } = fakeStream({ failAt: { index: 0, error: conn } });
+    await expect(new AnthropicLlmClient(client, { onCall: (t) => records.push(t) }).stream(REQ, () => {})).rejects.toBe(conn);
+    expect(records).toMatchObject([{ ok: false, error: { name: 'APIConnectionError' }, ttft_ms: null }]);
+  });
+
+  it('finalMessage rejecting after the text: failure record, error rethrown', async () => {
+    const abort = new APIUserAbortError({ message: 'aborted' });
+    const records: LlmCallTelemetry[] = [];
+    const { client } = fakeStream({ finalError: abort });
+    await expect(new AnthropicLlmClient(client, { onCall: (t) => records.push(t) }).stream(REQ, () => {})).rejects.toBe(abort);
+    expect(records).toMatchObject([{ ok: false, error: { name: 'APIUserAbortError' } }]);
+    expect(typeof records[0]?.ttft_ms).toBe('number');
+  });
+
+  it('a throwing hook changes neither the result nor the error', async () => {
+    const throwing = () => {
+      throw new Error('hook failed');
+    };
+    expect(await new AnthropicLlmClient(fakeStream().client, { onCall: throwing }).stream(REQ, () => {})).toBe('Ветер гонит пыль. Ты идёшь.');
+    const boom = new Error('boom');
+    await expect(new AnthropicLlmClient(fakeStream({ failAt: { index: 3, error: boom } }).client, { onCall: throwing }).stream(REQ, () => {})).rejects.toBe(boom);
+  });
+
+  it('no hook: the same output and params', async () => {
+    const a = fakeStream();
+    const b = fakeStream();
+    expect(await new AnthropicLlmClient(a.client).stream(REQ, () => {})).toBe(await new AnthropicLlmClient(b.client, { onCall: () => {} }).stream(REQ, () => {}));
+    expect(a.seen).toEqual(b.seen);
+  });
+
+  it('complete() records stay without ttft_ms', async () => {
+    const records: LlmCallTelemetry[] = [];
+    const client: MessagesClient = { messages: { create: () => Promise.resolve(FINAL) } };
+    await new AnthropicLlmClient(client, { onCall: (t) => records.push(t) }).complete(REQ);
+    expect('ttft_ms' in (records[0] as object)).toBe(false);
+  });
+
+  it('an injected client without messages.stream: a clear error, no call', async () => {
+    const client: MessagesClient = { messages: { create: () => Promise.resolve(FINAL) } };
+    await expect(new AnthropicLlmClient(client).stream(REQ, () => {})).rejects.toThrow('no messages.stream');
   });
 });

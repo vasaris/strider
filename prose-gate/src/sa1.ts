@@ -9,9 +9,12 @@
 //    unclosed « hides the rest of the prose -- a miss, never a false block), minus (2) every LINE
 //    whose first non-whitespace character is a dialogue dash — – or - . Stripped characters are
 //    replaced by spaces, so offsets stay those of the original prose and no two words glue.
-//  - PRONOUNS: вы | вас | вам | вами | ваш* (case-insensitive), with no letter (\p{L})
-//    immediately before, and none after except the ваш* ending letters: 'выход', 'вывод',
-//    'вязь', 'увы' never match; 'Вас', 'вашего', 'ваша' do.
+//  - PRONOUNS: вы | вас | вам | вами | ваш* (case-insensitive), with no word character
+//    immediately before, and none after except the ваш* ending. A word character is a letter or
+//    a combining mark ([\p{L}\p{M}], the token convention of NF1's grounding.ts -- SA2, 3.3a-K3):
+//    'выход', 'вывод', 'вязь', 'увы' never match, nor do the same words written with a
+//    combining acute (U+0301) right after 'вы' ('выход') or right before it ('увы');
+//    'Вас', 'вашего', 'ваша' do.
 //  - COUNT in the authorial text: >= 2 -> one BLOCK finding; exactly 1 -> one WARN finding (list
 //    'sa1_plural'; term = the first pronoun, index = its offset, the reason carries the count).
 //  - SCOPE: runs only inside scanTurnProse with a package (pkg !== null), exactly like NF1. The
@@ -24,13 +27,16 @@
 //      the rule must be revisited then (today it already warns on "Между вами" in the corpus).
 //  (c) Dialogue in straight or other quotes ("…", „…“) is not stripped -- only «…» and dash
 //      lines are dialogue markers here, matching Russian typesetting in the Keeper's prose.
+//  (d) A stress mark INSIDE a pronoun (a combining acute after the 'ы' of 'вы' or the 'а' of
+//      'вас') breaks the token -- a MISS (the Keeper does not mark stress; the decomposed form
+//      is not normalized away here).
 
 import type { Violation } from './antislop.js';
 
 const LINE_TERMINATORS = new Set(['\n', '\r', '\v', '\f', '\u0085', ' ', ' ']);
 const DIALOGUE_DASHES = new Set(['—', '–', '-']);
 const LEADING_SPACE = /^[\t\p{Zs}]$/u;
-const PLURAL_ADDRESS = /(?<!\p{L})(?:вы|вас|вам|вами|ваш\p{L}*)(?!\p{L})/giu;
+const PLURAL_ADDRESS = /(?<![\p{L}\p{M}])(?:вы|вас|вам|вами|ваш[\p{L}\p{M}]*)(?![\p{L}\p{M}])/giu;
 
 /**
  * The authorial text of `prose`, same UTF-16 length (offsets carry over): «…» spans (nested,

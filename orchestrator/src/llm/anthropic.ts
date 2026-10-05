@@ -9,6 +9,11 @@
 // complete() -- model, wall time on a monotonic clock, token usage and stop reason, or on failure
 // the error's name and HTTP status (never its message). It carries no request or response text.
 // Without the hook complete() runs exactly as before.
+//
+// Streaming (3.3a-K3, DEFERRED LAT1): stream() sends the SAME buildMessageParams(req) through
+// `messages.stream`, forwards every non-empty text delta (thinking and other deltas ignored) and
+// resolves the final message's concatenated text blocks. Its telemetry record additionally carries
+// `ttft_ms` (call start -> first text delta, same monotonic clock; null when no text arrived).
 
 import Anthropic, { APIConnectionError, APIConnectionTimeoutError, APIError, APIUserAbortError } from '@anthropic-ai/sdk';
 import type { LlmClient, LlmRequest } from '../keeper/seam.js';
@@ -52,10 +57,27 @@ export interface MessageResult {
   readonly stop_reason?: string | null;
 }
 
-/** The minimal slice of the SDK client this class uses (injectable for offline tests). */
+/** The slice of one streamed event this class reads: text arrives as `content_block_delta` with
+ *  `delta.type === 'text_delta'` and a string `delta.text`; every other event (and every other
+ *  delta type, e.g. `thinking_delta`) is ignored. `delta` is `unknown` on purpose: the SDK's delta
+ *  shapes differ per event (`message_delta` has no `type`), so textDeltaOf narrows at runtime. */
+export interface MessageStreamEventLike {
+  readonly type: string;
+  readonly delta?: unknown;
+}
+
+/** The slice of the SDK's MessageStream this class uses: async-iterable over events, and
+ *  finalMessage() resolving the complete message (the SDK handles completion/error/abort). */
+export interface MessageStreamLike extends AsyncIterable<MessageStreamEventLike> {
+  finalMessage(): Promise<MessageResult>;
+}
+
+/** The minimal slice of the SDK client this class uses (injectable for offline tests). `stream` is
+ *  optional so injected fakes written before streaming keep compiling; stream() then throws. */
 export interface MessagesClient {
   readonly messages: {
     create(params: MessageParams): Promise<MessageResult>;
+    stream?(params: MessageParams): MessageStreamLike;
   };
 }
 
@@ -67,7 +89,9 @@ export interface LlmCallUsage {
   readonly cache_read_input_tokens: number | null;
 }
 
-/** One record per complete(): no request content, no response text, no error message. */
+/** One record per complete() / stream(): no request content, no response text, no error message.
+ *  `ttft_ms` is present ONLY on streamed calls: integer ms from the call start to the first
+ *  non-empty text delta, null when no text arrived. */
 export type LlmCallTelemetry =
   | {
       readonly model: string;
@@ -75,12 +99,14 @@ export type LlmCallTelemetry =
       readonly ok: true;
       readonly usage: LlmCallUsage | null; // null: the response carried no usage
       readonly stop_reason: string | null;
+      readonly ttft_ms?: number | null; // stream() only
     }
   | {
       readonly model: string;
       readonly duration_ms: number;
       readonly ok: false;
       readonly error: { readonly name: string; readonly status?: number }; // status: an HTTP status, when the error has one
+      readonly ttft_ms?: number | null; // stream() only
     };
 
 export type LlmCallHook = (t: LlmCallTelemetry) => void;
@@ -127,6 +153,13 @@ function emit(hook: LlmCallHook, t: LlmCallTelemetry): void {
   } catch {
     // ignored by design
   }
+}
+
+/** The text of a `content_block_delta` / `text_delta` event; '' for any other event. */
+function textDeltaOf(ev: MessageStreamEventLike): string {
+  if (ev.type !== 'content_block_delta' || typeof ev.delta !== 'object' || ev.delta === null) return '';
+  const d = ev.delta as { readonly type?: unknown; readonly text?: unknown };
+  return d.type === 'text_delta' && typeof d.text === 'string' ? d.text : '';
 }
 
 /** The model's concatenated text blocks (non-text blocks skipped). */
@@ -198,6 +231,42 @@ export class AnthropicLlmClient implements LlmClient {
       throw err;
     }
     emit(hook, { model: req.model, duration_ms: elapsed(), ok: true, usage: usageOf(m.usage), stop_reason: m.stop_reason ?? null });
+    return textOf(m);
+  }
+
+  /**
+   * Streamed call: `messages.stream(buildMessageParams(req))`, every non-empty text delta forwarded
+   * to `onText` in order, then `finalMessage()`; returns the final message's text blocks joined
+   * (the same textOf as complete()). duration_ms runs until finalMessage resolves or the call
+   * fails. On failure (including an `onText` that throws) the failure record carries ttft_ms when
+   * text had started, and the original error is rethrown.
+   */
+  async stream(req: LlmRequest, onText: (delta: string) => void): Promise<string> {
+    const messages = this.client.messages;
+    if (messages.stream === undefined) {
+      throw new Error('AnthropicLlmClient: the injected client has no messages.stream (streaming unsupported)');
+    }
+    const hook = this.onCall;
+    const started = performance.now();
+    const elapsed = (): number => Math.max(0, Math.round(performance.now() - started));
+    let ttft: number | null = null;
+    let m: MessageResult;
+    try {
+      const s = messages.stream(buildMessageParams(req));
+      for await (const ev of s) {
+        const text = textDeltaOf(ev);
+        if (text.length === 0) continue;
+        if (ttft === null) ttft = elapsed();
+        onText(text);
+      }
+      m = await s.finalMessage();
+    } catch (err) {
+      if (hook !== undefined) emit(hook, { model: req.model, duration_ms: elapsed(), ok: false, error: errorOf(err), ttft_ms: ttft });
+      throw err;
+    }
+    if (hook !== undefined) {
+      emit(hook, { model: req.model, duration_ms: elapsed(), ok: true, usage: usageOf(m.usage), stop_reason: m.stop_reason ?? null, ttft_ms: ttft });
+    }
     return textOf(m);
   }
 }

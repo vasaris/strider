@@ -29,7 +29,7 @@ export interface Keeper {
  *   - keeper (AnthropicKeeper): system = keeper prompt + activated tone.md (buildKeeperSystem);
  *     user = the preamble + rendered package (buildKeeperUser); the raw reply is the prose,
  *     trimmed by AnthropicKeeper.
- *  complete() returns the model's raw text output; interpretation belongs to the caller. */
+ *  complete() / stream() return the model's raw text output; interpretation belongs to the caller. */
 export interface LlmRequest {
   readonly model: string; // config, not hardcoded in caller logic
   readonly system: string; // assembled by the caller (judge: rubric+tone; keeper: prompt+tone)
@@ -38,4 +38,8 @@ export interface LlmRequest {
 
 export interface LlmClient {
   complete(req: LlmRequest): Promise<string>;
+  /** Streamed variant of complete() (3.3a-K3, DEFERRED LAT1), OPTIONAL: the same request, but
+   *  `onText` receives every non-empty text delta, in order, as it arrives. Resolves the full raw
+   *  text (the same string complete() would return). Callers fall back to complete() when absent. */
+  stream?(req: LlmRequest, onText: (delta: string) => void): Promise<string>;
 }
