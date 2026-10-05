@@ -101,7 +101,8 @@ Keyed-скрипты (`calibrate.mts`, `full-cycle.mts` и `full-cycle.mts --bea
     - K2 `e757d3e` — пакеты тактов (`beat`, `## player`, `## questions`, `## previous`);
     - K3 `5eabff5` — стриминг Хранителя и выдача по предложениям за гейтом; граница SA2;
     - K4 `98cb553` — keeper v0.4 («Такты»), фикстура запросов v0.4, `full-cycle.mts --beats`;
-    - K5 — docs.
+    - K5 `786344c` — docs; ревью архива — CONFIRMED с условием K5.1;
+    - K5.1 — docs по заметкам ревью (`PKG1` — первым коммитом 3.3b; `BEAT1` (7)–(8)).
 
     Прогон тактов Ивана 05.10 (`claude-sonnet-5`): setup 86.9, resolution 84.1, arrival 86, encounter 88; 1 блок из 20; TTFT — почти всё размышление модели (`LAT1`). Запись — `docs/CALIBRATION_TONE_JUDGE.md` §«3.3a».
 - Последний код-коммит `98cb553`:
@@ -110,7 +111,7 @@ Keyed-скрипты (`calibrate.mts`, `full-cycle.mts` и `full-cycle.mts --bea
   - 5 golden стабильны, снимок 900 прогонов пути (`engine/test/journey/snapshot900*`), фикстуры запросов Хранителя v0.3 (11) и v0.4 (20), NF1-реплей 2 / 10;
   - живой гейт на корпусе 58 проз — 5 block / 2 SA1-warn (такты v0.4 в корпус не входят);
   - pack 0.1.0, `npm audit` 0.
-- **Следующее:** `ROADMAP_SESSIONS.md` → **чат 3.3b** (интерактивный ход в app); вход — `docs/HANDOFF_STAGE3_3B.md`. Первым — скелет 3.3b по процессу А.
+- **Следующее:** `ROADMAP_SESSIONS.md` → **чат 3.3b** (интерактивный ход в app); вход — `docs/HANDOFF_STAGE3_3B.md`. Первым — скелет 3.3b по процессу А; первым коммитом 3.3b — `PKG1`.
 
 ## Карта репо
 - `engine/` — чистый TS-движок (`src/` модули по подсистемам, `test/`, `cli/`).
