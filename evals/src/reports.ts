@@ -4,18 +4,18 @@
 // Every keyed report name now carries the prompt version(s), the model and a UTC timestamp, and
 // is written with an EXCLUSIVE create ('wx'): an existing file is an error, never a silent
 // overwrite. Names keep the evals/.gitignore stems (calibration-report.*, full-cycle-report*,
-// keeper-smoke.*), so the working-copy reports stay ignored; the audit trail stays a deliberate
+// beats-cycle-report*, keeper-smoke.*), so the working-copy reports stay ignored; the audit trail stays a deliberate
 // copy into evals/l4-records/.
 import { writeFileSync } from 'node:fs';
 
-export type ReportKind = 'calibration' | 'full-cycle' | 'keeper-smoke';
+export type ReportKind = 'calibration' | 'full-cycle' | 'beats-cycle' | 'keeper-smoke';
 
 export interface ReportNameInput {
   readonly kind: ReportKind;
   /** Repo-relative prompt paths (e.g. 'prompts/judge.system.v0.3.md'). calibration needs judge;
-   *  full-cycle needs keeper AND judge; keeper-smoke needs keeper. */
+   *  full-cycle / beats-cycle need keeper AND judge; keeper-smoke needs keeper. */
   readonly prompts: { readonly keeper?: string; readonly judge?: string };
-  /** calibration: the judge model; full-cycle / keeper-smoke: the Keeper model. */
+  /** calibration: the judge model; full-cycle / beats-cycle / keeper-smoke: the Keeper model. */
   readonly model: string;
   readonly now: Date;
 }
@@ -55,6 +55,13 @@ export function reportFileName(input: ReportNameInput): string {
     case 'full-cycle':
       return (
         `full-cycle-report.keeper-${need(prompts.keeper, 'keeper', kind)}` +
+        `.judge-${need(prompts.judge, 'judge', kind)}.${model}.${stamp}.json`
+      );
+    // 3.3a-K4b (`full-cycle.mts --beats`): its own stem -- the corpus loaders sweep every
+    // `full-cycle-report.*`, and a beat report must not enter the pinned prose corpus.
+    case 'beats-cycle':
+      return (
+        `beats-cycle-report.keeper-${need(prompts.keeper, 'keeper', kind)}` +
         `.judge-${need(prompts.judge, 'judge', kind)}.${model}.${stamp}.json`
       );
     case 'keeper-smoke':

@@ -242,6 +242,63 @@ describe('prompt diff pin 3.1-C3 (keeper v0.2 -> v0.3, judge v0.3 -> v0.4; bases
   });
 });
 
+// v0.3 -> v0.4 keeper (3.3a-K4): beats. Keeper §2 p.6 adds the player's words (`player.approach`,
+// `questions`) and the previous beat's prose (`previous`) as legitimate name sources in beats, and a
+// new §8 "Такты" describes the beat kinds (setup / resolution / arrival / encounter) and the
+// `## player`, `## questions`, `## previous` sections. Judge unchanged.
+const KEEPER_V03_SHA256 = '8f9ebc023597e244a484660f35de8286f449e875eed705b18d4b2efb1e03d7a8';
+
+const KEEPER_V04_EDITS: readonly Edit[] = [
+  ['— v0.3 (СКЕЛЕТ)', '— v0.4 (СКЕЛЕТ)'],
+  [
+    '   оракула, сцены обнаружения (`detection`) и раздела пути (`journey`). Если их нет — место\n' +
+      '   безымянно, прошлое не упоминается.\n',
+    '   оракула, сцены обнаружения (`detection`) и раздела пути (`journey`); в тактах — ещё из слов\n' +
+      '   игрока (`player.approach`, `questions`) и прозы прошлого такта (`previous`), см. §8. Если их\n' +
+      '   нет — место безымянно, прошлое не упоминается.\n',
+  ],
+  [
+    'он **становится** конкретным событием здешней сцены. Не сглаживай его в общие слова.\n',
+    'он **становится** конкретным событием здешней сцены. Не сглаживай его в общие слова.\n' +
+      '\n' +
+      '## 8. Такты\n' +
+      '\n' +
+      'Шаг пути разложен на такты. Вид такта — `beat` в разделе `## turn`; пакет без `beat` — целый шаг,\n' +
+      'как раньше.\n' +
+      '\n' +
+      '- **`setup` — завязка.** Путь за этот переход и сцена до момента проверки: где герой, что встало\n' +
+      '  на пути, как это звучит, пахнет, ложится под руку. Исхода сцены ещё нет — в пакете нет `dice`, не\n' +
+      '  описывай его. Что герой сделает в самой сцене, решает игрок: этого действия не пиши. Сцена\n' +
+      '  кончается тем, что герой стоит перед испытанием; вариантов на выбор не перечисляй.\n' +
+      '- **`resolution` — развязка.** Продолжает `## previous` — завязку этой же сцены. Сцена уже введена:\n' +
+      '  оракул остаётся её предметом, заново его не представляй; не повторяй образы и обороты завязки,\n' +
+      '  держи то же время суток и место. Исход — только из `dice`, последствия — только из `patch` и\n' +
+      '  `journey`. `player.approach` — как герой пытается действовать, а не что у него вышло: удалось ли —\n' +
+      '  решают кости. Исход, которого кости не дали, не дари. Конец — открытое положение, без вариантов,\n' +
+      '  на которые игроку пока нечем ответить.\n' +
+      '- **`arrival` — прибытие, `encounter` — значимая встреча.** Целый шаг, как в §3 и §4.\n' +
+      '- **`## player`** — ход игрока к броску этого такта: в развязке это проверка сцены (`dice`), в\n' +
+      '  остальных тактах — бросок пути (`journey.travel_check`). `hope_spent: 1` — герой собрал силы перед\n' +
+      '  броском: это усилие, а не последствие, и без чисел; отрицательная `hope_delta` в `patch` этого\n' +
+      '  такта — та же трата, а не потеря. `approach` — слова игрока о том, как действует герой: намерение,\n' +
+      '  а не факт.\n' +
+      '- **`## questions`** — вопросы игрока оракулу и ответы движка. Ответ — факт мира: вплети его в\n' +
+      '  сцену, не пересказывая вопрос. Ответ с `extreme: true` (пояснение — `note`) — поворот, а не просто\n' +
+      '  «да» или «нет». Текст вопроса — слова игрока, сам по себе он ничего не утверждает.\n' +
+      '- **`## previous`** — принятая проза прошлого такта. Время, место, погода и состояние героя те же,\n' +
+      '  пока пакет не говорит иного. Не пересказывай её.\n' +
+      '- **Имена.** Имена из `player.approach`, `questions` и `## previous` можно брать; новых поверх них\n' +
+      '  не выдумывай (правило 6).\n',
+  ],
+];
+
+describe('prompt diff pin 3.3a-K4 (keeper v0.3 -> v0.4; v0.3 frozen)', () => {
+  it('keeper.system.v0.4.md = v0.3 + exactly the approved edits, byte-for-byte', () => {
+    expect(sha256('keeper.system.v0.3.md')).toBe(KEEPER_V03_SHA256); // v0.3 frozen
+    expect(applyEdits(read('keeper.system.v0.3.md'), KEEPER_V04_EDITS)).toBe(read('keeper.system.v0.4.md'));
+  });
+});
+
 // prompts/assembly.v1.json (3.1-C4): the Keeper/judge request framing moved out of evals source
 // into this file. Frozen from now on (sha256), and its two values are the pre-C4 evals literals
 // byte-for-byte (keeperSystem.ts TONE_SIDECAR_SEPARATOR; anthropicKeeper.ts buildKeeperUser preamble).

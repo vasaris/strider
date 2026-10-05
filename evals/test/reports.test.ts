@@ -39,6 +39,19 @@ describe('RP1 report names', () => {
     );
   });
 
+  it('beats-cycle: its own stem, never the swept full-cycle-report. one (3.3a-K4b)', () => {
+    const name = reportFileName({
+      kind: 'beats-cycle',
+      prompts: { keeper: 'prompts/keeper.system.v0.4.md', judge: 'prompts/judge.system.v0.4.md' },
+      model: 'claude-sonnet-5',
+      now: NOW,
+    });
+    expect(name).toBe('beats-cycle-report.keeper-v0.4.judge-v0.4.claude-sonnet-5.20260928T101112Z.json');
+    expect(name.startsWith('full-cycle-report')).toBe(false);
+    expect(() => reportFileName({ kind: 'beats-cycle', prompts: { judge: JUDGE }, model: 'm', now: NOW })).toThrow(/keeper/);
+    expect(() => reportFileName({ kind: 'beats-cycle', prompts: { keeper: KEEPER }, model: 'm', now: NOW })).toThrow(/judge/);
+  });
+
   it('sanitizes the model id', () => {
     expect(reportFileName({ kind: 'calibration', prompts: { judge: JUDGE }, model: 'org/model:v1 beta', now: NOW })).toBe(
       'calibration-report.judge-v0.3.org_model_v1_beta.20260928T101112Z.json',
@@ -63,6 +76,9 @@ describe('RP1 report names', () => {
     const ks = reportFileName({ kind: 'keeper-smoke', prompts: { keeper: KEEPER }, model: 'm', now: NOW });
     expect(cal.startsWith('calibration-report.')).toBe(true);
     expect(fc.startsWith('full-cycle-report')).toBe(true);
+    const bc = reportFileName({ kind: 'beats-cycle', prompts: { keeper: KEEPER, judge: JUDGE }, model: 'm', now: NOW });
+    expect(bc.startsWith('beats-cycle-report')).toBe(true);
+    expect(readFileSync(new URL('../.gitignore', import.meta.url), 'utf8').split('\n')).toContain('beats-cycle-report*');
     expect(ks.startsWith('keeper-smoke.')).toBe(true);
     expect(ks).not.toBe('keeper-smoke.mts'); // the re-included script itself
   });
